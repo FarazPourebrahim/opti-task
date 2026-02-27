@@ -10,5 +10,4 @@ The frontend section of **OptiTask** is built with a modern, type-safe, and main
 
 - **State Management**: React Context API
 
-- **Styling**: Module CSS   
- 
+- **Styling**: Module CSS
