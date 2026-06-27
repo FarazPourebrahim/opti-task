@@ -17,6 +17,10 @@ import { taskTypeDefs } from '@modules/task/task.schema';
 import { taskResolvers } from '@modules/task/task.resolver';
 import { activityTypeDefs } from '@modules/activity/activity.schema';
 import { activityResolvers } from '@modules/activity/activity.resolver';
+import { sprintTypeDefs } from '@modules/sprint/sprint.schema';
+import { sprintResolvers } from '@modules/sprint/sprint.resolver';
+import { epicTypeDefs } from '@modules/epic/epic.schema';
+import { epicResolvers } from '@modules/epic/epic.resolver';
 
 /**
  * Composes the executable schema from the base scaffolding plus every module's
@@ -33,6 +37,8 @@ const typeDefs = [
   teamTypeDefs,
   taskTypeDefs,
   activityTypeDefs,
+  sprintTypeDefs,
+  epicTypeDefs,
 ];
 
 const resolvers = [
@@ -45,6 +51,8 @@ const resolvers = [
   teamResolvers,
   taskResolvers,
   activityResolvers,
+  sprintResolvers,
+  epicResolvers,
 ];
 
 export function buildSchema(): GraphQLSchema {
