@@ -1,6 +1,7 @@
 import DataLoader from 'dataloader';
 import type {
   PrismaClient,
+  ProjectSettings,
   Team,
   TeamMember,
   User,
@@ -23,6 +24,9 @@ export type Loaders = {
   skillsByUserId: DataLoader<string, string[]>;
   statisticsByUserId: DataLoader<string, UserStatistics | null>;
   teamMembershipsByUserId: DataLoader<string, TeamMembershipWithTeam[]>;
+  teamsByProjectId: DataLoader<string, Team[]>;
+  teamMembersByTeamId: DataLoader<string, TeamMember[]>;
+  projectSettingsByProjectId: DataLoader<string, ProjectSettings | null>;
 };
 
 function groupByUserId<T extends { userId: string }>(
@@ -97,6 +101,50 @@ export function createLoaders(prisma: PrismaClient): Loaders {
           orderBy: { createdAt: 'desc' },
         });
         return groupByUserId(ids, rows);
+      },
+    ),
+
+    teamsByProjectId: new DataLoader<string, Team[]>(async (ids) => {
+      const rows = await prisma.team.findMany({
+        where: { projectId: { in: [...ids] } },
+        orderBy: { createdAt: 'asc' },
+      });
+      const byProject = new Map<string, Team[]>();
+      for (const row of rows) {
+        const bucket = byProject.get(row.projectId);
+        if (bucket) {
+          bucket.push(row);
+        } else {
+          byProject.set(row.projectId, [row]);
+        }
+      }
+      return ids.map((id) => byProject.get(id) ?? []);
+    }),
+
+    teamMembersByTeamId: new DataLoader<string, TeamMember[]>(async (ids) => {
+      const rows = await prisma.teamMember.findMany({
+        where: { teamId: { in: [...ids] } },
+        orderBy: { createdAt: 'asc' },
+      });
+      const byTeam = new Map<string, TeamMember[]>();
+      for (const row of rows) {
+        const bucket = byTeam.get(row.teamId);
+        if (bucket) {
+          bucket.push(row);
+        } else {
+          byTeam.set(row.teamId, [row]);
+        }
+      }
+      return ids.map((id) => byTeam.get(id) ?? []);
+    }),
+
+    projectSettingsByProjectId: new DataLoader<string, ProjectSettings | null>(
+      async (ids) => {
+        const rows = await prisma.projectSettings.findMany({
+          where: { projectId: { in: [...ids] } },
+        });
+        const byProject = new Map(rows.map((row) => [row.projectId, row]));
+        return ids.map((id) => byProject.get(id) ?? null);
       },
     ),
   };
