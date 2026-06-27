@@ -21,6 +21,10 @@ import { sprintTypeDefs } from '@modules/sprint/sprint.schema';
 import { sprintResolvers } from '@modules/sprint/sprint.resolver';
 import { epicTypeDefs } from '@modules/epic/epic.schema';
 import { epicResolvers } from '@modules/epic/epic.resolver';
+import { commentTypeDefs } from '@modules/comment/comment.schema';
+import { commentResolvers } from '@modules/comment/comment.resolver';
+import { notificationTypeDefs } from '@modules/notification/notification.schema';
+import { notificationResolvers } from '@modules/notification/notification.resolver';
 
 /**
  * Composes the executable schema from the base scaffolding plus every module's
@@ -39,6 +43,8 @@ const typeDefs = [
   activityTypeDefs,
   sprintTypeDefs,
   epicTypeDefs,
+  commentTypeDefs,
+  notificationTypeDefs,
 ];
 
 const resolvers = [
@@ -53,6 +59,8 @@ const resolvers = [
   activityResolvers,
   sprintResolvers,
   epicResolvers,
+  commentResolvers,
+  notificationResolvers,
 ];
 
 export function buildSchema(): GraphQLSchema {

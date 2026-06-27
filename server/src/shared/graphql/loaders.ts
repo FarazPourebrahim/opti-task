@@ -1,5 +1,7 @@
 import DataLoader from 'dataloader';
 import type {
+  Attachment,
+  Comment,
   Label,
   PrismaClient,
   ProjectSettings,
@@ -32,6 +34,10 @@ export type Loaders = {
   labelsByTaskId: DataLoader<string, Label[]>;
   watchersByTaskId: DataLoader<string, User[]>;
   dependsOnByTaskId: DataLoader<string, Task[]>;
+  attachmentsByTaskId: DataLoader<string, Attachment[]>;
+  mentionedUsersByCommentId: DataLoader<string, User[]>;
+  repliesByCommentId: DataLoader<string, Comment[]>;
+  attachmentsByCommentId: DataLoader<string, Attachment[]>;
 };
 
 function groupBy<K, T>(keys: ReadonlyArray<K>, rows: T[], keyOf: (row: T) => K): T[][] {
@@ -198,6 +204,40 @@ export function createLoaders(prisma: PrismaClient): Loaders {
       return groupBy(ids, rows, (row) => row.taskId).map((group) =>
         group.map((row) => row.dependsOn),
       );
+    }),
+
+    attachmentsByTaskId: new DataLoader<string, Attachment[]>(async (ids) => {
+      const rows = await prisma.attachment.findMany({
+        where: { taskId: { in: [...ids] } },
+        orderBy: { createdAt: 'asc' },
+      });
+      return groupBy(ids, rows, (row) => row.taskId ?? '');
+    }),
+
+    mentionedUsersByCommentId: new DataLoader<string, User[]>(async (ids) => {
+      const rows = await prisma.mention.findMany({
+        where: { commentId: { in: [...ids] } },
+        include: { mentionedUser: true },
+      });
+      return groupBy(ids, rows, (row) => row.commentId).map((group) =>
+        group.map((row) => row.mentionedUser),
+      );
+    }),
+
+    repliesByCommentId: new DataLoader<string, Comment[]>(async (ids) => {
+      const rows = await prisma.comment.findMany({
+        where: { parentCommentId: { in: [...ids] } },
+        orderBy: { createdAt: 'asc' },
+      });
+      return groupBy(ids, rows, (row) => row.parentCommentId ?? '');
+    }),
+
+    attachmentsByCommentId: new DataLoader<string, Attachment[]>(async (ids) => {
+      const rows = await prisma.attachment.findMany({
+        where: { commentId: { in: [...ids] } },
+        orderBy: { createdAt: 'asc' },
+      });
+      return groupBy(ids, rows, (row) => row.commentId ?? '');
     }),
   };
 }

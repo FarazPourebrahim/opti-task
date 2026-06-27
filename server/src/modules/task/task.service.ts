@@ -15,6 +15,7 @@ import {
   type Connection,
   type SortDirection,
 } from '@shared/utils';
+import { emit } from '@shared/events';
 import * as activityRepo from '@modules/activity/activity.repository';
 import * as repo from './task.repository.js';
 import {
@@ -142,20 +143,30 @@ export async function createTask(
     ...(data.priority !== undefined ? { priority: data.priority } : {}),
   };
 
-  return withTransaction(async (tx) => {
-    const task = await repo.createTask(createData, tx);
+  const task = await withTransaction(async (tx) => {
+    const created = await repo.createTask(createData, tx);
     await activityRepo.createActivity(
       {
         projectId,
-        taskId: task.id,
+        taskId: created.id,
         actorId: principal.id,
         type: 'TASK_CREATED',
-        metadata: { title: task.title },
+        metadata: { title: created.title },
       },
       tx,
     );
-    return task;
+    return created;
   });
+
+  if (task.assigneeId) {
+    await emit('task.assigned', {
+      taskId: task.id,
+      projectId,
+      assigneeId: task.assigneeId,
+      actorId: principal.id,
+    });
+  }
+  return task;
 }
 
 export async function updateTask(
@@ -229,8 +240,8 @@ export async function assignTask(
     return task;
   }
 
-  return withTransaction(async (tx) => {
-    const updated = await repo.updateTask(id, { assigneeId }, tx);
+  const updated = await withTransaction(async (tx) => {
+    const result = await repo.updateTask(id, { assigneeId }, tx);
     await activityRepo.createActivity(
       {
         projectId: task.projectId,
@@ -241,8 +252,18 @@ export async function assignTask(
       },
       tx,
     );
-    return updated;
+    return result;
   });
+
+  if (assigneeId) {
+    await emit('task.assigned', {
+      taskId: id,
+      projectId: task.projectId,
+      assigneeId,
+      actorId: principal.id,
+    });
+  }
+  return updated;
 }
 
 export async function setStoryPoints(

@@ -8,12 +8,16 @@ import { createContext, type GraphQLContext } from '@shared/graphql/context';
 import { formatError } from '@shared/graphql/format-error';
 import { rateLimitMiddleware } from '@shared/middleware/rate-limit';
 import { isProduction } from '@shared/config';
+import { registerNotificationHandlers } from '@modules/notification/notification.events';
 
 /**
  * Builds and wires the Express app with Apollo at /graphql. Kept separate from
  * server bootstrap so tests can mount the app without binding a port.
  */
 export async function createApp(): Promise<Express> {
+  // Wire domain-event subscribers (notification fan-out). Idempotent.
+  registerNotificationHandlers();
+
   const app = express();
 
   app.disable('x-powered-by');
