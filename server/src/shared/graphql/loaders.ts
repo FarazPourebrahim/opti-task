@@ -1,7 +1,9 @@
 import DataLoader from 'dataloader';
 import type {
+  Label,
   PrismaClient,
   ProjectSettings,
+  Task,
   Team,
   TeamMember,
   User,
@@ -27,7 +29,24 @@ export type Loaders = {
   teamsByProjectId: DataLoader<string, Team[]>;
   teamMembersByTeamId: DataLoader<string, TeamMember[]>;
   projectSettingsByProjectId: DataLoader<string, ProjectSettings | null>;
+  labelsByTaskId: DataLoader<string, Label[]>;
+  watchersByTaskId: DataLoader<string, User[]>;
+  dependsOnByTaskId: DataLoader<string, Task[]>;
 };
+
+function groupBy<K, T>(keys: ReadonlyArray<K>, rows: T[], keyOf: (row: T) => K): T[][] {
+  const buckets = new Map<K, T[]>();
+  for (const row of rows) {
+    const key = keyOf(row);
+    const bucket = buckets.get(key);
+    if (bucket) {
+      bucket.push(row);
+    } else {
+      buckets.set(key, [row]);
+    }
+  }
+  return keys.map((key) => buckets.get(key) ?? []);
+}
 
 function groupByUserId<T extends { userId: string }>(
   ids: ReadonlyArray<string>,
@@ -147,5 +166,38 @@ export function createLoaders(prisma: PrismaClient): Loaders {
         return ids.map((id) => byProject.get(id) ?? null);
       },
     ),
+
+    labelsByTaskId: new DataLoader<string, Label[]>(async (ids) => {
+      const rows = await prisma.taskLabel.findMany({
+        where: { taskId: { in: [...ids] } },
+        include: { label: true },
+        orderBy: { label: { name: 'asc' } },
+      });
+      return groupBy(ids, rows, (row) => row.taskId).map((group) =>
+        group.map((row) => row.label),
+      );
+    }),
+
+    watchersByTaskId: new DataLoader<string, User[]>(async (ids) => {
+      const rows = await prisma.taskWatcher.findMany({
+        where: { taskId: { in: [...ids] } },
+        include: { user: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      return groupBy(ids, rows, (row) => row.taskId).map((group) =>
+        group.map((row) => row.user),
+      );
+    }),
+
+    dependsOnByTaskId: new DataLoader<string, Task[]>(async (ids) => {
+      const rows = await prisma.taskDependency.findMany({
+        where: { taskId: { in: [...ids] } },
+        include: { dependsOn: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      return groupBy(ids, rows, (row) => row.taskId).map((group) =>
+        group.map((row) => row.dependsOn),
+      );
+    }),
   };
 }

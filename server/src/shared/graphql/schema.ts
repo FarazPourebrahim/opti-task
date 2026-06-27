@@ -13,6 +13,10 @@ import { projectTypeDefs } from '@modules/project/project.schema';
 import { projectResolvers } from '@modules/project/project.resolver';
 import { teamTypeDefs } from '@modules/team/team.schema';
 import { teamResolvers } from '@modules/team/team.resolver';
+import { taskTypeDefs } from '@modules/task/task.schema';
+import { taskResolvers } from '@modules/task/task.resolver';
+import { activityTypeDefs } from '@modules/activity/activity.schema';
+import { activityResolvers } from '@modules/activity/activity.resolver';
 
 /**
  * Composes the executable schema from the base scaffolding plus every module's
@@ -27,6 +31,8 @@ const typeDefs = [
   organizationTypeDefs,
   projectTypeDefs,
   teamTypeDefs,
+  taskTypeDefs,
+  activityTypeDefs,
 ];
 
 const resolvers = [
@@ -37,6 +43,8 @@ const resolvers = [
   organizationResolvers,
   projectResolvers,
   teamResolvers,
+  taskResolvers,
+  activityResolvers,
 ];
 
 export function buildSchema(): GraphQLSchema {
