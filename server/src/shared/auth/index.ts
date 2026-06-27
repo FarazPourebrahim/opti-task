@@ -14,3 +14,14 @@ export {
   clearAuthCookies,
 } from './cookies.js';
 export { requireAuth } from './require-auth.js';
+export {
+  PERMISSIONS,
+  ROLE_PERMISSIONS,
+  can,
+  ownsAny,
+  resolveEffectiveRoles,
+  getEffectiveRoles,
+  authorize,
+  authorizeOwnerOrPermission,
+} from './rbac/index.js';
+export type { Role, Permission, AuthScope } from './rbac/index.js';
