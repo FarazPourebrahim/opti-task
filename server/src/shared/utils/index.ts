@@ -14,3 +14,4 @@ export type {
 } from './pagination.js';
 export { toPrismaSortOrder } from './sort.js';
 export type { SortDirection } from './sort.js';
+export { durationToMs } from './duration.js';

@@ -1,5 +1,6 @@
 import express, { type Express } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { buildSchema } from '@shared/graphql/schema';
@@ -16,7 +17,8 @@ export async function createApp(): Promise<Express> {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(cors());
+  app.use(cors({ credentials: true }));
+  app.use(cookieParser());
 
   app.get('/healthz', (_req, res) => {
     res.json({ status: 'ok' });
@@ -35,7 +37,7 @@ export async function createApp(): Promise<Express> {
     rateLimitMiddleware,
     express.json({ limit: '1mb' }),
     expressMiddleware(apollo, {
-      context: async ({ req }) => createContext({ req }),
+      context: async ({ req, res }) => createContext({ req, res }),
     }),
   );
 

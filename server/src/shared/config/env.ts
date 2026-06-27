@@ -32,7 +32,28 @@ function loadEnv(): Env {
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
 
-  return parsed.data;
+  const data = parsed.data;
+
+  // Secrets are optional for local/test convenience but mandatory in production.
+  if (data.NODE_ENV === 'production') {
+    const missing = (
+      [
+        ['DATABASE_URL', data.DATABASE_URL],
+        ['JWT_ACCESS_SECRET', data.JWT_ACCESS_SECRET],
+        ['JWT_REFRESH_SECRET', data.JWT_REFRESH_SECRET],
+      ] as const
+    )
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+
+    if (missing.length > 0) {
+      throw new Error(
+        `Missing required production environment variables: ${missing.join(', ')}`,
+      );
+    }
+  }
+
+  return data;
 }
 
 export const env = loadEnv();
