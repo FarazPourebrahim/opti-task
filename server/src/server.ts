@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { env } from '@shared/config';
 import { logger } from '@shared/logger';
+import { disconnectPrisma } from '@shared/db';
 
 async function bootstrap(): Promise<void> {
   const app = await createApp();
@@ -14,7 +15,9 @@ async function bootstrap(): Promise<void> {
 
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'Shutting down');
-    server.close(() => process.exit(0));
+    server.close(() => {
+      void disconnectPrisma().finally(() => process.exit(0));
+    });
   };
 
   process.on('SIGINT', () => shutdown('SIGINT'));
