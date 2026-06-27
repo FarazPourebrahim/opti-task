@@ -12,7 +12,7 @@ describe('health resolver', () => {
     // Assert
     expect(result.status).toBe('ok');
     expect(result.uptimeSeconds).toBeGreaterThanOrEqual(0);
-    expect(() => new Date(result.timestamp)).not.toThrow();
-    expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
+    expect(result.timestamp).toBeInstanceOf(Date);
+    expect(Number.isNaN(result.timestamp.getTime())).toBe(false);
   });
 });

@@ -1,15 +1,15 @@
 /**
- * Health check — the only operation present in Phase 0. Domain typeDefs and
- * resolvers are merged into this base in later phases (see ROADMAP Phase 2).
+ * Health check. Uses `extend type Query` so it composes with every other
+ * module's root fields (the base `Query`/`Mutation` live in base.ts).
  */
 export const healthTypeDefs = /* GraphQL */ `
   type HealthStatus {
     status: String!
     uptimeSeconds: Float!
-    timestamp: String!
+    timestamp: DateTime!
   }
 
-  type Query {
+  extend type Query {
     health: HealthStatus!
   }
 `;
@@ -19,7 +19,7 @@ export const healthResolvers = {
     health: () => ({
       status: 'ok',
       uptimeSeconds: process.uptime(),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
     }),
   },
 };

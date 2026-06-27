@@ -2,12 +2,11 @@ import express, { type Express } from 'express';
 import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
-import { resolvers, typeDefs } from '@shared/graphql/schema';
+import { buildSchema } from '@shared/graphql/schema';
+import { createContext, type GraphQLContext } from '@shared/graphql/context';
+import { formatError } from '@shared/graphql/format-error';
+import { rateLimitMiddleware } from '@shared/middleware/rate-limit';
 import { isProduction } from '@shared/config';
-
-export type AppContext = {
-  requestId: string;
-};
 
 /**
  * Builds and wires the Express app with Apollo at /graphql. Kept separate from
@@ -23,19 +22,20 @@ export async function createApp(): Promise<Express> {
     res.json({ status: 'ok' });
   });
 
-  const apollo = new ApolloServer<AppContext>({
-    typeDefs,
-    resolvers,
+  const apollo = new ApolloServer<GraphQLContext>({
+    schema: buildSchema(),
     introspection: !isProduction,
+    formatError,
   });
 
   await apollo.start();
 
   app.use(
     '/graphql',
-    express.json(),
+    rateLimitMiddleware,
+    express.json({ limit: '1mb' }),
     expressMiddleware(apollo, {
-      context: async () => ({ requestId: crypto.randomUUID() }),
+      context: async ({ req }) => createContext({ req }),
     }),
   );
 

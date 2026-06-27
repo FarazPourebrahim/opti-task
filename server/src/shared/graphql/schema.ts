@@ -1,9 +1,19 @@
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import type { GraphQLSchema } from 'graphql';
+import { baseTypeDefs } from './base.js';
+import { scalarResolvers } from './scalars.js';
 import { healthResolvers, healthTypeDefs } from './health.js';
+import { demoResolvers, demoTypeDefs } from './demo.js';
 
 /**
- * Composed GraphQL schema. As modules land, their typeDefs/resolvers are added
- * to these arrays (Phase 2 introduces formal schema stitching + DataLoaders).
+ * Composes the executable schema from the base scaffolding plus every module's
+ * typeDefs/resolvers. New modules register by adding their pair to these arrays
+ * — they extend the shared `Query`/`Mutation` roots declared in base.ts.
  */
-export const typeDefs = [healthTypeDefs];
+const typeDefs = [baseTypeDefs, healthTypeDefs, demoTypeDefs];
 
-export const resolvers = [healthResolvers];
+const resolvers = [scalarResolvers, healthResolvers, demoResolvers];
+
+export function buildSchema(): GraphQLSchema {
+  return makeExecutableSchema({ typeDefs, resolvers });
+}
