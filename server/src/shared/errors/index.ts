@@ -5,5 +5,6 @@ export {
   NotFoundError,
   ValidationError,
   ConflictError,
+  ServiceUnavailableError,
 } from './app-error.js';
 export type { ErrorCode } from './app-error.js';

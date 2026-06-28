@@ -11,6 +11,7 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'BAD_USER_INPUT'
   | 'CONFLICT'
+  | 'SERVICE_UNAVAILABLE'
   | 'INTERNAL_SERVER_ERROR';
 
 export class AppError extends Error {
@@ -55,5 +56,16 @@ export class ValidationError extends AppError {
 export class ConflictError extends AppError {
   constructor(message = 'Resource already exists') {
     super(message, 'CONFLICT', 409);
+  }
+}
+
+/**
+ * A dependency the request relies on (e.g. the external AI provider) is
+ * unavailable. Safe to expose: tells the client to retry without leaking
+ * internals. Used when the provider times out or fails after retries.
+ */
+export class ServiceUnavailableError extends AppError {
+  constructor(message = 'Service temporarily unavailable') {
+    super(message, 'SERVICE_UNAVAILABLE', 503);
   }
 }

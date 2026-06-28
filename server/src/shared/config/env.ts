@@ -18,6 +18,9 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
+  // External AI provider resilience (timeout per call + retry attempts).
+  AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
+  AI_REQUEST_RETRIES: z.coerce.number().int().min(0).max(5).default(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

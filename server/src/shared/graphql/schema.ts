@@ -25,6 +25,8 @@ import { commentTypeDefs } from '@modules/comment/comment.schema';
 import { commentResolvers } from '@modules/comment/comment.resolver';
 import { notificationTypeDefs } from '@modules/notification/notification.schema';
 import { notificationResolvers } from '@modules/notification/notification.resolver';
+import { aiTypeDefs } from '@modules/ai/ai.schema';
+import { aiResolvers } from '@modules/ai/ai.resolver';
 
 /**
  * Composes the executable schema from the base scaffolding plus every module's
@@ -45,6 +47,7 @@ const typeDefs = [
   epicTypeDefs,
   commentTypeDefs,
   notificationTypeDefs,
+  aiTypeDefs,
 ];
 
 const resolvers = [
@@ -61,6 +64,7 @@ const resolvers = [
   epicResolvers,
   commentResolvers,
   notificationResolvers,
+  aiResolvers,
 ];
 
 export function buildSchema(): GraphQLSchema {
