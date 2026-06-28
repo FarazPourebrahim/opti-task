@@ -11,6 +11,7 @@ import {
   type Connection,
 } from '@shared/utils';
 import { emit } from '@shared/events';
+import { publish } from '@shared/pubsub';
 import * as activityRepo from '@modules/activity/activity.repository';
 import * as repo from './ai.repository.js';
 import {
@@ -365,16 +366,27 @@ export async function approveRecommendation(
   await authorize(ctx, 'ai:approve', { projectId: rec.projectId });
   assertPending(rec);
 
+  let result: AiRecommendation;
   if (rec.type === 'STORY_POINT_ESTIMATION') {
     const points = (rec.metadata as { storyPoints?: number }).storyPoints ?? null;
-    return applyStoryPoints(rec, principal.id, points, 'APPROVED');
-  }
-  if (rec.type === 'TASK_ASSIGNMENT') {
+    result = await applyStoryPoints(rec, principal.id, points, 'APPROVED');
+  } else if (rec.type === 'TASK_ASSIGNMENT') {
     const assigneeId = (rec.metadata as { suggestedAssigneeId?: string | null }).suggestedAssigneeId ?? null;
-    return applyAssignment(rec, principal.id, assigneeId, 'APPROVED');
+    result = await applyAssignment(rec, principal.id, assigneeId, 'APPROVED');
+  } else {
+    // Informational recommendations: approving simply records the decision.
+    result = await resolveInformational(rec, principal.id, 'APPROVED');
   }
-  // Informational recommendations: approving simply records the decision.
-  return resolveInformational(rec, principal.id, 'APPROVED');
+  publishDecision(result);
+  return result;
+}
+
+function publishDecision(rec: AiRecommendation): void {
+  publish('AI_RECOMMENDATION_UPDATED', {
+    recommendationId: rec.id,
+    projectId: rec.projectId,
+    approvalStatus: rec.approvalStatus,
+  });
 }
 
 export async function rejectRecommendation(
@@ -386,7 +398,7 @@ export async function rejectRecommendation(
   await authorize(ctx, 'ai:approve', { projectId: rec.projectId });
   assertPending(rec);
 
-  return withTransaction(async (tx) => {
+  const result = await withTransaction(async (tx) => {
     await activityRepo.createActivity(
       {
         projectId: rec.projectId,
@@ -403,6 +415,8 @@ export async function rejectRecommendation(
       tx,
     );
   });
+  publishDecision(result);
+  return result;
 }
 
 export async function overrideRecommendation(
@@ -415,13 +429,13 @@ export async function overrideRecommendation(
   await authorize(ctx, 'ai:approve', { projectId: rec.projectId });
   assertPending(rec);
 
+  let result: AiRecommendation;
   if (rec.type === 'STORY_POINT_ESTIMATION') {
     if (input.storyPoints === undefined || input.storyPoints === null) {
       throw new ValidationError('storyPoints is required to override this recommendation');
     }
-    return applyStoryPoints(rec, principal.id, input.storyPoints, 'OVERRIDDEN');
-  }
-  if (rec.type === 'TASK_ASSIGNMENT') {
+    result = await applyStoryPoints(rec, principal.id, input.storyPoints, 'OVERRIDDEN');
+  } else if (rec.type === 'TASK_ASSIGNMENT') {
     const assigneeId = input.assigneeId ?? null;
     if (assigneeId) {
       const user = await prisma.user.findUnique({ where: { id: assigneeId } });
@@ -429,9 +443,12 @@ export async function overrideRecommendation(
         throw new NotFoundError('Override assignee not found');
       }
     }
-    return applyAssignment(rec, principal.id, assigneeId, 'OVERRIDDEN');
+    result = await applyAssignment(rec, principal.id, assigneeId, 'OVERRIDDEN');
+  } else {
+    throw new ValidationError('This recommendation type cannot be overridden');
   }
-  throw new ValidationError('This recommendation type cannot be overridden');
+  publishDecision(result);
+  return result;
 }
 
 // --- Transactional appliers ---

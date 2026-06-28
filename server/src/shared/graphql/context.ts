@@ -37,8 +37,7 @@ function readAccessToken(req: Request): string | null {
   return cookies?.[ACCESS_COOKIE] ?? null;
 }
 
-function resolveUser(req: Request): AuthenticatedUser | null {
-  const token = readAccessToken(req);
+function resolveUserFromToken(token: string | null): AuthenticatedUser | null {
   if (!token) {
     return null;
   }
@@ -49,6 +48,38 @@ function resolveUser(req: Request): AuthenticatedUser | null {
     // Invalid/expired tokens yield an anonymous context, not a hard error.
     return null;
   }
+}
+
+function resolveUser(req: Request): AuthenticatedUser | null {
+  return resolveUserFromToken(readAccessToken(req));
+}
+
+/**
+ * Builds the per-operation context for a WebSocket subscription. The socket
+ * authenticates via `connectionParams.authorization` (a Bearer token). There is
+ * no HTTP response to write to, so `res`/`cookies` are inert here — subscription
+ * resolvers only read `user`, `prisma`, and `loaders`.
+ */
+export function createSubscriptionContext(connectionParams: unknown): GraphQLContext {
+  const params = (connectionParams ?? {}) as Record<string, unknown>;
+  const header = params.authorization ?? params.Authorization;
+  const token =
+    typeof header === 'string' && header.startsWith('Bearer ')
+      ? header.slice('Bearer '.length).trim()
+      : null;
+
+  return {
+    requestId: randomUUID(),
+    prisma,
+    loaders: createLoaders(prisma),
+    user: resolveUserFromToken(token),
+    // BOUNDARY: no HTTP response object exists for a WS subscription; resolvers
+    // in this path never touch `res`/`cookies`.
+    res: undefined as unknown as Response,
+    cookies: {},
+    userAgent: null,
+    ipAddress: null,
+  };
 }
 
 export function createContext({

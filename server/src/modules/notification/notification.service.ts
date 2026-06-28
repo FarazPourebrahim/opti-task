@@ -9,6 +9,7 @@ import {
   encodeCursor,
   type Connection,
 } from '@shared/utils';
+import { publish } from '@shared/pubsub';
 import * as repo from './notification.repository.js';
 import { getEmailAdapter } from './notification.email.js';
 import type { NotificationInput } from './notification.model.js';
@@ -21,6 +22,10 @@ import { prisma } from '@shared/db';
  */
 export async function deliver(input: NotificationInput): Promise<void> {
   const notification = await repo.createNotification(input);
+  publish('NOTIFICATION_CREATED', {
+    notificationId: notification.id,
+    recipientId: notification.recipientId,
+  });
   const recipient = await prisma.user.findUnique({
     where: { id: input.recipientId },
     select: { email: true },

@@ -16,6 +16,7 @@ import {
   type SortDirection,
 } from '@shared/utils';
 import { emit } from '@shared/events';
+import { publish } from '@shared/pubsub';
 import * as activityRepo from '@modules/activity/activity.repository';
 import * as repo from './task.repository.js';
 import {
@@ -187,7 +188,9 @@ export async function updateTask(
     ...(data.priority !== undefined ? { priority: data.priority } : {}),
     ...(data.dueDate !== undefined ? { dueDate: data.dueDate } : {}),
   };
-  return repo.updateTask(id, updateData);
+  const updated = await repo.updateTask(id, updateData);
+  publish('TASK_UPDATED', { taskId: id, projectId: task.projectId });
+  return updated;
 }
 
 export async function changeStatus(
@@ -208,8 +211,8 @@ export async function changeStatus(
     );
   }
 
-  return withTransaction(async (tx) => {
-    const updated = await repo.updateTask(id, { status }, tx);
+  const updated = await withTransaction(async (tx) => {
+    const result = await repo.updateTask(id, { status }, tx);
     await activityRepo.createActivity(
       {
         projectId: task.projectId,
@@ -220,8 +223,10 @@ export async function changeStatus(
       },
       tx,
     );
-    return updated;
+    return result;
   });
+  publish('TASK_UPDATED', { taskId: id, projectId: task.projectId });
+  return updated;
 }
 
 export async function assignTask(
@@ -255,6 +260,7 @@ export async function assignTask(
     return result;
   });
 
+  publish('TASK_UPDATED', { taskId: id, projectId: task.projectId });
   if (assigneeId) {
     await emit('task.assigned', {
       taskId: id,
@@ -283,8 +289,8 @@ export async function setStoryPoints(
     return task;
   }
 
-  return withTransaction(async (tx) => {
-    const updated = await repo.updateTask(id, { storyPoints: points }, tx);
+  const updated = await withTransaction(async (tx) => {
+    const result = await repo.updateTask(id, { storyPoints: points }, tx);
     await activityRepo.createActivity(
       {
         projectId: task.projectId,
@@ -295,8 +301,10 @@ export async function setStoryPoints(
       },
       tx,
     );
-    return updated;
+    return result;
   });
+  publish('TASK_UPDATED', { taskId: id, projectId: task.projectId });
+  return updated;
 }
 
 export async function moveToSprint(
@@ -318,8 +326,8 @@ export async function moveToSprint(
     return task;
   }
 
-  return withTransaction(async (tx) => {
-    const updated = await repo.updateTask(id, { sprintId }, tx);
+  const updated = await withTransaction(async (tx) => {
+    const result = await repo.updateTask(id, { sprintId }, tx);
     await activityRepo.createActivity(
       {
         projectId: task.projectId,
@@ -330,8 +338,10 @@ export async function moveToSprint(
       },
       tx,
     );
-    return updated;
+    return result;
   });
+  publish('TASK_UPDATED', { taskId: id, projectId: task.projectId });
+  return updated;
 }
 
 export async function deleteTask(

@@ -10,6 +10,7 @@ import {
   encodeCursor,
   type Connection,
 } from '@shared/utils';
+import { publish } from '@shared/pubsub';
 import * as activityRepo from '@modules/activity/activity.repository';
 import * as repo from './sprint.repository.js';
 import { validateCreateSprint, validateUpdateSprint } from './sprint.validation.js';
@@ -117,7 +118,9 @@ export async function changeSprintState(
       `Cannot change sprint state from ${sprint.state} to ${state}`,
     );
   }
-  return repo.updateSprint(id, { state });
+  const updated = await repo.updateSprint(id, { state });
+  publish('SPRINT_UPDATED', { sprintId: id, projectId: sprint.projectId });
+  return updated;
 }
 
 export async function deleteSprint(

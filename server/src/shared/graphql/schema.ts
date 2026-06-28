@@ -27,6 +27,10 @@ import { notificationTypeDefs } from '@modules/notification/notification.schema'
 import { notificationResolvers } from '@modules/notification/notification.resolver';
 import { aiTypeDefs } from '@modules/ai/ai.schema';
 import { aiResolvers } from '@modules/ai/ai.resolver';
+import { analyticsTypeDefs } from '@modules/analytics/analytics.schema';
+import { analyticsResolvers } from '@modules/analytics/analytics.resolver';
+import { realtimeTypeDefs } from '@modules/realtime/realtime.schema';
+import { realtimeResolvers } from '@modules/realtime/realtime.resolver';
 
 /**
  * Composes the executable schema from the base scaffolding plus every module's
@@ -48,6 +52,8 @@ const typeDefs = [
   commentTypeDefs,
   notificationTypeDefs,
   aiTypeDefs,
+  analyticsTypeDefs,
+  realtimeTypeDefs,
 ];
 
 const resolvers = [
@@ -65,6 +71,8 @@ const resolvers = [
   commentResolvers,
   notificationResolvers,
   aiResolvers,
+  analyticsResolvers,
+  realtimeResolvers,
 ];
 
 export function buildSchema(): GraphQLSchema {

@@ -15,6 +15,7 @@ import {
   type Connection,
 } from '@shared/utils';
 import { emit } from '@shared/events';
+import { publish } from '@shared/pubsub';
 import { getStorageAdapter } from '@shared/storage';
 import * as activityRepo from '@modules/activity/activity.repository';
 import * as repo from './comment.repository.js';
@@ -136,6 +137,11 @@ export async function createComment(
     return created;
   });
 
+  publish('COMMENT_ADDED', {
+    commentId: comment.id,
+    taskId,
+    projectId: task.projectId,
+  });
   // Best-effort, post-commit fan-out (see shared/events).
   await emit('comment.mentioned', {
     commentId: comment.id,
