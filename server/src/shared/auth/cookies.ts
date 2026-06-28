@@ -1,5 +1,6 @@
 import type { Response } from 'express';
-import { isProduction } from '@shared/config';
+import { env, isProduction } from '@shared/config';
+import { durationToMs } from '@shared/utils';
 
 /**
  * HTTP-only auth cookies (docs/security.md). Tokens are also returned in the
@@ -20,13 +21,16 @@ export function setAuthCookies(
   res: Response,
   tokens: { accessToken: string; refreshToken: string },
 ): void {
+  // Cookie lifetimes must track the configured token/session TTLs — otherwise a
+  // longer JWT_REFRESH_TTL is silently truncated by the browser deleting the
+  // cookie early, forcing re-login despite a still-valid server session.
   res.cookie(ACCESS_COOKIE, tokens.accessToken, {
     ...baseCookieOptions,
-    maxAge: 15 * 60 * 1000,
+    maxAge: durationToMs(env.JWT_ACCESS_TTL),
   });
   res.cookie(REFRESH_COOKIE, tokens.refreshToken, {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: durationToMs(env.JWT_REFRESH_TTL),
   });
 }
 
