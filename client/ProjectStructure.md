@@ -3,17 +3,16 @@
  ## src/ 
 - ### Assets/
 - ### App/
-- - #### Routes/
-- - #### Layout/
 - - #### Context
 - ### features/
-- - #### Components/
-- - #### Hooks/
-- ### Constants/
-- ### Pages/
+- - ### pages/
+- - - #### Components/
+- - - #### Hooks/
 - ### Services/
 - ### Shared/
 - - #### Hooks/
 - - #### Utils/
-- ### Styles/
-- ### Types/
+- - #### Constants/
+- - #### Layout/
+- - #### Styles/
+- - #### Types/
