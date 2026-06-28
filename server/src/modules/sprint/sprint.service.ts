@@ -95,6 +95,19 @@ export async function updateSprint(
   await authorize(ctx, 'sprint:update', { projectId: sprint.projectId });
   const data = validateUpdateSprint(input);
 
+  // Validate ordering against the merged (stored + incoming) window: updating
+  // only one endpoint must not produce end < start relative to the other.
+  const effectiveStart =
+    data.startDate !== undefined ? data.startDate : sprint.startDate;
+  const effectiveEnd = data.endDate !== undefined ? data.endDate : sprint.endDate;
+  if (
+    effectiveStart &&
+    effectiveEnd &&
+    effectiveEnd.getTime() < effectiveStart.getTime()
+  ) {
+    throw new ValidationError('End date must be on or after start date');
+  }
+
   const updateData: Prisma.SprintUncheckedUpdateInput = {
     ...(data.name !== undefined ? { name: data.name } : {}),
     ...(data.goal !== undefined ? { goal: data.goal } : {}),
