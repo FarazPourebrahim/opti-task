@@ -28,6 +28,14 @@ export function depthLimit(maxDepth: number): ValidationRule {
           return Math.max(0, ...selections.map((s) => nodeDepth(s, seenFragments)));
         }
         case Kind.FIELD: {
+          // Introspection meta-fields (`__schema`, `__type`, `__typename`) are
+          // exempt: the standard introspection query GraphQL tooling sends (e.g.
+          // Apollo Sandbox / the playground) nests ~13 levels deep and must pass
+          // for clients to load the schema at all. Introspection can't traverse
+          // into domain types, and it's disabled in production regardless.
+          if (node.name.value.startsWith('__')) {
+            return 0;
+          }
           const selections = node.selectionSet?.selections ?? [];
           if (selections.length === 0) {
             return 1;

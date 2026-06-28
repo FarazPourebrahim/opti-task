@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildSchema as buildGraphQLSchema, parse, validate } from 'graphql';
+import {
+  buildSchema as buildGraphQLSchema,
+  getIntrospectionQuery,
+  parse,
+  validate,
+} from 'graphql';
 import { depthLimit } from './depth-limit.js';
 
 /**
@@ -35,5 +40,12 @@ describe('depthLimit', () => {
     `; // root -> child -> child -> id  => depth 4
     expect(depthErrors(query, 3)).toHaveLength(1);
     expect(depthErrors(query, 4)).toHaveLength(0);
+  });
+
+  it('exempts the standard introspection query (it nests deeper than the limit)', () => {
+    // The introspection query tooling sends (Apollo Sandbox / playground) is
+    // ~13 levels deep; without exempting `__`-prefixed meta-fields it would be
+    // rejected at the production limit of 12, breaking schema loading.
+    expect(depthErrors(getIntrospectionQuery(), 12)).toHaveLength(0);
   });
 });
