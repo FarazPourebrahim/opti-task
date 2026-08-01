@@ -2,7 +2,6 @@
 
  ## src/ 
 - ### Assets/
-- ### App/
 - ### features/
 - - #### Components/
 - - #### Hooks/
