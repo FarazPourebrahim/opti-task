@@ -1,16 +1,18 @@
 # Frontend Structure
 
  ## src/ 
-- ### Assets/
+
 - ### features/
 - - #### Components/
 - - #### Hooks/
 - ### Shared/
-- - #### Context
+- - #### Assets/
 - - #### Hooks/
-- - #### Services/
-- - #### Utils/
+- - #### Components/
 - - #### Constants/
-- - #### Layout/
+- - #### Contexts/
+- - #### Layouts/
+- - #### Services/
 - - #### Styles/
 - - #### Types/
+- - #### Utils/
