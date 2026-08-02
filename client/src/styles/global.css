@@ -1,0 +1,18 @@
+@import "animations.css";
+@import "colors.css";
+@import "measures.css";
+@import "shodows.css";
+@import "typography.css";
+@import "resets.css";
+
+html {
+  font-family: "Vazirmatn", system-ui;
+  font-feature-settings: "ss01";
+}
+
+body {
+  background-color: var(--color-surface-400);
+  color: var(--color-text-400);
+
+  font-size: var(--fs-400);
+}
