@@ -72,18 +72,4 @@
     --color-text-400: var(--color-gray-98);
 
   }
-
-  body{
-
-    /*Surface Colors*/
-    --color-surface-300: var(--color-primary-darker);
-    --color-surface-400: var(--color-primary);
-    --color-surface-500: var(--color-primary-lighter);
-
-    /*Text Colors*/
-    --color-text-300: var(--color-gray-70);
-    --color-text-400: var(--color-gray-98);
-
-  }
-
 }
