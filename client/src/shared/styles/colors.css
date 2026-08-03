@@ -36,9 +36,9 @@
 
   /*Primary Colors*/
   --color-primary-opposite: var(--color-gray-98);
-  --color-primary-lighter:oklch(83.3% 0.145 321.434) ;
-  --color-primary: oklch(74% 0.238 322.16);
-  --color-primary-darker:oklch(66.7% 0.295 322.15) ;
+  --color-primary-lighter:oklch(90.1% 0.058 230.902);
+  --color-primary: oklch(82.8% 0.111 230.318);
+  --color-primary-darker:oklch(74.6% 0.16 232.661);
 
 
   /*Accent Colors*/
