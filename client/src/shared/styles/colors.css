@@ -1,0 +1,75 @@
+:root {
+
+  /*Gray Colors*/
+  --color-gray-100: hsl(0, 0%, 100%);
+  --color-gray-98: hsl(0deg 0% 98%);
+  --color-gray-96: hsl(0deg 0% 94%);
+  --color-gray-90: hsl(0deg 0% 90%);
+  --color-gray-80: hsl(0deg 0% 80%);
+  --color-gray-70: hsl(0deg 0% 70%);
+  --color-gray-60: hsl(0deg 0% 60%);
+  --color-gray-50: hsl(0deg 0% 50%);
+  --color-gray-40: hsl(0deg 0% 40%);
+  --color-gray-30: hsl(0deg 0% 30%);
+  --color-gray-20: hsl(0deg 0% 20%);
+  --color-gray-16: hsl(0deg 0% 16%);
+  --color-gray-13: hsl(0deg 0% 13%);
+  --color-gray-10: hsl(0deg 0% 10%);
+
+  /*Success Colors*/
+  --color-success-opposite: var(--color-gray-98);
+  --color-success-lighter: oklch(79.2% 0.209 151.711);
+  --color-success: oklch(72.3% 0.219 149.579);
+  --color-success-darker: oklch(62.7% 0.194 149.214);
+
+  /*Danger Colors*/
+  --color-danger-opposite: var(--color-gray-98);
+  --color-danger-lighter: oklch(63.7% 0.237 25.331);
+  --color-danger: oklch(57.7% 0.245 27.325);
+  --color-danger-darker: oklch(57.7% 0.245 27.325);
+
+  /*Warning Colors*/
+  --color-warning-opposite: var(--color-gray-98);
+  --color-warning-lighter: oklch(90.5% 0.182 98.111);
+  --color-warning: oklch(85.2% 0.199 91.936);
+  --color-warning-darker: oklch(79.5% 0.184 86.047);
+
+  /*Primary Colors*/
+  --color-primary-opposite: var(--color-gray-98);
+  --color-primary-lighter:oklch(90.1% 0.058 230.902);
+  --color-primary: oklch(82.8% 0.111 230.318);
+  --color-primary-darker:oklch(74.6% 0.16 232.661);
+
+
+  /*Accent Colors*/
+  --color-accent-opposite: var(--color-gray-98);
+  --color-accent-lighter:oklch(90.1% 0.076 70.697) ;
+  --color-accent: oklch(83.7% 0.128 66.29);
+  --color-accent-darker: oklch(75% 0.183 55.934);
+
+  body.light, body{
+
+    /*Surface Colors*/
+    --color-surface-300: hsl(262, 67%, 98%);
+    --color-surface-400: hsl(262, 50%, 99%);
+    --color-surface-500: hsl(262, 30%, 100%);
+
+    /*Text Colors*/
+    --color-text-300: var(--color-gray-30);
+    --color-text-400: var(--color-gray-13);
+
+  }
+
+  body.dark{
+
+    /*Surface Colors*/
+    --color-surface-300: var(--color-gray-10);
+    --color-surface-400: var(--color-gray-13);
+    --color-surface-500: var(--color-gray-16);
+
+    /*Text Colors*/
+    --color-text-300: var(--color-gray-70);
+    --color-text-400: var(--color-gray-98);
+
+  }
+}
