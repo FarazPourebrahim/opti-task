@@ -1,0 +1,60 @@
+.fullWidthWrapper {
+    width: 100%;
+}
+
+.ltr input {
+    direction: ltr;
+    text-align: left;
+}
+
+.mantineInput {
+    font-family: inherit;
+    font-size: var(--fs-300);
+    line-height: 1.5;
+    color: var(--color-text-400);
+    background-color: var(--color-surface-500);
+    border: 1px solid var(--color-gray-80);
+    border-radius: var(--br-300);
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mantineInput:hover:not(:disabled) {
+    border-color: var(--color-gray-60);
+}
+
+.mantineInput:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix( var(--color-primary) 25%, transparent);
+}
+
+.mantineInput:disabled {
+    background-color: var(--color-gray-96);
+    color: var(--color-gray-50);
+    cursor: not-allowed;
+}
+
+.wrapperRoot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.wrapperLabel {
+    font-size: var(--fs-300);
+    font-weight: 500;
+    color: var(--color-text-400);
+}
+
+.wrapperDescription {
+    font-size: var(--fs-200);
+    color: var(--color-text-300);
+}
+
+.wrapperError {
+    font-size: var(--fs-200);
+    color: var(--color-danger);
+}
