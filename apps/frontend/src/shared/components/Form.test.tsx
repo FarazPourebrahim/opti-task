@@ -1,6 +1,6 @@
-import { axe } from 'jest-axe';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { auditA11y } from '@/shared/tests/a11y';
 import {
   renderWithProviders,
   screen,
@@ -70,7 +70,7 @@ describe('Field', () => {
       </Field>,
     );
 
-    expect(await axe(container)).toHaveNoViolations();
+    expect(await auditA11y(container)).toHaveNoViolations();
   });
 });
 
@@ -132,7 +132,7 @@ describe('Checkbox', () => {
 
   it('has no accessibility violations', async () => {
     const { container } = renderWithProviders(<CheckboxHarness />);
-    expect(await axe(container)).toHaveNoViolations();
+    expect(await auditA11y(container)).toHaveNoViolations();
   });
 });
 
@@ -228,6 +228,6 @@ describe('RadioGroup', () => {
       />,
     );
 
-    expect(await axe(container)).toHaveNoViolations();
+    expect(await auditA11y(container)).toHaveNoViolations();
   });
 });

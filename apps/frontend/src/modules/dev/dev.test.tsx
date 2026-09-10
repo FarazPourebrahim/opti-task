@@ -1,5 +1,5 @@
-import { axe } from 'jest-axe';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { auditA11y } from '@/shared/tests/a11y';
 import { TokensPage } from '@/modules/dev/Tokens.page';
 import {
   DURATIONS,
@@ -93,7 +93,7 @@ describe('token gallery', () => {
 
       const { container } = renderWithProviders(<TokensPage />);
 
-      expect(await axe(container)).toHaveNoViolations();
+      expect(await auditA11y(container)).toHaveNoViolations();
     },
   );
 });

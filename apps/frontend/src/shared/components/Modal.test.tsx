@@ -1,6 +1,6 @@
-import { axe } from 'jest-axe';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { auditA11y } from '@/shared/tests/a11y';
 import {
   renderWithProviders,
   screen,
@@ -90,7 +90,7 @@ describe('Modal', () => {
     const { user, baseElement } = renderWithProviders(<ModalHarness />);
     await user.click(screen.getByRole('button', { name: 'Open modal' }));
 
-    expect(await axe(baseElement)).toHaveNoViolations();
+    expect(await auditA11y(baseElement)).toHaveNoViolations();
   });
 });
 

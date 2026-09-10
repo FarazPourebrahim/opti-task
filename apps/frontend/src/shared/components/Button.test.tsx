@@ -1,5 +1,5 @@
-import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
+import { auditA11y } from '@/shared/tests/a11y';
 import { renderWithProviders, screen } from '@/shared/tests/renderWithProviders';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
@@ -88,7 +88,7 @@ describe('Button', () => {
         <Button variant={variant}>Action</Button>,
       );
 
-      expect(await axe(container)).toHaveNoViolations();
+      expect(await auditA11y(container)).toHaveNoViolations();
     },
   );
 });
@@ -107,7 +107,7 @@ describe('IconButton', () => {
       <IconButton label="Close" icon={<svg />} />,
     );
 
-    expect(await axe(container)).toHaveNoViolations();
+    expect(await auditA11y(container)).toHaveNoViolations();
   });
 
   it('swaps the icon for a spinner while loading', () => {
