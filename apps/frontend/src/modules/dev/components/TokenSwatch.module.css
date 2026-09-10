@@ -1,0 +1,41 @@
+/* Nesting mirrors TokenSwatch.tsx: .swatch > .swatchChip + .swatchName + .swatchValue */
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  min-inline-size: 0;
+
+  .swatchChip {
+    block-size: var(--space-700);
+    inline-size: 100%;
+    border: var(--bw-100) solid var(--color-border-300);
+    border-radius: var(--br-300);
+    background-color: var(--color-surface-500);
+
+    &[data-preview='shadow'] {
+      border-color: transparent;
+    }
+
+    &[data-preview='size'] {
+      block-size: var(--space-400);
+      background-color: var(--color-primary);
+      border-color: transparent;
+      border-radius: var(--br-100);
+    }
+  }
+
+  .swatchName {
+    color: var(--color-text-400);
+    font-size: var(--fs-200);
+    font-weight: var(--fw-500);
+    overflow-wrap: anywhere;
+  }
+
+  .swatchValue {
+    color: var(--color-text-300);
+    font-family: var(--font-family-mono);
+    font-size: var(--fs-100);
+    overflow-wrap: anywhere;
+  }
+}
