@@ -1,2 +1,26 @@
+# editor / OS
 .idea
 /.idea/*
+.claude
+.DS_Store
+.vscode/
+
+# dependencies (pnpm workspace root + every package)
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# test / coverage
+coverage/
+.vitest/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+logs/
+*.log
