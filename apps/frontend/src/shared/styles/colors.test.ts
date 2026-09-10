@@ -98,6 +98,7 @@ const TEXT_PAIRS = [
   ['--color-text-400', '--color-surface-500'],
   ['--color-text-300', '--color-surface-300'],
   ['--color-text-300', '--color-surface-400'],
+  ['--color-inverse-text', '--color-inverse-surface'],
 ] as const;
 
 const UI_PAIRS = [
