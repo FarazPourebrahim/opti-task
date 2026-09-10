@@ -32,6 +32,50 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 - **Impact**: none functionally — the audit engine is identical. Cosmetic
   dependency-naming mismatch only.
 
+## Phase 1 — Design System & Theming
+
+- **What**: `resets.css` reverses the working agreement's ordering of
+  `min-block-size: 100dvh` / `100vh` on `body`.
+- **Why**: the agreement lists `dvh` first. Later declarations win, so that
+  ordering makes `100vh` the effective value everywhere and leaves `dvh` as dead
+  code — reintroducing the exact mobile viewport bug `dvh` exists to fix.
+- **Right fix**: correct the snippet in `.claude/CLAUDE.md` so future projects
+  do not inherit it.
+- **Impact**: none here — this app is correct. The shared agreement is not.
+
+- **What**: the theme is applied twice — once by an inline script in
+  `index.html` and once by `ThemeProvider` — and the storage key plus class
+  names are duplicated between them.
+- **Why**: the class must be on `<body>` before first paint. Anything importable
+  runs after the module bundle loads, which is one repaint too late; that flash
+  is precisely what the script prevents.
+- **Right fix**: none available while the theme is a `body` class and the app is
+  a client-rendered SPA. Server rendering would let the class be emitted in the
+  HTML directly.
+- **Impact**: changing `THEME_STORAGE_KEY` or the class names means editing two
+  files. `theme.test.tsx` asserts they agree, so drift fails the suite.
+
+- **What**: `css: false` in the Vitest config — component stylesheets are not
+  processed during tests.
+- **Why**: jsdom's CSS parser predates native nesting and dumped every nested
+  stylesheet to stderr as a parse error, burying real failures. jsdom performs
+  no layout, so no assertion depended on the CSS.
+- **Right fix**: none needed. `vite build` compiles and validates every
+  stylesheet (nesting is flattened to descendant selectors there), and
+  `tokens.test.ts` reads the CSS as text for its invariants.
+- **Impact**: a malformed `.module.css` surfaces at build time rather than test
+  time. CSS Modules still resolve to proxied class names in tests.
+
+- **What**: routing in `App.tsx` is a `window.location.hash` comparison.
+- **Why**: React Router lands in Phase 5 (F5.1); the token gallery needed to be
+  reachable in Phase 1 without pulling that dependency forward.
+- **Right fix**: Phase 5 replaces the whole file with the data router.
+- **Impact**: the hash is read once at render and is not reactive — navigating
+  to `#/dev/tokens` needs a reload. Dev-only; the branch is statically removed
+  from production builds.
+
+## Monorepo / tooling
+
 - **What**: the frontend runs **Vitest 3** while the backend runs Vitest 2.
 - **Why**: Vitest 2 pins Vite 5. With Vite 6 in the app, `vitest/config`'s
   `defineConfig` was typed against Vite 5 while `@vitejs/plugin-react` resolved

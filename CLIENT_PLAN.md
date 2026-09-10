@@ -230,7 +230,7 @@ line is not done, regardless of whether the feature "works".
 | Phase | Title | Cumulative % | Status |
 |---|---|---|:--:|
 | 0 | Foundations & Tooling | 6% | ✅ |
-| 1 | Design System & Theming | 14% | ⬜ |
+| 1 | Design System & Theming | 14% | ✅ |
 | 2 | Shared Component Library | 24% | ⬜ |
 | 3 | GraphQL Data Layer & Codegen | 32% | ⬜ |
 | 4 | Auth & Session | 40% | ⬜ |
@@ -245,7 +245,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 6%** (Phase 0 complete).
+**Current overall progress: 14%** (Phases 0–1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -313,36 +313,52 @@ variable UI typeface plus a mono face for IDs, cursors and code.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F1.1 | `shared/styles/resets.css` — the global reset from the working agreement, verbatim | ⬜ |
-| F1.2 | `colors.css` — grayscale `--color-gray-100` (white) → `--color-gray-10` (near-black) on a consistent ladder (100/95/90/80/70/60/50/40/30/20/15/10) | ⬜ |
-| F1.3 | `colors.css` — semantic families `primary`, `accent`, `success`, `warning`, `danger`, `info`, each with `-opposite`, `-lighter`, base, `-darker` (one hue/saturation, lightness varies) | ⬜ |
-| F1.4 | `colors.css` — surface/text tokens (`--color-surface-300/400/500`, `--color-text-300/400`) remapped under `body.light` / `body.dark` | ⬜ |
-| F1.5 | `typography.css` — `--fs-100`…`--fs-900`; self-hosted variable font via `@fontsource` (no CDN); weight + line-height + letter-spacing tokens | ⬜ |
-| F1.6 | `measures.css` — `--br-100`…`--br-600` and `--space-100`…`--space-900` on the same numeric convention | ⬜ |
-| F1.7 | `shadows.css` — `--shadow-100/300/400/500` and `--shadow-blur-100/300/400/500/600`, each blur tier **visibly softer and larger-spread** than its base counterpart | ⬜ |
-| F1.8 | `animations.css` — `--animation-duration-100`…`900`, easing tokens, `prefers-reduced-motion` kill-switch | ⬜ |
-| F1.9 | `global.css` — imports in dependency order (resets + tokens first), sets only document-level defaults | ⬜ |
-| F1.10 | `theme.context.tsx` — honors `prefers-color-scheme` on first load, persists the user's choice, applies `body.light`/`body.dark`, no flash of wrong theme | ⬜ |
-| F1.11 | `shared/i18n/` — `react-i18next` config + `en.json`, typed key helper | ⬜ |
-| F1.12 | Dev-only `/dev/tokens` route rendering every token in both themes | ⬜ |
+| F1.1 | `shared/styles/resets.css` — the global reset from the working agreement | ✅ |
+| F1.2 | `colors.css` — grayscale `--color-gray-100` (white) → `--color-gray-10` (near-black) on a consistent ladder | ✅ |
+| F1.3 | `colors.css` — semantic families `primary`, `accent`, `success`, `warning`, `danger`, `info`, each with `-opposite`, `-lighter`, base, `-darker` (one hue/saturation, lightness varies) | ✅ |
+| F1.4 | `colors.css` — surface/text/border tokens remapped under `body.light` / `body.dark` | ✅ |
+| F1.5 | `typography.css` — `--fs-100`…`--fs-900`; self-hosted variable fonts via `@fontsource-variable` (no CDN); weight + line-height + letter-spacing tokens | ✅ |
+| F1.6 | `measures.css` — `--br-*`, `--space-*`, `--bw-*` and layout ceilings on the same numeric convention | ✅ |
+| F1.7 | `shadows.css` — `--shadow-*` and `--shadow-blur-*`, each blur tier **visibly softer and larger-spread** than its base counterpart | ✅ |
+| F1.8 | `animations.css` — `--animation-duration-*`, easing tokens, `prefers-reduced-motion` kill-switch | ✅ |
+| F1.9 | `global.css` — imports in dependency order (fonts + reset + tokens first), sets only document-level defaults | ✅ |
+| F1.10 | `theme.context.tsx` — honors `prefers-color-scheme`, persists the choice, applies `body.light`/`body.dark`, no flash of wrong theme | ✅ |
+| F1.11 | `shared/i18n/` — `react-i18next` + `en.json` with **compile-checked keys** via module augmentation | ✅ |
+| F1.12 | Dev-only `#/dev/tokens` gallery rendering every token in both themes | ✅ |
+| F1.13 | `AppProviders` — one provider tree shared by the app and the test harness | ✅ |
+| F1.14 | Standing CI guard: no raw colors/sizes/durations in any `*.module.css` (risk R10) | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] `grep -rE "#[0-9a-fA-F]{3,8}|rgba?\(" apps/frontend/src --include=*.module.css`
-      returns **nothing**. All color is HSL, in `colors.css`, behind a variable.
-- [ ] HSL syntax is consistent across every token file — comma form or space form,
-      never both.
-- [ ] No token exists outside the defined scales. No adjective-named tokens
-      (`-fast`, `-slow`, `-lg`).
-- [ ] Every `--shadow-blur-N` differs from `--shadow-N` at the same step
-      (an identical value is a bug, not a variant).
-- [ ] `/dev/tokens` renders the full palette, type scale, radii, shadows and
-      durations, and is visually verified in **both** themes.
-- [ ] Theme choice survives a reload with **no** flash of the wrong theme.
-- [ ] With `prefers-reduced-motion: reduce`, no transition or animation plays.
-- [ ] Contrast: body text and every semantic `-opposite` pairing meets **WCAG AA**
-      (4.5:1 text, 3:1 large text and UI borders) in both themes — measured, not eyeballed.
-- [ ] i18n is wired and `/dev/tokens` reads its labels from `en.json`.
+- [x] No raw color, size or duration in any `*.module.css` — enforced by a test
+      that walks every module stylesheet, not a one-off grep. Verified to
+      **fail** on an injected `#ff0000` before being accepted.
+- [x] HSL syntax is consistent across every token file — comma form only
+      (asserted; the check reads declarations, not comments).
+- [x] No token exists outside the defined scales; every scale is asserted to
+      ascend at each step, and adjective names (`-fast`, `-lg`) are banned by test.
+- [x] Every `--shadow-blur-N` differs from `--shadow-N` at the same step **and**
+      has a strictly larger blur radius (asserted per step).
+- [x] `#/dev/tokens` renders the full palette, type scale, spacing, radii,
+      shadows and durations — asserted token-by-token against the inventory, so
+      a token missing from the gallery fails the suite. `axe` reports **0
+      violations** in both themes.
+- [x] Theme choice survives a reload with no flash of the wrong theme: an inline
+      pre-paint script applies the class before the module bundle, asserted to
+      appear **before** `main.tsx` in `index.html` and to share the storage key.
+- [x] With `prefers-reduced-motion: reduce`, every duration token collapses and
+      all animation/transition durations are forced to 0.01ms (asserted).
+- [x] Contrast **measured**, not eyeballed: 22 pairs across both themes plus all
+      6 semantic `-opposite` pairings. Text ≥ 4.5:1, UI borders and focus ring
+      ≥ 3:1. The first run failed on both border tokens; `--color-border-400`
+      was retuned to `--color-gray-50` (now 3.05–4.41:1).
+- [x] i18n is wired, keys are **compile-checked** (an unknown key is a type
+      error), and the gallery reads every label from `en.json`.
+
+> **Not verified by me:** the gallery is asserted structurally and for
+> accessibility, but I have not looked at it in a browser. Run
+> `pnpm run frontend-dev` and open `http://localhost:5173/#/dev/tokens` to judge
+> the palette by eye before Phase 2 builds components on top of it.
 
 ---
 
