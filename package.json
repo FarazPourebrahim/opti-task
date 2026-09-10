@@ -13,6 +13,13 @@
     "backend-start": "cd apps/backend && pnpm run start",
     "backend-test": "cd apps/backend && pnpm run test",
     "backend-lint": "cd apps/backend && pnpm run lint",
-    "backend-typecheck": "cd apps/backend && pnpm run typecheck"
+    "backend-typecheck": "cd apps/backend && pnpm run typecheck",
+
+    "frontend-dev": "cd apps/frontend && pnpm run dev",
+    "frontend-build": "cd apps/frontend && pnpm run build",
+    "frontend-preview": "cd apps/frontend && pnpm run preview",
+    "frontend-test": "cd apps/frontend && pnpm run test",
+    "frontend-lint": "cd apps/frontend && pnpm run lint",
+    "frontend-typecheck": "cd apps/frontend && pnpm run typecheck"
   }
 }
