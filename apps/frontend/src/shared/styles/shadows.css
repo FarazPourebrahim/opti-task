@@ -1,0 +1,42 @@
+/*
+ * Elevation. Two parallel scales on the same steps:
+ *
+ *   --shadow-N       tight, contact-style elevation
+ *   --shadow-blur-N  a deliberately softer, larger-spread counterpart
+ *
+ * A blur tier MUST differ from its base tier at the same step — an identical
+ * value is a bug, not a variant (asserted in tokens.test.ts).
+ *
+ * The tint lives in --shadow-color so dark surfaces can carry a heavier
+ * shadow; a shadow tuned for white is invisible on a near-black surface. This
+ * file owns that override rather than colors.css, so all elevation concerns
+ * stay in one place.
+ */
+
+:root {
+  --shadow-color: hsl(225, 40%, 4%, 0.1);
+  --shadow-color-strong: hsl(225, 40%, 4%, 0.16);
+}
+
+body.dark {
+  --shadow-color: hsl(225, 60%, 2%, 0.4);
+  --shadow-color-strong: hsl(225, 60%, 2%, 0.56);
+}
+
+:root {
+  --shadow-100: 0 1px 2px var(--shadow-color);
+  --shadow-300: 0 2px 4px var(--shadow-color);
+  --shadow-400: 0 4px 8px var(--shadow-color);
+  --shadow-500: 0 8px 12px var(--shadow-color-strong);
+  --shadow-600: 0 12px 24px var(--shadow-color-strong);
+
+  --shadow-blur-100: 0 1px 4px var(--shadow-color);
+  --shadow-blur-300: 0 2px 8px var(--shadow-color);
+  --shadow-blur-400: 0 4px 12px var(--shadow-color);
+  --shadow-blur-500: 0 8px 16px var(--shadow-color-strong);
+  --shadow-blur-600: 0 12px 48px var(--shadow-color-strong);
+
+  /* Focus ring — one definition so every control looks identical when focused. */
+  --shadow-focus: 0 0 0 var(--bw-300) var(--color-surface-300),
+    0 0 0 calc(var(--bw-300) + var(--bw-300)) var(--color-focus-ring);
+}
