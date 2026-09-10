@@ -1,0 +1,15 @@
+# build output
+dist/
+*.tsbuildinfo
+
+# test / coverage
+coverage/
+.vitest/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# dependencies
+node_modules/
