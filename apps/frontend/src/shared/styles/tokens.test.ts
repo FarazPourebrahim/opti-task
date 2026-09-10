@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -126,6 +126,41 @@ describe('scale hygiene', () => {
       expect(read(file), `${file} uses an adjective-named token`).not.toMatch(
         banned,
       );
+    }
+  });
+
+  it('keeps raw values out of every component stylesheet', () => {
+    // The standing guard against design-system drift: a component may not
+    // hard-code a color, font size, radius, shadow or duration that a token
+    // already covers. Token files are the one place raw values belong.
+    const srcRoot = join(process.cwd(), 'src');
+
+    const moduleStylesheets: string[] = [];
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) walk(full);
+        else if (entry.endsWith('.module.css')) moduleStylesheets.push(full);
+      }
+    };
+    walk(srcRoot);
+
+    expect(moduleStylesheets.length).toBeGreaterThan(0);
+
+    for (const file of moduleStylesheets) {
+      const body = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      const where = relative(srcRoot, file);
+
+      expect(body.match(/#[0-9a-fA-F]{3,8}\b/g), `${where}: raw hex color`).toBeNull();
+      expect(body.match(/\brgba?\(/g), `${where}: raw rgb color`).toBeNull();
+      expect(body.match(/\bhsla?\(/g), `${where}: raw hsl color`).toBeNull();
+      // Durations belong to the motion scale.
+      expect(
+        body.match(/(?:transition|animation)(?:-duration)?:[^;]*\b\d+m?s\b/g),
+        `${where}: raw duration`,
+      ).toBeNull();
+      // px is allowed only inside a token file; components use rem tokens.
+      expect(body.match(/:\s*\d+px\b/g), `${where}: raw px value`).toBeNull();
     }
   });
 
