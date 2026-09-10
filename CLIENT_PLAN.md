@@ -231,7 +231,7 @@ line is not done, regardless of whether the feature "works".
 |---|---|---|:--:|
 | 0 | Foundations & Tooling | 6% | ✅ |
 | 1 | Design System & Theming | 14% | ✅ |
-| 2 | Shared Component Library | 24% | ⬜ |
+| 2 | Shared Component Library | 24% | 🚧 |
 | 3 | GraphQL Data Layer & Codegen | 32% | ⬜ |
 | 4 | Auth & Session | 40% | ⬜ |
 | 5 | App Shell, Routing & Guards | 47% | ⬜ |
@@ -371,15 +371,18 @@ styled only with Phase 1 tokens. Features must never invent a primitive.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F2.1 | Form: `Button`, `IconButton`, `Input`, `Textarea`, `Field` (label + hint + error), `Checkbox`, `RadioGroup`, `Switch` | ⬜ |
-| F2.2 | Radix-backed: `Select`, `Combobox`, `DropdownMenu`, `ContextMenu`, `Popover`, `Tooltip`, `Tabs`, `Modal` (Dialog), `Drawer`, `ConfirmDialog` | ⬜ |
+| F2.0 | Test environment able to run Radix floating surfaces (happy-dom + polyfills + shared `auditA11y`) | ✅ |
+| F2.1 | Form: `Button`, `IconButton`, `Input`, `Textarea`, `Field` (label + hint + error), `Checkbox`, `RadioGroup`, `Switch` | ✅ |
+| F2.2a | Overlays: `Modal`, `Drawer`, `ConfirmDialog` (with focus return) | ✅ |
+| F2.2b | Triggers: `DropdownMenu`, `ContextMenu`, `Popover`, `Tooltip` | ✅ |
+| F2.2c | Radix-backed: `Select`, `Combobox`, `Tabs` | ⬜ |
 | F2.3 | `Toast` + `ToastProvider` — the only channel for transient messages | ⬜ |
 | F2.4 | Display: `Avatar`, `AvatarGroup`, `Badge`, `Chip`, `Card`, `Table`, `Breadcrumbs`, `SegmentedControl`, `ProgressBar`, `Kbd` | ⬜ |
-| F2.5 | State: `Skeleton`, `Spinner`, `EmptyState`, `ErrorState`, `LoadMore` | ⬜ |
+| F2.5 | State: `Skeleton`, `Spinner`, `EmptyState`, `ErrorState`, `LoadMore` | 🚧 (`Spinner` done) |
 | F2.6 | `DatePicker` / `DateTimePicker` emitting **full RFC-3339** strings | ⬜ |
 | F2.7 | `ErrorBoundary` + a route-level fallback | ⬜ |
 | F2.8 | Dev-only `/dev/components` gallery covering every primitive and every state | ⬜ |
-| F2.9 | A test per primitive: renders, keyboard path, disabled/loading/error states | ⬜ |
+| F2.9 | A test per primitive: renders, keyboard path, disabled/loading/error states | 🚧 (53 tests over the primitives built so far) |
 
 ### Exit criteria (DoD)
 
