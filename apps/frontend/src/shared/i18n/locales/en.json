@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "OptiTask",
+    "tagline": "AI-assisted Agile task management"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "search": "Search"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "error": {
+    "network": "Can't reach the server. Check your connection and try again.",
+    "timeout": "That took too long. Try again.",
+    "unauthorized": "Your session has expired. Sign in again to continue.",
+    "forbidden": "You don't have permission to do that.",
+    "notFound": "We couldn't find what you were looking for.",
+    "conflict": "That was already changed. Refresh and try again.",
+    "validation": "Some of the details below need fixing.",
+    "rateLimited": "Too many requests. Wait a moment and try again.",
+    "serviceUnavailable": "The AI service is unavailable right now. Nothing was saved.",
+    "server": "Something went wrong on our end.",
+    "unknown": "Something went wrong.",
+    "requestId": "Reference: {{requestId}}"
+  },
+  "dev": {
+    "tokens": {
+      "title": "Design tokens",
+      "subtitle": "Every token in the system, rendered in the active theme.",
+      "grayscale": "Grayscale",
+      "semantic": "Semantic colors",
+      "surfaces": "Surfaces and text",
+      "typography": "Typography",
+      "spacing": "Spacing",
+      "radius": "Border radius",
+      "shadows": "Elevation",
+      "motion": "Motion",
+      "sample": "The quick brown fox jumps over the lazy dog",
+      "opposite": "Aa"
+    }
+  }
+}

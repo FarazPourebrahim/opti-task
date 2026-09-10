@@ -1,19 +1,36 @@
+import { useTranslation } from 'react-i18next';
+import { TokensPage } from '@/modules/dev/Tokens.page';
+import styles from './App.module.css';
+
 /**
- * Router setup and route tree.
+ * Route tree.
  *
- * This file only ever maps paths to feature pages, applies guards and nests
- * layouts — no business logic, no data fetching. The router itself lands in
- * Phase 5 (F5.1); until then this renders the boot placeholder below.
- *
- * The strings here are intentionally the only un-translated copy in the app:
- * i18n is wired in Phase 1 (F1.11) and this placeholder is replaced by the
- * real shell in Phase 5. Tracked in docs/known-debt.md.
+ * Phase 5 (F5.1) replaces this with the React Router data router; until then a
+ * hash check is the whole routing layer. It stays free of business logic and
+ * data fetching either way.
  */
+const DEV_TOKENS_ROUTE = '#/dev/tokens';
+
 export function App() {
+  const { t } = useTranslation();
+
+  // A development tool, never reachable in a production build: the condition is
+  // statically false there, so the gallery tree-shakes out of the bundle.
+  if (import.meta.env.DEV && window.location.hash === DEV_TOKENS_ROUTE) {
+    return <TokensPage />;
+  }
+
   return (
-    <main>
-      <h1>OptiTask</h1>
-      <p>Frontend scaffold is running.</p>
+    <main className={styles.home}>
+      <div className={styles.homeCard}>
+        <h1 className={styles.homeTitle}>{t('app.name')}</h1>
+        <p className={styles.homeTagline}>{t('app.tagline')}</p>
+        {import.meta.env.DEV ? (
+          <a className={styles.homeDevLink} href={DEV_TOKENS_ROUTE}>
+            {t('dev.tokens.title')}
+          </a>
+        ) : null}
+      </div>
     </main>
   );
 }

@@ -1,0 +1,41 @@
+/*
+ * Dimensional tokens: spacing rhythm, border radius, border width and layout
+ * ceilings. Same 100–900 convention as every other scale — lowest is smallest.
+ *
+ * Never invent a value between two steps. If a design lands between them,
+ * round to the nearer token rather than adding a one-off.
+ */
+
+:root {
+  /* Spacing — a 4px base rhythm, doubling through the upper half. */
+  --space-100: 0.25rem;
+  --space-200: 0.5rem;
+  --space-300: 0.75rem;
+  --space-400: 1rem;
+  --space-500: 1.5rem;
+  --space-600: 2rem;
+  --space-700: 3rem;
+  --space-800: 4rem;
+  --space-900: 6rem;
+
+  /* Border radius. */
+  --br-100: 0.125rem;
+  --br-200: 0.25rem;
+  --br-300: 0.375rem;
+  --br-400: 0.5rem;
+  --br-500: 0.75rem;
+  --br-600: 1rem;
+  --br-round: 50%;
+  --br-pill: 9999px;
+
+  /* Border width. */
+  --bw-100: 1px;
+  --bw-300: 2px;
+  --bw-500: 3px;
+
+  /* Layout ceilings — the few places a raw measurement is legitimate. */
+  --layout-sidebar-width: 15rem;
+  --layout-topbar-height: 3.5rem;
+  --layout-content-max: 90rem;
+  --layout-prose-max: 42rem;
+}

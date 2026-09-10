@@ -36,7 +36,14 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/shared/tests/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
-    css: true,
+    /*
+     * jsdom's CSS parser predates native nesting and dumps every nested
+     * stylesheet to stderr as a parse error, burying real failures. It cannot
+     * lay out or compute styles either, so processing CSS here buys nothing —
+     * `vite build` is what validates the stylesheets. CSS Modules still resolve
+     * to proxied class names, so class-based queries keep working.
+     */
+    css: false,
     // The env loader fails fast on missing config, so tests need a valid pair.
     env: {
       VITE_API_URL: 'http://localhost:4000/graphql',

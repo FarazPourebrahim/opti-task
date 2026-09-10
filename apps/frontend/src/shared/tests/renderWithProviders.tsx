@@ -1,18 +1,16 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import type { RenderOptions, RenderResult } from '@testing-library/react';
+import { AppProviders } from '@/shared/context/AppProviders';
 
 /**
  * The single render entry point for component tests.
  *
- * Every test renders through here so a newly added provider reaches the whole
- * suite in one edit. Providers land as their phases do: theme + i18n (Phase 1),
- * Apollo (Phase 3), auth (Phase 4), router (Phase 5), toasts (Phase 2).
+ * It wraps in the SAME provider tree the real app uses, so a test can never
+ * pass against a provider stack the user never gets.
  */
-function AllProviders({ children }: { children: ReactNode }) {
-  return <>{children}</>;
-}
+const AllProviders = AppProviders;
 
 export type RenderWithProvidersResult = RenderResult & {
   user: ReturnType<typeof userEvent.setup>;
