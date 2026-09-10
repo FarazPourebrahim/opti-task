@@ -16,13 +16,18 @@ layer, and **Prisma** for data access and migrations.
 
 ### Prerequisites
 - **Node.js ≥ 22**
+- **pnpm ≥ 9** — this is a pnpm workspace; npm/yarn would create a second
+  lockfile and break the `@contracts` workspace link
 - **PostgreSQL** running locally (or reachable via `DATABASE_URL`)
 
 ### 1. Install
+Install once from the **repository root** — that links `@contracts` into this
+app and runs `prisma generate` (postinstall):
 ```bash
-cd server
-npm install        # runs `prisma generate` automatically (postinstall)
+pnpm install
 ```
+Then work from this directory (`apps/backend`), or drive it from the root with
+`ppnpm run backend-dev` / `backend-build` / `backend-start`.
 
 ### 2. Configure environment
 Copy `.env.example` to `.env` and fill it in:
@@ -46,13 +51,13 @@ In **production** the app refuses to boot without `DATABASE_URL`,
 
 ### 3. Migrate the database
 ```bash
-npm run migrate:dev      # apply migrations to a fresh DB (dev)
-npm run seed             # optional: demo org/project/team/sprint/tasks
+pnpm run migrate:dev      # apply migrations to a fresh DB (dev)
+pnpm run seed             # optional: demo org/project/team/sprint/tasks
 ```
 
 ### 4. Run
 ```bash
-npm run dev              # tsx watch — http://localhost:4000/graphql
+pnpm run dev              # tsx watch — http://localhost:4000/graphql
 ```
 - **GraphQL HTTP**: `POST http://localhost:4000/graphql`
 - **GraphQL subscriptions (WebSocket)**: `ws://localhost:4000/graphql`
@@ -64,18 +69,18 @@ npm run dev              # tsx watch — http://localhost:4000/graphql
 
 | Script | What it does |
 |---|---|
-| `npm run dev` | Run with hot reload (tsx watch) |
-| `npm run build` | `tsc -b && tsc-alias` → `dist/` |
-| `npm start` | Run the built server (`dist/server.js`) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint over `src/` |
-| `npm test` | Vitest (integration tests hit a real Postgres) |
-| `npm run test:coverage` | Vitest with V8 coverage + thresholds |
-| `npm run migrate:dev` | Apply a migration to the dev DB |
-| `npm run migrate` | `prisma migrate deploy` (prod-safe, forward-only) |
-| `npm run migrate:reset` | Drop + recreate the schema (dev only) |
-| `npm run seed` | Seed demo data |
-| `npm run schema:print` | Regenerate `docs/api/schema.graphql` |
+| `pnpm run dev` | Run with hot reload (tsx watch) |
+| `pnpm run build` | `tsc --noEmit && tsup` → bundled `dist/server.js` |
+| `pnpm start` | Run the built server (`dist/server.js`) |
+| `pnpm run typecheck` | `tsc --noEmit` |
+| `pnpm run lint` | ESLint over `src/` |
+| `pnpm test` | Vitest (integration tests hit a real Postgres) |
+| `pnpm run test:coverage` | Vitest with V8 coverage + thresholds |
+| `pnpm run migrate:dev` | Apply a migration to the dev DB |
+| `pnpm run migrate` | `prisma migrate deploy` (prod-safe, forward-only) |
+| `pnpm run migrate:reset` | Drop + recreate the schema (dev only) |
+| `pnpm run seed` | Seed demo data |
+| `pnpm run schema:print` | Regenerate `docs/api/schema.graphql` |
 
 ---
 
@@ -86,14 +91,19 @@ and is split by responsibility:
 
 ```
 src/modules/<feature>/
-├── <feature>.schema.ts      # GraphQL SDL (typeDefs)
-├── <feature>.resolver.ts    # transport only — no business logic
-├── <feature>.service.ts     # business logic, authorization, transactions
-├── <feature>.repository.ts  # database access only (Prisma)
-├── <feature>.model.ts       # domain types / state machines
-├── <feature>.validation.ts  # zod input validation
-└── <feature>.test.ts        # colocated success/failure/invalid/authz tests
+├── graphql/
+│   ├── <feature>.typeDefs.ts   # GraphQL SDL
+│   └── <feature>.resolvers.ts  # transport only — no business logic
+├── <feature>.service.ts        # business logic, authorization, transactions
+├── <feature>.repository.ts     # database access only (Prisma)
+├── <feature>.model.ts          # domain types / state machines
+├── <feature>.validation.ts     # zod input validation
+└── <feature>.test.ts           # colocated success/failure/invalid/authz tests
 ```
+
+Imports inside the app use the `@/` alias (`@/shared/db`, `@/modules/task/...`).
+A bare scope like `@contracts` always means a shared workspace package, so an
+import line shows at a glance whether it crosses the app boundary.
 
 Cross-cutting code lives in `src/shared/`:
 
@@ -108,8 +118,30 @@ Cross-cutting code lives in `src/shared/`:
 | `storage/` | Attachment storage adapter (swappable) |
 | `errors/` | Typed `AppError` classes + safe error codes |
 | `utils/` | Cursor pagination, sorting helpers |
-| `middleware/` | Rate limiting |
+| `logger/` | The pino instance + the typed security-event helper |
+| `middleware/` | Rate limiting, per-request structured logging |
 | `tests/` | Cross-feature end-to-end tests |
+
+### Shared contracts (`@contracts`)
+
+Anything both this API and a client must agree on lives in
+`packages/contracts` and is imported as `@contracts`:
+
+| Exported | Why it is shared |
+|---|---|
+| Domain enums (`TASK_STATUSES`, `PROJECT_STATES`, …) | One vocabulary for the DB, the SDL and the UI |
+| `Connection` / `PageInfo` / page-size bounds | Every list query returns this exact shape |
+| `ErrorCode` | Clients branch on `extensions.code`, never on a message |
+| `RealtimeEvents` | Publisher and subscriber check against one payload map |
+| `Role` / `Permission` | Lets a UI hide actions; the server still re-checks every one |
+
+The package is pure types, enums and constants — no Node- or browser-only APIs —
+so it compiles into both a server bundle and a browser bundle. The role→permission
+**matrix** deliberately stays server-side: the vocabulary is shared, the authority
+is not.
+
+`src/shared/tests/contracts.test.ts` asserts every shared enum still matches the
+Prisma schema exactly, so the two definitions cannot drift apart unnoticed.
 
 ### Modules
 `auth · user · organization · project · team · task · activity · sprint · epic ·
@@ -147,7 +179,7 @@ mutations run in a transaction and write immutable `activity_logs`.
 Tests are colocated (`*.test.ts`) plus an end-to-end suite in
 `src/shared/tests/`. Integration tests run against a **real PostgreSQL** via
 `DATABASE_URL` and clean up after themselves by email/name tag. Run a focused
-file with `npx vitest run src/modules/<feature>`.
+file with `pnpm exec vitest run src/modules/<feature>`.
 
 ---
 

@@ -1,19 +1,19 @@
 # OptiTask CI — copy to .github/workflows/ci.yml at the repository root.
 # Runs typecheck → lint → test(+coverage) → build on every PR/push, with a
 # PostgreSQL service for the integration tests.
+#
+# This is a pnpm workspace: dependencies install once at the root (which is what
+# links @contracts into the backend), then each script runs through --filter.
 name: CI
 
 on:
   push:
-    branches: [main, 'backend/**']
+    branches: [main, dev, 'backend/**']
   pull_request:
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
 
     services:
       postgres:
@@ -39,15 +39,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache: pnpm
 
-      - run: npm ci
-      - run: npm run migrate           # prisma migrate deploy against CI DB
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run test:coverage     # enforces coverage thresholds
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter optitask-backend run migrate      # prisma migrate deploy against CI DB
+      - run: pnpm --filter @contracts run typecheck
+      - run: pnpm --filter optitask-backend run typecheck
+      - run: pnpm --filter optitask-backend run lint
+      - run: pnpm --filter optitask-backend run test:coverage # enforces coverage thresholds
+      - run: pnpm --filter optitask-backend run build

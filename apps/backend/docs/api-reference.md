@@ -3,7 +3,7 @@
 The complete guide to consuming the OptiTask GraphQL API — for **frontend** and
 **AI** developers. You should not need to read the server source. The
 machine-readable schema is **[api/schema.graphql](api/schema.graphql)**
-(regenerate with `npm run schema:print`); this document explains how to use it.
+(regenerate with `pnpm run schema:print`); this document explains how to use it.
 
 - [Endpoints](#endpoints)
 - [Authentication](#authentication)

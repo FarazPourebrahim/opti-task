@@ -19,15 +19,21 @@ How to run OptiTask in production and the continuous-integration pipeline.
   these or `DATABASE_URL` are missing in production.
 
 ### 2. Build & migrate
+This is a pnpm workspace — install from the repository root so `@contracts` is
+linked, then drive the backend by filter:
 ```bash
-cd server
-npm ci                 # clean install (runs prisma generate)
-npm run build          # → dist/
-npm run migrate        # prisma migrate deploy (forward-only)
+pnpm install --frozen-lockfile                        # runs prisma generate
+pnpm --filter optitask-backend run build              # → apps/backend/dist/
+pnpm --filter optitask-backend run migrate            # prisma migrate deploy (forward-only)
 ```
+The build is a **bundle** (tsup): `@contracts` is inlined into
+`dist/server.js`, so the deployed artifact has no workspace-only imports left to
+resolve. Real dependencies (Prisma's client, argon2) stay external and are
+installed as usual.
 
 ### 3. Start
 ```bash
+cd apps/backend
 NODE_ENV=production node dist/server.js
 ```
 Serves GraphQL at `/graphql` (HTTP + WebSocket subscriptions) on `PORT`
@@ -54,8 +60,8 @@ See the table in [`../README.md`](../README.md#2-configure-environment).
 ## Migrations
 - Migrations are **forward-only** (Prisma Migrate). There are no per-step `down`
   migrations: to undo, author a corrective forward migration.
-- **Always back up** before `npm run migrate` in production.
-- `npm run migrate:reset` is **dev-only** — it drops and recreates the schema.
+- **Always back up** before running `migrate` in production.
+- `migrate:reset` is **dev-only** — it drops and recreates the schema.
 
 ---
 
@@ -65,22 +71,22 @@ Run on every PR: **typecheck → lint → test → build**, with a PostgreSQL se
 for the integration tests, and coverage thresholds enforced.
 
 A ready-to-use GitHub Actions workflow is provided at
-[`../ci/github-actions.ci.yml`](../ci/github-actions.ci.yml). Because CI config
-lives at the repository root, copy it to `.github/workflows/ci.yml` (the repo
-owner manages git/root):
+[`../ci/github-actions.ci.yml`](../ci/github-actions.ci.yml). It ships as a
+template rather than an active workflow — copy it to `.github/workflows/ci.yml`
+to switch CI on:
 
 ```bash
 mkdir -p .github/workflows
-cp server/ci/github-actions.ci.yml .github/workflows/ci.yml
+cp apps/backend/ci/github-actions.ci.yml .github/workflows/ci.yml
 ```
 
 Pipeline stages:
 1. Start PostgreSQL (service container) and export `DATABASE_URL`.
-2. `npm ci` (in `server/`).
-3. `npm run migrate` against the CI database.
-4. `npm run typecheck` · `npm run lint`.
-5. `npm run test:coverage` (fails if coverage thresholds aren't met).
-6. `npm run build`.
+2. `pnpm install --frozen-lockfile` at the repository root.
+3. `migrate` against the CI database.
+4. `typecheck` (both `@contracts` and the backend) · `lint`.
+5. `test:coverage` (fails if coverage thresholds aren't met).
+6. `build`.
 
 Coverage thresholds are configured in `vitest.config.ts`
 (lines/statements ≥ 80%, functions ≥ 75%, branches ≥ 72%).
