@@ -37,13 +37,14 @@ const light = blockOf('body\\.light');
 const dark = blockOf('body\\.dark');
 
 function resolve(token: string, theme: Tokens): string {
-  let value = theme.get(token) ?? root.get(token);
-  if (!value) throw new Error(`Token ${token} is not defined`);
+  const initial = theme.get(token) ?? root.get(token);
+  if (!initial) throw new Error(`Token ${token} is not defined`);
 
+  let value: string = initial;
   for (let i = 0; i < 10; i += 1) {
     const ref = value.match(/^var\((--[\w-]+)\)$/);
     if (!ref?.[1]) break;
-    const next = theme.get(ref[1]) ?? root.get(ref[1]);
+    const next: string | undefined = theme.get(ref[1]) ?? root.get(ref[1]);
     if (!next) throw new Error(`Token ${ref[1]} is not defined`);
     value = next;
   }

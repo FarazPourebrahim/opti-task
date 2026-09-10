@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderBootFailure } from '@/shared/lib/bootFailure';
+import '@/shared/styles/global.css';
 
 /**
  * Application bootstrap.
@@ -13,11 +14,16 @@ import { renderBootFailure } from '@/shared/lib/bootFailure';
 async function bootstrap(container: HTMLElement): Promise<void> {
   try {
     await import('@/shared/config');
-    const { App } = await import('@/App');
+    const [{ App }, { AppProviders }] = await Promise.all([
+      import('@/App'),
+      import('@/shared/context/AppProviders'),
+    ]);
 
     createRoot(container).render(
       <StrictMode>
-        <App />
+        <AppProviders>
+          <App />
+        </AppProviders>
       </StrictMode>,
     );
   } catch (error) {
