@@ -2,6 +2,9 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { CalendarDays, X } from 'lucide-react';
 import { useState } from 'react';
 import { DayPicker } from 'react-day-picker';
+// react-day-picker ships unstyled: without its base stylesheet the calendar
+// renders as an unlaid-out list of buttons. Our tokens then override it below.
+import 'react-day-picker/style.css';
 import { useTranslation } from 'react-i18next';
 import { fromApiDateTime, toApiDateTime } from '@/shared/utils/date.utils';
 import styles from './DatePicker.module.css';
