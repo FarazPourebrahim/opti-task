@@ -1,16 +1,15 @@
 import {
   ApolloClient,
   ApolloLink,
-  CombinedGraphQLErrors,
   HttpLink,
   InMemoryCache,
-  ServerError,
 } from '@apollo/client';
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { SetContextLink } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { relayStylePagination } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
-import { catchError, from, mergeMap, throwError } from 'rxjs';
+import { catchError, from, map, mergeMap, throwError } from 'rxjs';
 import { env } from '@/shared/config';
 import { ApiError, toApiError } from '@/shared/lib/apiError';
 import {
@@ -36,12 +35,7 @@ function readRequestId(operation: {
 }
 
 function isUnauthenticated(error: unknown): boolean {
-  if (ServerError.is(error) && error.statusCode === 401) return true;
-
-  return (
-    CombinedGraphQLErrors.is(error) &&
-    error.errors.some((item) => item.extensions?.['code'] === 'UNAUTHENTICATED')
-  );
+  return ApiError.is(error) && error.kind === 'unauthorized';
 }
 
 /**
@@ -59,13 +53,28 @@ const clientHeaderLink = new SetContextLink((prevContext) => ({
 }));
 
 /**
- * Turns every failure into an `ApiError` before it leaves the client.
+ * Turns every failure into an `ApiError`, whatever shape it arrived in.
  *
- * This sits ABOVE the refresh link, so an operation that succeeds on retry
- * never reaches it and no error is reported for a recovered request.
+ * Two different things are handled here because Apollo treats them
+ * differently. A transport failure (no response, a 5xx, an unparseable body)
+ * travels the observable's error channel. A GraphQL error in an otherwise
+ * successful 200 does NOT — it rides along as `result.errors`, and Apollo
+ * raises `CombinedGraphQLErrors` for it *above* the link chain, where no link
+ * can see it. Converting those results into thrown errors here is what puts
+ * both on one path, and it is what lets the refresh link below see an expired
+ * session at all.
  */
 const errorNormalizationLink = new ApolloLink((operation, forward) =>
   forward(operation).pipe(
+    map((result) => {
+      const errors = result.errors;
+      if (errors && errors.length > 0) {
+        throw toApiError(new CombinedGraphQLErrors(result, errors), {
+          requestId: readRequestId(operation),
+        });
+      }
+      return result;
+    }),
     catchError((error: unknown) =>
       throwError(() => toApiError(error, { requestId: readRequestId(operation) })),
     ),
@@ -242,9 +251,15 @@ export function createApolloClient(
       : createHttpLink();
 
   client = new ApolloClient({
+    /*
+     * Order matters. Requests travel top-to-bottom, responses and errors back
+     * up: normalization happens below the refresh link so the refresh link
+     * only ever inspects an ApiError, and an operation that succeeds on replay
+     * never surfaces an error at all.
+     */
     link: ApolloLink.from([
-      errorNormalizationLink,
       createAuthRefreshLink(handleSessionExpired),
+      errorNormalizationLink,
       clientHeaderLink,
       terminalLink,
     ]),
