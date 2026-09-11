@@ -1,4 +1,4 @@
-/* Nesting mirrors App.tsx: .home > .homeCard > (.homeTitle, .homeTagline, .homeDevLink) */
+/* Nesting mirrors App.tsx: .home > .homeCard > (.homeTitle, .homeTagline, .homeDevLinks > .homeDevLink) */
 
 .home {
   display: grid;
@@ -32,19 +32,26 @@
       font-size: var(--fs-500);
     }
 
-    .homeDevLink {
-      padding-block: var(--space-200);
-      padding-inline: var(--space-400);
-      border-radius: var(--br-pill);
-      background-color: var(--color-primary);
-      color: var(--color-primary-opposite);
-      font-size: var(--fs-300);
-      font-weight: var(--fw-500);
-      transition: background-color var(--animation-duration-300)
-        var(--easing-standard);
+    .homeDevLinks {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--space-300);
 
-      &:hover {
-        background-color: var(--color-primary-darker);
+      .homeDevLink {
+        padding-block: var(--space-200);
+        padding-inline: var(--space-400);
+        border-radius: var(--br-pill);
+        background-color: var(--color-primary);
+        color: var(--color-primary-opposite);
+        font-size: var(--fs-300);
+        font-weight: var(--fw-500);
+        transition: background-color var(--animation-duration-300)
+          var(--easing-standard);
+
+        &:hover {
+          background-color: var(--color-primary-darker);
+        }
       }
     }
   }
