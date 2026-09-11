@@ -1,0 +1,111 @@
+/*
+ * Nesting mirrors Avatar.tsx:
+ *   .avatar > (.avatarImage, .avatarFallback)
+ *   .avatarGroup > (.avatarGroupItem, .avatarGroupOverflow)
+ */
+
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--br-round);
+  background-color: var(--color-surface-500);
+  user-select: none;
+  vertical-align: middle;
+
+  &[data-size='xs'] {
+    inline-size: var(--space-400);
+    block-size: var(--space-400);
+    font-size: var(--fs-100);
+  }
+
+  &[data-size='sm'] {
+    inline-size: var(--space-500);
+    block-size: var(--space-500);
+    font-size: var(--fs-100);
+  }
+
+  &[data-size='md'] {
+    inline-size: var(--space-600);
+    block-size: var(--space-600);
+    font-size: var(--fs-300);
+  }
+
+  &[data-size='lg'] {
+    inline-size: var(--space-700);
+    block-size: var(--space-700);
+    font-size: var(--fs-500);
+  }
+
+  .avatarImage {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .avatarFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+    background-color: var(--color-primary);
+    color: var(--color-primary-opposite);
+    font-weight: var(--fw-700);
+    letter-spacing: var(--ls-500);
+  }
+}
+
+.avatarGroup {
+  display: inline-flex;
+  align-items: center;
+
+  .avatarGroupItem {
+    display: inline-flex;
+    border: var(--bw-300) solid var(--color-surface-400);
+    border-radius: var(--br-round);
+
+    /* Overlap every avatar after the first. */
+    & + & {
+      margin-inline-start: calc(-1 * var(--space-200));
+    }
+  }
+
+  .avatarGroupOverflow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: calc(-1 * var(--space-200));
+    border: var(--bw-300) solid var(--color-surface-400);
+    border-radius: var(--br-round);
+    background-color: var(--color-surface-500);
+    color: var(--color-text-300);
+    font-weight: var(--fw-700);
+
+    &[data-size='xs'] {
+      inline-size: var(--space-400);
+      block-size: var(--space-400);
+      font-size: var(--fs-100);
+    }
+
+    &[data-size='sm'] {
+      inline-size: var(--space-500);
+      block-size: var(--space-500);
+      font-size: var(--fs-100);
+    }
+
+    &[data-size='md'] {
+      inline-size: var(--space-600);
+      block-size: var(--space-600);
+      font-size: var(--fs-200);
+    }
+
+    &[data-size='lg'] {
+      inline-size: var(--space-700);
+      block-size: var(--space-700);
+      font-size: var(--fs-300);
+    }
+  }
+}
