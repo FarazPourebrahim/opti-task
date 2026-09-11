@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "OptiTask frontend — React SPA client for the OptiTask GraphQL API",
+  "description": "OptiTask frontend \u2014 React SPA client for the OptiTask GraphQL API",
   "engines": {
     "node": ">=22"
   },
@@ -14,10 +14,11 @@
     "typecheck": "tsc --noEmit",
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:check": "graphql-codegen --config codegen.ts --check",
+    "depth:check": "node scripts/check-query-depth.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "verify": "tsc --noEmit && eslint \"src/**/*.{ts,tsx}\" && vitest run",
+    "verify": "tsc --noEmit && eslint \"src/**/*.{ts,tsx}\" && node scripts/check-query-depth.mjs && vitest run",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
