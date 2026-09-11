@@ -41,13 +41,32 @@ cp .env.example .env
 | `JWT_REFRESH_SECRET` | prod | — | Signs refresh tokens |
 | `JWT_ACCESS_TTL` | no | `15m` | Access-token lifetime |
 | `JWT_REFRESH_TTL` | no | `7d` | Refresh-token lifetime |
+| `CORS_ORIGINS` | **prod** | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated browser origins allowed to send credentialed requests. A credentialed CORS response cannot use `*`, so this must list the web client's origin exactly (no path, no trailing slash). |
 | `PORT` | no | `4000` | HTTP/WS port |
 | `LOG_LEVEL` | no | `info` | pino log level |
 | `AI_REQUEST_TIMEOUT_MS` | no | `8000` | Per-call AI provider timeout |
 | `AI_REQUEST_RETRIES` | no | `1` | AI provider retry attempts |
 
 In **production** the app refuses to boot without `DATABASE_URL`,
-`JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET` (fail-fast env validation).
+`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and `CORS_ORIGINS` (fail-fast env
+validation).
+
+### Browser clients, CORS and CSRF
+The API authenticates browsers with HTTP-only cookies, which brings two
+requirements a non-browser client never sees:
+
+- **`CORS_ORIGINS` must list the web client's origin.** A credentialed response
+  may not use the `*` wildcard, so the origin is reflected one at a time and an
+  unlisted origin simply gets no CORS headers.
+- **Cookie-authenticated requests must send a custom header**
+  (`x-optitask-client`, any non-empty value) and, when they send `Origin`, it
+  must be allowlisted. A cross-site `<form>` cannot set a custom header, and
+  setting one from `fetch` forces a preflight the allowlist refuses — so this
+  backs up the `SameSite=Lax` cookie rather than relying on it alone.
+
+Requests authenticated with `Authorization: Bearer` are exempt: that header is
+equally unforgeable cross-site, so curl, scripts and server-to-server callers
+need no changes.
 
 ### 3. Migrate the database
 ```bash
