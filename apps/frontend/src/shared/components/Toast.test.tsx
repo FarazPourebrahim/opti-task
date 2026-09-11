@@ -157,7 +157,7 @@ describe('SkeletonList', () => {
   });
 
   it('hides the individual placeholders from assistive technology', () => {
-    const { container } = renderWithProviders(<SkeletonList count={2} />);
+    const { container } = renderWithProviders(<SkeletonList count={2} label="Loading" />);
 
     const placeholders = container.querySelectorAll('[aria-hidden="true"]');
     expect(placeholders.length).toBeGreaterThan(0);

@@ -1,0 +1,67 @@
+/*
+ * Nesting mirrors Skeleton.tsx:
+ *   .skeleton (standalone)
+ *   .skeletonList > .skeletonRow > .skeletonRowText
+ *   .loadMore > .loadMoreSpinner
+ */
+
+.skeleton {
+  display: block;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-surface-400) 25%,
+    var(--color-surface-500) 50%,
+    var(--color-surface-400) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--animation-duration-900) linear infinite;
+
+  &[data-shape='line'] {
+    block-size: var(--space-300);
+    inline-size: 100%;
+    border-radius: var(--br-200);
+  }
+
+  &[data-shape='block'] {
+    block-size: var(--space-700);
+    inline-size: 100%;
+    border-radius: var(--br-400);
+  }
+
+  &[data-shape='circle'] {
+    border-radius: var(--br-round);
+  }
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-400);
+
+  .skeletonRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-300);
+
+    .skeletonRowText {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: var(--space-200);
+      min-inline-size: 0;
+    }
+  }
+}
+
+.loadMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--space-400);
+
+  .loadMoreSpinner {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-300);
+  }
+}
