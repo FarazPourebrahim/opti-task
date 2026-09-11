@@ -39,12 +39,29 @@
   }
 }
 
+/*
+ * Sweeps a highlight band left-to-right across a placeholder. The band is
+ * narrower than the element (see .skeleton's background-size), so it starts and
+ * ends fully offscreen instead of appearing to pulse in place.
+ */
 @keyframes shimmer {
   from {
-    background-position: 100% 0;
+    background-position: -150% 0;
   }
   to {
-    background-position: -100% 0;
+    background-position: 250% 0;
+  }
+}
+
+/* Indicator appearing inside a control — checkbox tick, radio dot. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

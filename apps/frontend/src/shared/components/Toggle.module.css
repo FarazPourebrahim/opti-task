@@ -3,6 +3,11 @@
  *   .toggleRow > (control, .toggleText > (.toggleLabel, .toggleDescription))
  * where control is .checkboxBox > .checkboxMark, .switchTrack > .switchThumb,
  * or .radioBox > .radioDot. .radioGroup wraps the rows for RadioGroup.
+ *
+ * Sizing note: the controls are 1.25rem (--space-500) rather than 1rem. At
+ * 1rem with a hairline border they read as the browser's native widgets; the
+ * larger box, thicker checked border and animated indicator are what make them
+ * look designed rather than default.
  */
 
 .toggleRow {
@@ -15,16 +20,20 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    inline-size: var(--space-400);
-    block-size: var(--space-400);
-    margin-block-start: var(--space-100);
-    border: var(--bw-100) solid var(--color-border-400);
-    border-radius: var(--br-200);
+    inline-size: var(--space-500);
+    block-size: var(--space-500);
+    border: var(--bw-300) solid var(--color-border-400);
+    border-radius: var(--br-300);
     background-color: var(--color-surface-500);
+    box-shadow: var(--shadow-100);
     cursor: pointer;
     transition:
       background-color var(--animation-duration-300) var(--easing-standard),
       border-color var(--animation-duration-300) var(--easing-standard);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+    }
 
     &[data-state='checked'],
     &[data-state='indeterminate'] {
@@ -33,6 +42,7 @@
     }
 
     &:disabled {
+      box-shadow: none;
       cursor: not-allowed;
       opacity: 0.55;
     }
@@ -42,32 +52,36 @@
       align-items: center;
       justify-content: center;
       color: var(--color-primary-opposite);
+      /* Scales in so checking feels like an action, not a repaint. */
+      animation: pop-in var(--animation-duration-300) var(--easing-spring);
 
       & > svg {
         inline-size: var(--space-300);
         block-size: var(--space-300);
-        stroke-width: 3;
+        stroke-width: 3.5;
       }
     }
   }
 
   .switchTrack {
-    position: relative;
+    display: inline-flex;
     flex-shrink: 0;
+    align-items: center;
     inline-size: var(--space-600);
     block-size: var(--space-400);
-    margin-block-start: var(--space-100);
-    padding: 0;
-    border: var(--bw-100) solid var(--color-border-400);
+    /* Padding, not border: the thumb travel below is derived from it. */
+    padding: var(--bw-300);
+    border: none;
     border-radius: var(--br-pill);
-    background-color: var(--color-surface-400);
+    /* A filled off-state reads as a control; a hairline outline reads as a
+       stray box, which is what made this look unfinished. */
+    background-color: var(--color-control-off);
+    box-shadow: var(--shadow-inset);
     cursor: pointer;
-    transition:
-      background-color var(--animation-duration-300) var(--easing-standard),
-      border-color var(--animation-duration-300) var(--easing-standard);
+    transition: background-color var(--animation-duration-300)
+      var(--easing-standard);
 
     &[data-state='checked'] {
-      border-color: var(--color-primary);
       background-color: var(--color-primary);
     }
 
@@ -83,12 +97,13 @@
       border-radius: var(--br-round);
       background-color: var(--color-gray-100);
       box-shadow: var(--shadow-300);
-      transform: translateX(2px);
-      transition: transform var(--animation-duration-300) var(--easing-standard);
+      /* Track 2rem − thumb 0.75rem − padding 2×2px = exactly 1rem of travel. */
+      transform: translateX(0);
+      transition: transform var(--animation-duration-300) var(--easing-spring);
       will-change: transform;
 
       &[data-state='checked'] {
-        transform: translateX(calc(var(--space-600) - var(--space-300) - 6px));
+        transform: translateX(var(--space-400));
       }
     }
   }
@@ -98,20 +113,27 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    inline-size: var(--space-400);
-    block-size: var(--space-400);
-    margin-block-start: var(--space-100);
-    border: var(--bw-100) solid var(--color-border-400);
+    inline-size: var(--space-500);
+    block-size: var(--space-500);
+    border: var(--bw-300) solid var(--color-border-400);
     border-radius: var(--br-round);
     background-color: var(--color-surface-500);
+    box-shadow: var(--shadow-100);
     cursor: pointer;
-    transition: border-color var(--animation-duration-300) var(--easing-standard);
+    transition:
+      border-color var(--animation-duration-300) var(--easing-standard),
+      box-shadow var(--animation-duration-300) var(--easing-standard);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+    }
 
     &[data-state='checked'] {
       border-color: var(--color-primary);
     }
 
     &:disabled {
+      box-shadow: none;
       cursor: not-allowed;
       opacity: 0.55;
     }
@@ -122,6 +144,7 @@
       block-size: var(--space-200);
       border-radius: var(--br-round);
       background-color: var(--color-primary);
+      animation: pop-in var(--animation-duration-300) var(--easing-spring);
     }
   }
 
@@ -149,5 +172,5 @@
 .radioGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-300);
+  gap: var(--space-400);
 }

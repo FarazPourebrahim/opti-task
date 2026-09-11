@@ -121,6 +121,18 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
   translation catalogue. No dev *code* ships — verified by grepping the built
   bundle for gallery identifiers.
 
+- **What**: `--color-border-400` is asserted at 3:1 against a control's own
+  fill (`--color-surface-500`), not against the page behind it.
+- **Why**: requiring both forced a mid-grey hairline on every field, which is
+  what made inputs read as unstyled browser controls. WCAG 1.4.11 asks that a
+  component be *identifiable*; its boundary against its own fill is what does
+  that, and elevation (`--shadow-100`) now carries the separation from the page.
+- **Right fix**: none if the reading holds. If a stricter interpretation is
+  wanted, give controls a fill that clears 3:1 against the page instead of
+  darkening the border again.
+- **Impact**: against the page a light-theme control border sits at 2.75:1.
+  Re-check during the Phase 14 accessibility sweep.
+
 - **What**: no visual verification of any component.
 - **Why**: the suite asserts structure, behaviour, keyboard paths and axe
   cleanliness, but happy-dom performs no layout — nothing here proves a

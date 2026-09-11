@@ -91,8 +91,17 @@ body.light {
   --color-text-400: var(--color-gray-15);
   --color-text-300: var(--color-gray-40);
 
-  --color-border-400: var(--color-gray-50);
+  --color-border-400: var(--color-gray-60);
   --color-border-300: var(--color-gray-90);
+
+  /* Unchecked switch track: a filled "off" state reads as a control, where a
+     hairline outline reads as a stray box. */
+  --color-control-off: var(--color-gray-50);
+
+  /* Placeholder shimmer. Deliberately NOT surface-400 → surface-500: those sit
+     two lightness steps apart in light theme, so the sweep was invisible. */
+  --color-skeleton-base: var(--color-gray-90);
+  --color-skeleton-highlight: var(--color-gray-98);
 
   --color-focus-ring: var(--color-primary);
   --color-overlay: hsl(225, 24%, 10%, 0.45);
@@ -116,6 +125,11 @@ body.dark {
 
   --color-border-400: var(--color-gray-50);
   --color-border-300: var(--color-gray-20);
+
+  --color-control-off: var(--color-gray-50);
+
+  --color-skeleton-base: var(--color-gray-20);
+  --color-skeleton-highlight: var(--color-gray-30);
 
   --color-focus-ring: var(--color-primary-lighter);
   --color-overlay: hsl(225, 24%, 4%, 0.6);

@@ -22,10 +22,16 @@
   border: var(--bw-100) solid var(--color-border-400);
   border-radius: var(--br-400);
   background-color: var(--color-surface-500);
+  box-shadow: var(--shadow-100);
   color: var(--color-text-400);
   cursor: pointer;
   font-size: var(--fs-400);
   text-align: start;
+  transition: border-color var(--animation-duration-300) var(--easing-standard);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+  }
 
   &[data-placeholder] {
     color: var(--color-text-300);
@@ -37,6 +43,7 @@
 
   &:disabled {
     background-color: var(--color-surface-400);
+    box-shadow: none;
     cursor: not-allowed;
     opacity: 0.6;
   }
@@ -112,7 +119,13 @@
         user-select: none;
 
         &[data-selected='true'] {
-          background-color: var(--color-surface-400);
+          background-color: var(--color-primary);
+          color: var(--color-primary-opposite);
+
+          .comboboxItemDescription,
+          .comboboxItemCheck {
+            color: var(--color-primary-opposite);
+          }
         }
 
         &[data-disabled='true'] {
