@@ -1,0 +1,48 @@
+/*
+ * Shared by Login.page.tsx, Register.page.tsx and ForgotPassword.page.tsx:
+ *   .form > (FormError, Field…, Button, .linkButton)
+ *   .notice > (.noticeTitle, .noticeBody)
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-400);
+}
+
+.linkButton {
+  align-self: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--fs-300);
+  font-weight: var(--fw-500);
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+  padding: var(--space-400);
+  border: var(--bw-100) solid var(--color-border-300);
+  border-radius: var(--br-400);
+  background-color: var(--color-surface-400);
+
+  .noticeTitle {
+    color: var(--color-text-400);
+    font-size: var(--fs-400);
+    font-weight: var(--fw-700);
+  }
+
+  .noticeBody {
+    color: var(--color-text-300);
+    font-size: var(--fs-300);
+    line-height: var(--lh-500);
+  }
+}
