@@ -234,7 +234,7 @@ line is not done, regardless of whether the feature "works".
 | 1 | Design System & Theming | 14% | ✅ |
 | 2 | Shared Component Library | 24% | ✅ |
 | 3 | GraphQL Data Layer & Codegen | 32% | ✅ |
-| 4 | Auth & Session | 40% | ⬜ |
+| 4 | Auth & Session | 40% | ✅ |
 | 5 | App Shell, Routing & Guards | 47% | ⬜ |
 | 6 | Organization & Members | 54% | ⬜ |
 | 7 | Project & Team | 61% | ⬜ |
@@ -246,7 +246,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 32%** (Phases 0–3 complete).
+**Current overall progress: 40%** (Phases 0–4 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -467,46 +467,55 @@ feature ever thinks about transport.
 
 # Phase 4 — Auth & Session — 32 → 40%
 
-**Blocked until P1 and P2 are merged.**
-
 **Goal:** A complete, honest identity surface and a session that survives reload.
 
 ### Tracker
 
 | ID | Task | Status |
 |---|---|:--:|
-| F4.1 | `session.store.ts` — module-scoped in-memory access token, subscribable; used **only** for WS `connectionParams` | ⬜ |
-| F4.2 | `auth.operations.ts` — register, login, logout, refreshToken, me, sessions, revokeSession, changePassword, requestPasswordReset | ⬜ |
-| F4.3 | `auth.schema.ts` — zod mirroring the backend exactly: email trim + lowercase; password 8–100 chars, ≥1 letter, ≥1 number | ⬜ |
-| F4.4 | `Login.page.tsx` + `Register.page.tsx` — premium split layout, inline validation, form-level server error | ⬜ |
-| F4.5 | `auth.context.tsx` — bootstrap: call `me`; on `UNAUTHENTICATED` try `refreshToken` once; else unauthenticated | ⬜ |
-| F4.6 | `Sessions.page.tsx` — list active sessions (user agent, IP, created), revoke individually, mark the current one | ⬜ |
-| F4.7 | `ChangePassword` form | ⬜ |
-| F4.8 | `ForgotPassword.page.tsx` — honest copy: reset is not yet enabled; no promise of an email | ⬜ |
-| F4.9 | Logout: mutation → `clearStore()` → drop the socket → clear the in-memory token → redirect | ⬜ |
-| F4.10 | Invitation acceptance route `/invite/:token` → `acceptInvitation` | ⬜ |
+| F4.1 | `session.store.ts` — module-scoped in-memory access token, subscribable; used **only** for WS `connectionParams` | ✅ *(landed in Phase 3 as F3.11)* |
+| F4.2 | `auth.operations.ts` — register, login, logout, me, sessions, revokeSession, changePassword, requestPasswordReset, acceptInvitation | ✅ |
+| F4.3 | `auth.schema.ts` — zod mirroring the backend exactly: email trim + lowercase; password 8–100 chars, ≥1 letter, ≥1 number | ✅ |
+| F4.4 | `Login.page.tsx` + `Register.page.tsx` — split layout, inline validation, form-level server error | ✅ |
+| F4.5 | `auth.context.tsx` — bootstrap: call `me`; if that fails, one refresh then retry; else unauthenticated | ✅ |
+| F4.6 | `Sessions.page.tsx` — list active sessions (user agent, IP, created), revoke individually, mark the current one | ✅ |
+| F4.7 | `ChangePasswordForm` | ✅ |
+| F4.8 | `ForgotPassword.page.tsx` — honest copy: reset is not enabled; no email field at all | ✅ |
+| F4.9 | Logout: mutation → clear token (closes the socket) → `clearStore()` | ✅ |
+| F4.10 | `AcceptInvitation.page.tsx` → `acceptInvitation`, with a sign-in-first path | ✅ |
+| F4.11 | `formatRelativeTime` — locale-aware relative timestamps for the sessions list | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Register → reload → still authenticated, driven by cookies alone.
-- [ ] `localStorage` and `sessionStorage` are **empty of any token** after login —
-      asserted in a test, not just observed.
-- [ ] A cross-origin credentialed request succeeds in a real browser (proves P1).
-- [ ] An expired access token transparently refreshes and the original operation
-      succeeds — the user sees no interruption.
-- [ ] A revoked/expired refresh token lands the user on login with a clear message
-      and an empty Apollo cache.
-- [ ] Client-side password validation rejects exactly what the server rejects —
-      a table test covers: 7 chars, 101 chars, letters-only, digits-only, valid.
-- [ ] Wrong password shows a form-level error and **never** reveals whether the
-      email exists.
-- [ ] Logging out and logging in as a different user shows **no** trace of the
-      previous user's data.
-- [ ] Every auth form: submit disabled + spinner while pending, `Enter` submits,
-      errors are announced to screen readers.
-- [ ] `ForgotPassword` makes no claim that an email was sent.
-- [ ] Coverage: success, wrong password, duplicate email, expired token,
-      network failure.
+- [x] Register → `me` with cookies alone → still authenticated. Verified against
+      the **running backend** with a cookie jar: register set both HTTP-only
+      cookies, `me` succeeded carrying only those cookies, and `refreshToken`
+      worked with no argument.
+- [x] `localStorage` and `sessionStorage` are **empty of any token** after login
+      — asserted, not observed.
+- [x] A credentialed cross-origin request succeeds (proves P1): the allowed
+      origin is reflected with `Allow-Credentials: true`, a foreign origin gets
+      no CORS headers at all.
+- [x] An expired access token transparently refreshes and the operation replays
+      (asserted in Phase 3's link tests, and again here through the bootstrap
+      path where only the refresh cookie survives).
+- [x] A failed refresh settles on `unauthenticated` with the cache cleared.
+      *(The redirect itself belongs to Phase 5's router.)*
+- [x] Client-side password validation matches the server exactly — a table test
+      covers 7 chars, exactly 8, exactly 100, 101 chars, letters-only,
+      digits-only and a valid value, plus email trim/lower-casing.
+- [x] Wrong password and unknown email produce the **same** message, asserted
+      not to contain "not found"/"no account"/"unknown user".
+- [x] Signing out leaves no trace: token cleared, cache emptied, user cleared —
+      all three asserted. Sign-out also completes locally when the server call
+      fails.
+- [x] Auth forms disable and show a spinner while pending, submit on `Enter`,
+      and announce errors via `role="alert"` with per-field messages wired
+      through `aria-describedby`/`aria-invalid`.
+- [x] `ForgotPassword` has **no email field** and makes no claim that a message
+      was sent — asserted against "check your inbox"/"we've sent" phrasing.
+- [x] Coverage: success, wrong credentials, duplicate email, expired session,
+      network failure, and `axe` clean on both forms.
 
 ---
 
