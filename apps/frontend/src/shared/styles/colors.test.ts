@@ -101,9 +101,16 @@ const TEXT_PAIRS = [
   ['--color-inverse-text', '--color-inverse-surface'],
 ] as const;
 
+/*
+ * WCAG 1.4.11 asks that a control be identifiable. For an input that is what
+ * its boundary against its OWN fill does, so that is the pair asserted here.
+ * An earlier version also required the border to clear 3:1 against the page
+ * behind it, which forced a mid-grey hairline that made every field look like
+ * an unstyled browser control; elevation now carries that separation instead.
+ */
 const UI_PAIRS = [
-  ['--color-border-400', '--color-surface-300'],
   ['--color-border-400', '--color-surface-500'],
+  ['--color-control-off', '--color-surface-400'],
   ['--color-focus-ring', '--color-surface-300'],
 ] as const;
 
