@@ -4,6 +4,13 @@ import styles from './Field.module.css';
 
 type FieldRenderProps = {
   id: string;
+  /**
+   * The label element's id. Native inputs are named by `htmlFor`/`id` alone,
+   * but a control rendered as a `<button>` (Radix Select, Combobox) is NOT —
+   * a `<label for>` forwards clicks to a button without contributing to its
+   * accessible name. Those controls spread this to name themselves.
+   */
+  'aria-labelledby': string;
   'aria-describedby': string | undefined;
   'aria-invalid': boolean | undefined;
 };
@@ -31,6 +38,7 @@ export function Field({
   children,
 }: FieldProps) {
   const id = useId();
+  const labelId = `${id}-label`;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
 
@@ -40,7 +48,7 @@ export function Field({
 
   return (
     <div className={styles.field} data-invalid={error ? true : undefined}>
-      <label className={styles.fieldLabel} htmlFor={id}>
+      <label className={styles.fieldLabel} htmlFor={id} id={labelId}>
         {label}
         {required ? (
           <span className={styles.fieldRequired} aria-hidden>
@@ -50,6 +58,7 @@ export function Field({
       </label>
       {children({
         id,
+        'aria-labelledby': labelId,
         'aria-describedby': describedBy,
         'aria-invalid': error ? true : undefined,
       })}
