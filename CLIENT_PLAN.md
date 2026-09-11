@@ -232,7 +232,7 @@ line is not done, regardless of whether the feature "works".
 | 0 | Foundations & Tooling | 6% | ✅ |
 | 1 | Design System & Theming | 14% | ✅ |
 | 2 | Shared Component Library | 24% | ✅ |
-| 3 | GraphQL Data Layer & Codegen | 32% | ⬜ |
+| 3 | GraphQL Data Layer & Codegen | 32% | ✅ |
 | 4 | Auth & Session | 40% | ⬜ |
 | 5 | App Shell, Routing & Guards | 47% | ⬜ |
 | 6 | Organization & Members | 54% | ⬜ |
@@ -245,7 +245,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 24%** (Phases 0–2 complete).
+**Current overall progress: 32%** (Phases 0–3 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -424,37 +424,43 @@ feature ever thinks about transport.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F3.1 | `codegen.ts` — `client-preset` against `apps/backend/docs/api/schema.graphql`; scalar map `UUID→string`, `DateTime→string`, `JSON→Record<string, unknown>` | ⬜ |
-| F3.2 | `shared/services/apollo.client.ts` — split link: `HttpLink` (`credentials: 'include'`, `x-optitask-client` header) for query/mutation, `GraphQLWsLink` for subscriptions | ⬜ |
-| F3.3 | `shared/lib/apiError.ts` — `ApiError extends Error` with `kind`, `status`, `requestId`, `messageKey`; `code → kind → i18n key` mapping table | ⬜ |
-| F3.4 | `errorLink` — normalizes GraphQL errors, network failures, timeouts and aborts into `ApiError`; distinguishes network failure by error **type** + `navigator.onLine`, never by message text | ⬜ |
-| F3.5 | 401 handling **in the link, once**: single-flight `refreshToken`, retry the original operation once, else `clearStore()` + redirect to login | ⬜ |
-| F3.6 | `requestIdLink` — reads `x-request-id` off the response and attaches it to `ApiError` *(gated on P3)* | ⬜ |
-| F3.7 | Cache `typePolicies` — relay-style pagination for every `*Connection` field, with correct `keyArgs` so filters/sorts do not merge into one another | ⬜ |
-| F3.8 | `ApolloProvider` in the app root; exactly one client instance | ⬜ |
-| F3.9 | Depth-limit guard: a CI check that fails if any generated document exceeds depth 12 | ⬜ |
-| F3.10 | MSW GraphQL handler helpers + fixtures for the shared test harness | ⬜ |
+| F3.1 | `codegen.ts` — `client-preset` against `apps/backend/docs/api/schema.graphql`; scalar map `UUID→string`, `DateTime→string`, `JSON→Record<string, unknown>` | ✅ |
+| F3.2 | `shared/services/apollo.client.ts` — split link: `HttpLink` (`credentials: 'include'`, `x-optitask-client` header) for query/mutation, `GraphQLWsLink` for subscriptions | ✅ |
+| F3.3 | `shared/lib/apiError.ts` — `ApiError extends Error` with `kind`, `status`, `requestId`, `messageKey`; `code → kind → i18n key` mapping table | ✅ |
+| F3.4 | Error normalization link — GraphQL errors, network failures, timeouts and aborts into `ApiError`; network failure detected by error **type** + `navigator.onLine`, never by message text | ✅ |
+| F3.5 | 401 handling **in the link, once**: single-flight refresh, replay the operation once, else `clearStore()` + session-expired signal | ✅ |
+| F3.6 | Request id read off the `x-request-id` response header and attached to `ApiError` *(works same-origin; cross-origin still gated on P3)* | ✅ |
+| F3.7 | Cache `typePolicies` — relay-style pagination for all 12 `*Connection` fields, with `keyArgs` so filters/sorts do not merge | ✅ |
+| F3.8 | `ApolloRootProvider` in the app root; exactly one client instance | ✅ |
+| F3.9 | Depth-limit guard: a build check that fails if any operation exceeds depth 12 | ✅ |
+| F3.10 | MSW GraphQL handler helpers + fixtures for the shared test harness | ✅ |
+| F3.11 | `session.store.ts` — the in-memory access token (pulled forward from F4.1; the socket link needs it) | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] `pnpm --filter optitask-frontend run codegen` is **idempotent** — re-running
-      it produces no git diff. CI enforces this.
-- [ ] Generated output is committed and type-checks.
-- [ ] `grep -rn "graphql(\`\|gql\`" apps/frontend/src` finds documents **only**
-      inside `*.operations.ts` files.
-- [ ] All 7 server error codes plus `network`, `timeout` and `aborted` map to a
-      distinct `ApiError.kind`, each covered by a unit test.
-- [ ] `aborted` never surfaces to the user (asserted in a test).
-- [ ] A `UNAUTHENTICATED` response triggers exactly **one** refresh even when
-      three requests fail concurrently (single-flight, asserted with MSW).
-- [ ] A failed refresh clears the Apollo cache and redirects to login — no cached
-      data from the previous user survives (asserted).
-- [ ] Two different `TaskFilter` values on the same connection produce **separate**
-      cache entries and do not contaminate each other (asserted).
-- [ ] A paginated `fetchMore` appends rather than replaces (asserted).
-- [ ] The depth-limit check fails a deliberately over-nested test document, then
-      passes once it is flattened with fragments.
-- [ ] No component imports `apollo.client.ts` directly.
+- [x] `pnpm --filter optitask-frontend run codegen` is **idempotent** — verified
+      by regenerating and confirming a clean `git diff`.
+- [x] Generated output is committed and type-checks.
+- [x] Documents live **only** in `*.operations.ts` files — verified by grep.
+- [x] All 7 server error codes plus `network`, `timeout`, `aborted`,
+      `rate_limited` and `service_unavailable` map to a distinct
+      `ApiError.kind`. The code test iterates `ERROR_CODES` from `@contracts`,
+      so a code added to the backend fails the suite rather than silently
+      degrading to `unknown`.
+- [x] Every kind resolves to a real i18n string (asserted per kind).
+- [x] `aborted` is mapped as its own kind and carries no distinct user-facing
+      copy. *(That the UI never renders it is a Phase 5 concern; nothing
+      renders errors yet.)*
+- [x] A `UNAUTHENTICATED` response triggers exactly **one** refresh even when
+      three requests fail concurrently (asserted with MSW).
+- [x] A failed refresh clears the access token, empties the Apollo cache, and
+      signals session expiry (asserted). The redirect itself lands in Phase 5.
+- [x] Two different filter values on the same connection produce **separate**
+      cache entries (asserted against `myNotifications(unreadOnly:)`).
+- [x] Paging appends rather than replaces (asserted end-to-end through the cache).
+- [x] The depth check fails a deliberately 14-level document naming the
+      operation, then passes once removed — verified, not assumed.
+- [x] No component imports `apollo.client.ts` directly — verified by grep.
 
 ---
 

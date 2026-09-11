@@ -142,6 +142,44 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 - **Impact**: spacing, overflow and contrast-in-context bugs would not be
   caught by CI today. This is the single largest gap in Phase 2's coverage.
 
+## Phase 3 — GraphQL Data Layer
+
+- **What**: the error-normalization link converts a 200 response carrying
+  `errors` into a thrown error, rather than letting it through as a result.
+- **Why**: Apollo Client 4 raises `CombinedGraphQLErrors` *above* the link
+  chain, so no link can observe a GraphQL error — which meant the refresh link
+  could never see `UNAUTHENTICATED` and the session could never be renewed.
+  Converting the result puts transport and GraphQL failures on one path.
+- **Right fix**: none available while auth failures arrive as GraphQL errors in
+  a 200 response.
+- **Impact**: `errorPolicy: 'all'` no longer yields partial data — a response
+  with both `data` and `errors` surfaces as an error. The API returns
+  `data: null` alongside a typed error, so nothing relies on that today. A
+  future partial-data field would need this link to special-case it.
+
+- **What**: `refreshSession()` uses a bare `fetch`, not an Apollo operation, and
+  the mutation is written as a raw string rather than a generated document.
+- **Why**: a refresh triggered *by* the auth link would re-enter that same link;
+  any bug there becomes an infinite loop. A direct request cannot recurse.
+- **Right fix**: none — the isolation is the point. The string is one field
+  deep and asserted by the refresh tests.
+- **Impact**: this one operation is not covered by codegen, so a rename of
+  `refreshToken` would not be caught at compile time.
+
+- **What**: `session.store.ts` landed in Phase 3 rather than Phase 4 (F4.1).
+- **Why**: the WebSocket link authenticates through `connectionParams`, so the
+  in-memory token had to exist before the client could be built.
+- **Right fix**: none; Phase 4 builds the auth flow on top of it.
+- **Impact**: none. Tracked as F3.11.
+
+- **What**: the request id is read from the `x-request-id` response header,
+  which a browser cannot see cross-origin until the backend exposes it.
+- **Why**: prerequisite P3 (`Access-Control-Expose-Headers`) is not merged.
+- **Right fix**: land P3 on the backend.
+- **Impact**: `ApiError.requestId` is populated in tests (same-origin) and will
+  be `undefined` in a real cross-origin deployment until P3 ships, so a support
+  reference would be missing exactly where it is most useful.
+
 ## Monorepo / tooling
 
 - **What**: the frontend runs **Vitest 3** while the backend runs Vitest 2.
