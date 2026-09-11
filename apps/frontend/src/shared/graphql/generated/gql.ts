@@ -14,11 +14,37 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+  '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n': typeof types.CurrentUserDocument;
+  '\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n': typeof types.LoginDocument;
+  '\n  mutation Register($input: RegisterInput!) {\n    register(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n': typeof types.RegisterDocument;
+  '\n  mutation Logout {\n    logout\n  }\n': typeof types.LogoutDocument;
+  '\n  query Sessions {\n    sessions {\n      id\n      userAgent\n      ipAddress\n      createdAt\n      expiresAt\n      current\n    }\n  }\n': typeof types.SessionsDocument;
+  '\n  mutation RevokeSession($sessionId: UUID!) {\n    revokeSession(sessionId: $sessionId)\n  }\n': typeof types.RevokeSessionDocument;
+  '\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n': typeof types.ChangePasswordDocument;
+  '\n  mutation RequestPasswordReset($email: String!) {\n    requestPasswordReset(email: $email)\n  }\n': typeof types.RequestPasswordResetDocument;
+  '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n': typeof types.AcceptInvitationDocument;
   '\n  query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {\n    myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {\n      edges {\n        cursor\n        node {\n          id\n          type\n          title\n          body\n          read\n          createdAt\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n': typeof types.MyNotificationsDocument;
   '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n': typeof types.UnreadNotificationCountDocument;
   '\n  query Health {\n    health {\n      status\n      uptimeSeconds\n      timestamp\n    }\n  }\n': typeof types.HealthDocument;
 };
 const documents: Documents = {
+  '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n':
+    types.CurrentUserDocument,
+  '\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n':
+    types.LoginDocument,
+  '\n  mutation Register($input: RegisterInput!) {\n    register(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n':
+    types.RegisterDocument,
+  '\n  mutation Logout {\n    logout\n  }\n': types.LogoutDocument,
+  '\n  query Sessions {\n    sessions {\n      id\n      userAgent\n      ipAddress\n      createdAt\n      expiresAt\n      current\n    }\n  }\n':
+    types.SessionsDocument,
+  '\n  mutation RevokeSession($sessionId: UUID!) {\n    revokeSession(sessionId: $sessionId)\n  }\n':
+    types.RevokeSessionDocument,
+  '\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n':
+    types.ChangePasswordDocument,
+  '\n  mutation RequestPasswordReset($email: String!) {\n    requestPasswordReset(email: $email)\n  }\n':
+    types.RequestPasswordResetDocument,
+  '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n':
+    types.AcceptInvitationDocument,
   '\n  query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {\n    myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {\n      edges {\n        cursor\n        node {\n          id\n          type\n          title\n          body\n          read\n          createdAt\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n':
     types.MyNotificationsDocument,
   '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n':
@@ -41,6 +67,60 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n',
+): (typeof documents)['\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation Register($input: RegisterInput!) {\n    register(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation Register($input: RegisterInput!) {\n    register(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation Logout {\n    logout\n  }\n',
+): (typeof documents)['\n  mutation Logout {\n    logout\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Sessions {\n    sessions {\n      id\n      userAgent\n      ipAddress\n      createdAt\n      expiresAt\n      current\n    }\n  }\n',
+): (typeof documents)['\n  query Sessions {\n    sessions {\n      id\n      userAgent\n      ipAddress\n      createdAt\n      expiresAt\n      current\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RevokeSession($sessionId: UUID!) {\n    revokeSession(sessionId: $sessionId)\n  }\n',
+): (typeof documents)['\n  mutation RevokeSession($sessionId: UUID!) {\n    revokeSession(sessionId: $sessionId)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n',
+): (typeof documents)['\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RequestPasswordReset($email: String!) {\n    requestPasswordReset(email: $email)\n  }\n',
+): (typeof documents)['\n  mutation RequestPasswordReset($email: String!) {\n    requestPasswordReset(email: $email)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

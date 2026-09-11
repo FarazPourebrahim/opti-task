@@ -179,6 +179,39 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 - **Impact**: none. `ApiError.requestId` is populated in both same-origin tests
   and a real cross-origin deployment.
 
+## Phase 4 — Auth & Session
+
+- **What**: the password policy is expressed twice — in
+  `modules/auth/schemas/auth.schema.ts` and in the backend's
+  `auth.validation.ts`.
+- **Why**: the API's `extensions` carries a `code` and nothing else, so a server
+  rejection can only ever be rendered as a form-level error. Duplicating the
+  rules is what lets a user see *which* field is wrong.
+- **Right fix**: move the policy into `@contracts` as a shared zod schema, so
+  both sides import one definition. That is a backend change too, so it was not
+  bundled into a frontend phase.
+- **Impact**: a policy change on the server that is not mirrored here shows up
+  as a confusing form-level error instead of a field hint. `auth.test.tsx`
+  asserts the exact boundaries, so the drift is at least visible.
+
+- **What**: the auth pages take `onSignedIn` / `onGoToLogin` callbacks instead
+  of navigating.
+- **Why**: React Router lands in Phase 5. Wiring `window.location` here would
+  be replaced immediately and would make the pages untestable in isolation.
+- **Right fix**: Phase 5 passes real navigation into these props, or replaces
+  them with router hooks.
+- **Impact**: nothing routes yet — the pages are reachable only from tests and,
+  after Phase 5, from the router.
+
+- **What**: `requestPasswordReset` is wired in `auth.operations.ts` but no
+  screen calls it, and `ForgotPassword.page.tsx` offers no email field.
+- **Why**: the backend mutation validates the address and returns success while
+  issuing no token and sending no mail. A form that appears to work would leave
+  users waiting for an email that never arrives.
+- **Right fix**: when the backend grows a reset-token table, turn that page into
+  a real form; the operation is already defined.
+- **Impact**: users cannot self-serve a forgotten password. The screen says so.
+
 ## Monorepo / tooling
 
 - **What**: the frontend runs **Vitest 3** while the backend runs Vitest 2.

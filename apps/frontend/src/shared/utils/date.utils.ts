@@ -30,3 +30,40 @@ export function isApiDateTime(value: string): boolean {
     value,
   );
 }
+
+/**
+ * A short relative description of an instant ("3 days ago").
+ *
+ * Uses `Intl.RelativeTimeFormat` so the wording follows the viewer's locale
+ * rather than being hard-coded English assembled from numbers.
+ */
+export function formatRelativeTime(
+  value: string | null | undefined,
+  now: Date = new Date(),
+): string {
+  const date = fromApiDateTime(value);
+  if (!date) return '';
+
+  const seconds = Math.round((date.getTime() - now.getTime()) / 1000);
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+
+  const divisions: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['second', 60],
+    ['minute', 60],
+    ['hour', 24],
+    ['day', 7],
+    ['week', 4.34524],
+    ['month', 12],
+    ['year', Number.POSITIVE_INFINITY],
+  ];
+
+  let amount = seconds;
+  for (const [unit, size] of divisions) {
+    if (Math.abs(amount) < size) {
+      return formatter.format(Math.round(amount), unit);
+    }
+    amount /= size;
+  }
+
+  return formatter.format(Math.round(amount), 'year');
+}
