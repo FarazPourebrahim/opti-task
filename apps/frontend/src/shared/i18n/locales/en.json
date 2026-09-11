@@ -48,6 +48,9 @@
       "motion": "Motion",
       "sample": "The quick brown fox jumps over the lazy dog",
       "opposite": "Aa"
+    },
+    "components": {
+      "title": "Component library"
     }
   }
 }

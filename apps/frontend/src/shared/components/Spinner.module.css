@@ -1,0 +1,36 @@
+/* Nesting mirrors Spinner.tsx: .spinner > .spinnerTrack */
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentcolor;
+
+  &[data-size='sm'] {
+    inline-size: var(--space-300);
+    block-size: var(--space-300);
+  }
+
+  &[data-size='md'] {
+    inline-size: var(--space-400);
+    block-size: var(--space-400);
+  }
+
+  &[data-size='lg'] {
+    inline-size: var(--space-500);
+    block-size: var(--space-500);
+  }
+
+  .spinnerTrack {
+    inline-size: 100%;
+    block-size: 100%;
+    animation: spin var(--animation-duration-900) linear infinite;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-width: 2.5;
+    /* Three-quarter arc: the gap is what makes rotation legible. */
+    stroke-dasharray: 47 16;
+    opacity: 0.9;
+  }
+}

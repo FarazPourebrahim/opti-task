@@ -1,0 +1,161 @@
+/*
+ * Nesting mirrors Combobox.tsx:
+ *   .comboboxTrigger > (.comboboxValue, .comboboxIcon)
+ *   .comboboxContent > .comboboxCommand
+ *     > (.comboboxInput,
+ *        .comboboxList > (.comboboxEmpty,
+ *                         .comboboxItem > (.comboboxItemIcon,
+ *                                          .comboboxItemText >
+ *                                            (.comboboxItemLabel,
+ *                                             .comboboxItemDescription),
+ *                                          .comboboxItemCheck)))
+ */
+
+.comboboxTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-200);
+  inline-size: 100%;
+  padding-block: var(--space-300);
+  padding-inline: var(--space-300);
+  border: var(--bw-100) solid var(--color-border-400);
+  border-radius: var(--br-400);
+  background-color: var(--color-surface-500);
+  color: var(--color-text-400);
+  cursor: pointer;
+  font-size: var(--fs-400);
+  text-align: start;
+
+  &[data-placeholder] {
+    color: var(--color-text-300);
+  }
+
+  &[data-invalid] {
+    border-color: var(--color-danger);
+  }
+
+  &:disabled {
+    background-color: var(--color-surface-400);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .comboboxValue {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .comboboxIcon {
+    flex-shrink: 0;
+    inline-size: var(--space-400);
+    block-size: var(--space-400);
+    color: var(--color-text-300);
+  }
+}
+
+.comboboxContent {
+  z-index: 60;
+  inline-size: var(--radix-popover-trigger-width);
+  min-inline-size: 14rem;
+  overflow: hidden;
+  border: var(--bw-100) solid var(--color-border-300);
+  border-radius: var(--br-500);
+  background-color: var(--color-surface-500);
+  box-shadow: var(--shadow-blur-500);
+
+  .comboboxCommand {
+    display: flex;
+    flex-direction: column;
+
+    .comboboxInput {
+      inline-size: 100%;
+      padding: var(--space-300);
+      border: none;
+      border-block-end: var(--bw-100) solid var(--color-border-300);
+      background: none;
+      color: var(--color-text-400);
+      font-size: var(--fs-400);
+      outline: none;
+
+      &::placeholder {
+        color: var(--color-text-300);
+      }
+    }
+
+    .comboboxList {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-100);
+      max-block-size: 16rem;
+      padding: var(--space-200);
+      overflow-y: auto;
+
+      .comboboxEmpty {
+        padding-block: var(--space-400);
+        color: var(--color-text-300);
+        font-size: var(--fs-300);
+        text-align: center;
+      }
+
+      .comboboxItem {
+        display: flex;
+        align-items: center;
+        gap: var(--space-300);
+        padding-block: var(--space-200);
+        padding-inline: var(--space-300);
+        border-radius: var(--br-300);
+        color: var(--color-text-400);
+        cursor: pointer;
+        font-size: var(--fs-300);
+        user-select: none;
+
+        &[data-selected='true'] {
+          background-color: var(--color-surface-400);
+        }
+
+        &[data-disabled='true'] {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
+        .comboboxItemIcon {
+          display: inline-flex;
+          flex-shrink: 0;
+          align-items: center;
+
+          & > svg {
+            inline-size: var(--space-400);
+            block-size: var(--space-400);
+          }
+        }
+
+        .comboboxItemText {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          min-inline-size: 0;
+
+          .comboboxItemLabel {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .comboboxItemDescription {
+            color: var(--color-text-300);
+            font-size: var(--fs-100);
+          }
+        }
+
+        .comboboxItemCheck {
+          flex-shrink: 0;
+          inline-size: var(--space-300);
+          block-size: var(--space-300);
+          color: var(--color-primary);
+        }
+      }
+    }
+  }
+}

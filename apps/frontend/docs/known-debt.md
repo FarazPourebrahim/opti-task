@@ -74,6 +74,62 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
   to `#/dev/tokens` needs a reload. Dev-only; the branch is statically removed
   from production builds.
 
+## Phase 2 — Shared Component Library
+
+- **What**: the test environment is **happy-dom**, not jsdom.
+- **Why**: jsdom implements no `PointerEvent`, `ResizeObserver` or
+  `IntersectionObserver`. Radix opens every floating surface (menu, popover,
+  tooltip, select) on pointer events and positions it with floating-ui's
+  `autoUpdate`, which constructs an IntersectionObserver. Under jsdom those
+  components never opened, and the throw inside an effect made React retry
+  forever — so tests **hung for 20–30s and timed out with no error** instead of
+  failing usefully. The same suite runs in ~90ms under happy-dom.
+- **Right fix**: none needed. Polyfills for the missing APIs are kept in
+  `setup.ts` anyway so the suite still works if the environment is switched back.
+- **Impact**: happy-dom is a different DOM implementation from the browser, so a
+  behaviour difference could hide in either direction. The Phase 14 E2E suite
+  runs against a real browser and is what actually certifies these components.
+
+- **What**: `userEvent.setup` runs with `pointerEventsCheck: 0` and `delay: null`.
+- **Why**: Radix sets `pointer-events: none` on `<body>` while a dismissable
+  layer is open (that is how it makes the page inert), which stalls userEvent's
+  pointer-events check. The default inter-event delay also interleaves with
+  Radix's own timers and made surfaces open nondeterministically.
+- **Right fix**: none — neither check protects anything in a headless DOM that
+  performs no hit-testing.
+- **Impact**: a genuine `pointer-events: none` regression on a control would not
+  be caught by the component suite. Reachable only via the E2E suite.
+
+- **What**: `auditA11y` disables the `region` and `aria-hidden-focus` axe rules.
+- **Why**: `region` requires page landmarks, which an isolated component does
+  not have. `aria-hidden-focus` fires on Radix's own focus sentinels
+  (`span[data-radix-focus-guard]`) — intentionally focusable, zero-size,
+  pointer-events:none elements implementing the focus trap.
+- **Right fix**: the Phase 14 full-route sweep audits with **both rules on**,
+  where landmarks exist and the finding would be real.
+- **Impact**: a component that genuinely hides focusable content behind
+  `aria-hidden` would not be flagged at the component level.
+
+- **What**: `Components.page.tsx` uses literal strings; `Tokens.page.tsx` uses
+  i18n keys, and a few `dev.*` keys therefore ship inside `en.json`.
+- **Why**: dev-only pages are never localized, so putting their copy through
+  i18n adds catalogue entries nobody will translate. The tokens gallery predates
+  that decision.
+- **Right fix**: drop the `dev.*` keys from `en.json` and inline the strings in
+  `Tokens.page.tsx`, so dev pages are consistently exempt.
+- **Impact**: a few hundred bytes of dev-only copy in the production
+  translation catalogue. No dev *code* ships — verified by grepping the built
+  bundle for gallery identifiers.
+
+- **What**: no visual verification of any component.
+- **Why**: the suite asserts structure, behaviour, keyboard paths and axe
+  cleanliness, but happy-dom performs no layout — nothing here proves a
+  component *looks* right, or that it holds up at 360px.
+- **Right fix**: open `#/dev/components` and `#/dev/tokens` in a browser at
+  narrow and wide widths; Phase 14 adds the Lighthouse and responsive passes.
+- **Impact**: spacing, overflow and contrast-in-context bugs would not be
+  caught by CI today. This is the single largest gap in Phase 2's coverage.
+
 ## Monorepo / tooling
 
 - **What**: the frontend runs **Vitest 3** while the backend runs Vitest 2.

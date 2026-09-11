@@ -1,0 +1,120 @@
+/*
+ * Nesting mirrors Toast.tsx:
+ *   .toast > (.toastIcon,
+ *             .toastText > (.toastTitle, .toastDescription, .toastRequestId),
+ *             .toastClose)
+ *   .toastViewport (sibling region holding the stack)
+ */
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-300);
+  padding: var(--space-400);
+  border: var(--bw-100) solid var(--color-border-300);
+  border-radius: var(--br-500);
+  background-color: var(--color-surface-500);
+  box-shadow: var(--shadow-blur-500);
+
+  &[data-state='open'] {
+    animation: slide-up var(--animation-duration-300) var(--easing-decelerate);
+  }
+
+  &[data-swipe='move'] {
+    transform: translateX(var(--radix-toast-swipe-move-x));
+  }
+
+  &[data-tone='info'] .toastIcon {
+    color: var(--color-info);
+  }
+
+  &[data-tone='success'] .toastIcon {
+    color: var(--color-success);
+  }
+
+  &[data-tone='warning'] .toastIcon {
+    color: var(--color-warning);
+  }
+
+  &[data-tone='danger'] .toastIcon {
+    color: var(--color-danger);
+  }
+
+  .toastIcon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+
+    & > svg {
+      inline-size: var(--space-400);
+      block-size: var(--space-400);
+    }
+  }
+
+  .toastText {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-100);
+    min-inline-size: 0;
+
+    .toastTitle {
+      color: var(--color-text-400);
+      font-size: var(--fs-400);
+      font-weight: var(--fw-700);
+      line-height: var(--lh-300);
+    }
+
+    .toastDescription {
+      color: var(--color-text-300);
+      font-size: var(--fs-300);
+      line-height: var(--lh-500);
+    }
+
+    .toastRequestId {
+      color: var(--color-text-300);
+      font-family: var(--font-family-mono);
+      font-size: var(--fs-100);
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .toastClose {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-100);
+    border: none;
+    border-radius: var(--br-300);
+    background: none;
+    color: var(--color-text-300);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--color-surface-400);
+      color: var(--color-text-400);
+    }
+
+    & > svg {
+      inline-size: var(--space-400);
+      block-size: var(--space-400);
+    }
+  }
+}
+
+.toastViewport {
+  position: fixed;
+  z-index: 80;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-300);
+  inline-size: min(26rem, calc(100vw - var(--space-500)));
+  max-block-size: 100dvh;
+  padding: var(--space-400);
+  overflow: hidden;
+  list-style: none;
+  outline: none;
+}

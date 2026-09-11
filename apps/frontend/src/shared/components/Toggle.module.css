@@ -1,0 +1,153 @@
+/*
+ * Nesting mirrors Toggle.tsx. All three controls share the same row shape:
+ *   .toggleRow > (control, .toggleText > (.toggleLabel, .toggleDescription))
+ * where control is .checkboxBox > .checkboxMark, .switchTrack > .switchThumb,
+ * or .radioBox > .radioDot. .radioGroup wraps the rows for RadioGroup.
+ */
+
+.toggleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-300);
+
+  .checkboxBox {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--space-400);
+    block-size: var(--space-400);
+    margin-block-start: var(--space-100);
+    border: var(--bw-100) solid var(--color-border-400);
+    border-radius: var(--br-200);
+    background-color: var(--color-surface-500);
+    cursor: pointer;
+    transition:
+      background-color var(--animation-duration-300) var(--easing-standard),
+      border-color var(--animation-duration-300) var(--easing-standard);
+
+    &[data-state='checked'],
+    &[data-state='indeterminate'] {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .checkboxMark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary-opposite);
+
+      & > svg {
+        inline-size: var(--space-300);
+        block-size: var(--space-300);
+        stroke-width: 3;
+      }
+    }
+  }
+
+  .switchTrack {
+    position: relative;
+    flex-shrink: 0;
+    inline-size: var(--space-600);
+    block-size: var(--space-400);
+    margin-block-start: var(--space-100);
+    padding: 0;
+    border: var(--bw-100) solid var(--color-border-400);
+    border-radius: var(--br-pill);
+    background-color: var(--color-surface-400);
+    cursor: pointer;
+    transition:
+      background-color var(--animation-duration-300) var(--easing-standard),
+      border-color var(--animation-duration-300) var(--easing-standard);
+
+    &[data-state='checked'] {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .switchThumb {
+      display: block;
+      inline-size: var(--space-300);
+      block-size: var(--space-300);
+      border-radius: var(--br-round);
+      background-color: var(--color-gray-100);
+      box-shadow: var(--shadow-300);
+      transform: translateX(2px);
+      transition: transform var(--animation-duration-300) var(--easing-standard);
+      will-change: transform;
+
+      &[data-state='checked'] {
+        transform: translateX(calc(var(--space-600) - var(--space-300) - 6px));
+      }
+    }
+  }
+
+  .radioBox {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--space-400);
+    block-size: var(--space-400);
+    margin-block-start: var(--space-100);
+    border: var(--bw-100) solid var(--color-border-400);
+    border-radius: var(--br-round);
+    background-color: var(--color-surface-500);
+    cursor: pointer;
+    transition: border-color var(--animation-duration-300) var(--easing-standard);
+
+    &[data-state='checked'] {
+      border-color: var(--color-primary);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .radioDot {
+      display: block;
+      inline-size: var(--space-200);
+      block-size: var(--space-200);
+      border-radius: var(--br-round);
+      background-color: var(--color-primary);
+    }
+  }
+
+  .toggleText {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-100);
+    min-inline-size: 0;
+
+    .toggleLabel {
+      color: var(--color-text-400);
+      cursor: pointer;
+      font-size: var(--fs-400);
+      line-height: var(--lh-300);
+    }
+
+    .toggleDescription {
+      color: var(--color-text-300);
+      font-size: var(--fs-200);
+      line-height: var(--lh-500);
+    }
+  }
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-300);
+}

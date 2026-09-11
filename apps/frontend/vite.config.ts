@@ -32,7 +32,7 @@ export default defineConfig({
     sourcemap: true,
   },
   test: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/shared/tests/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],

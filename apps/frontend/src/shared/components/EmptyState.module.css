@@ -1,0 +1,103 @@
+/*
+ * Nesting mirrors EmptyState.tsx:
+ *   .emptyState > (.emptyStateIcon, .emptyStateTitle, .emptyStateDescription)
+ *   .errorState > (.errorStateIcon, .errorStateTitle, .errorStateDescription,
+ *                  .errorStateRequestId)
+ *
+ * The two surfaces deliberately do NOT share styles: an empty result and a
+ * failed request must be distinguishable at a glance.
+ */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-300);
+  padding-block: var(--space-700);
+  padding-inline: var(--space-400);
+  text-align: center;
+
+  &[data-size='sm'] {
+    padding-block: var(--space-500);
+    gap: var(--space-200);
+  }
+
+  .emptyStateIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--space-700);
+    block-size: var(--space-700);
+    border-radius: var(--br-round);
+    background-color: var(--color-surface-500);
+    color: var(--color-text-300);
+
+    & > svg {
+      inline-size: var(--space-500);
+      block-size: var(--space-500);
+    }
+  }
+
+  .emptyStateTitle {
+    color: var(--color-text-400);
+    font-size: var(--fs-500);
+    font-weight: var(--fw-700);
+    letter-spacing: var(--ls-300);
+  }
+
+  .emptyStateDescription {
+    max-inline-size: var(--layout-prose-max);
+    color: var(--color-text-300);
+    font-size: var(--fs-300);
+    line-height: var(--lh-500);
+  }
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-300);
+  padding-block: var(--space-600);
+  padding-inline: var(--space-400);
+  border: var(--bw-100) solid var(--color-danger);
+  border-radius: var(--br-500);
+  text-align: center;
+
+  &[data-size='sm'] {
+    padding-block: var(--space-400);
+    gap: var(--space-200);
+  }
+
+  .errorStateIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-danger);
+
+    & > svg {
+      inline-size: var(--space-600);
+      block-size: var(--space-600);
+    }
+  }
+
+  .errorStateTitle {
+    color: var(--color-text-400);
+    font-size: var(--fs-500);
+    font-weight: var(--fw-700);
+  }
+
+  .errorStateDescription {
+    max-inline-size: var(--layout-prose-max);
+    color: var(--color-text-300);
+    font-size: var(--fs-300);
+    line-height: var(--lh-500);
+  }
+
+  .errorStateRequestId {
+    color: var(--color-text-300);
+    font-family: var(--font-family-mono);
+    font-size: var(--fs-100);
+    overflow-wrap: anywhere;
+  }
+}

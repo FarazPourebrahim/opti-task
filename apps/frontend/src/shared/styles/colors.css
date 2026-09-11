@@ -96,6 +96,12 @@ body.light {
 
   --color-focus-ring: var(--color-primary);
   --color-overlay: hsl(225, 24%, 10%, 0.45);
+
+  /* Inverted surface for tooltips and toasts: reads as "on top of the UI"
+     rather than part of it, and must flip with the theme or it vanishes
+     against a same-lightness surface. */
+  --color-inverse-surface: var(--color-gray-20);
+  --color-inverse-text: var(--color-gray-98);
 }
 
 body.dark {
@@ -113,4 +119,7 @@ body.dark {
 
   --color-focus-ring: var(--color-primary-lighter);
   --color-overlay: hsl(225, 24%, 4%, 0.6);
+
+  --color-inverse-surface: var(--color-gray-90);
+  --color-inverse-text: var(--color-gray-10);
 }
