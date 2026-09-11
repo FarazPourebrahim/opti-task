@@ -172,13 +172,12 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 - **Right fix**: none; Phase 4 builds the auth flow on top of it.
 - **Impact**: none. Tracked as F3.11.
 
-- **What**: the request id is read from the `x-request-id` response header,
-  which a browser cannot see cross-origin until the backend exposes it.
-- **Why**: prerequisite P3 (`Access-Control-Expose-Headers`) is not merged.
-- **Right fix**: land P3 on the backend.
-- **Impact**: `ApiError.requestId` is populated in tests (same-origin) and will
-  be `undefined` in a real cross-origin deployment until P3 ships, so a support
-  reference would be missing exactly where it is most useful.
+- **What**: ~~the request id is invisible cross-origin~~ — RESOLVED.
+- **Why**: prerequisite P3 was outstanding.
+- **Right fix**: done — the backend now sends
+  `Access-Control-Expose-Headers: x-request-id`.
+- **Impact**: none. `ApiError.requestId` is populated in both same-origin tests
+  and a real cross-origin deployment.
 
 ## Monorepo / tooling
 

@@ -74,19 +74,20 @@ Verified against the SDL and backend source, not assumed.
 
 ---
 
-## Prerequisites — backend changes required before Phase 4
+## Prerequisites — backend changes ✅ done
 
-These block the chosen auth model. They are small, and they are **backend** work;
-the frontend cannot work around them.
+These blocked the chosen auth model and have been resolved on the backend
+(branch `backend/CORS`, 5 commits, 12 new tests).
 
-| # | Blocker | Required change | Blocks |
+| # | Blocker | Resolution | Status |
 |---|---|---|:--:|
-| P1 | `apps/backend/src/app.ts:33` is `cors({ credentials: true })` with the `cors` package's default `origin: '*'`. A browser **rejects** `Access-Control-Allow-Origin: *` on a credentialed request, so `credentials: 'include'` fails every call. | Reflect an explicit origin allowlist from validated env (`CORS_ORIGINS`) together with `credentials: true`. | F4 |
-| P2 | No `Origin`/`Referer` validation and no CSRF token on state-changing GraphQL POSTs. `SameSite=Lax` blocks the common cases but is not defense in depth. | Require a custom header (e.g. `x-optitask-client`) on every request — it forces a CORS preflight a cross-site form cannot satisfy — and validate `Origin` against the allowlist. | F4 |
-| P3 | `x-request-id` is set on the response but is not in `Access-Control-Expose-Headers`, so JS cannot read it cross-origin. | Add `exposedHeaders: ['x-request-id']` to the CORS config. | F3.6 |
+| P1 | `cors({ credentials: true })` defaulted to `origin: '*'`. A browser **rejects** `Access-Control-Allow-Origin: *` on a credentialed request, so `credentials: 'include'` failed every call. | `shared/middleware/cors.ts` reflects one allowed origin at a time from a validated `CORS_ORIGINS` allowlist; required in production, defaulted to the Vite dev origins otherwise. | ✅ |
+| P2 | No `Origin` validation and no CSRF control on state-changing POSTs beyond `SameSite=Lax`. | `shared/middleware/csrf.ts` requires a non-empty `x-optitask-client` header **and** an allowlisted `Origin` — but only for cookie-authenticated requests. `Authorization: Bearer` and unauthenticated callers are exempt, so curl and server-to-server clients are unaffected. Rejections log the `csrf.rejected` security event. | ✅ |
+| P3 | `x-request-id` was set but not exposed, so JS could not read it cross-origin. | `exposedHeaders: ['x-request-id']` on the CORS config. | ✅ |
 
-> **Rule:** Phase 4 does not start until P1–P2 are merged and verified with a real
-> cross-origin browser request. Phase 3 may proceed; only F3.6 is gated on P3.
+The CSRF design deliberately checks only that a custom header is *present*, not
+its value: the security property is that a cross-site `<form>` cannot set one at
+all, and checking the value would couple the API to a client version for no gain.
 
 ---
 
@@ -429,7 +430,7 @@ feature ever thinks about transport.
 | F3.3 | `shared/lib/apiError.ts` — `ApiError extends Error` with `kind`, `status`, `requestId`, `messageKey`; `code → kind → i18n key` mapping table | ✅ |
 | F3.4 | Error normalization link — GraphQL errors, network failures, timeouts and aborts into `ApiError`; network failure detected by error **type** + `navigator.onLine`, never by message text | ✅ |
 | F3.5 | 401 handling **in the link, once**: single-flight refresh, replay the operation once, else `clearStore()` + session-expired signal | ✅ |
-| F3.6 | Request id read off the `x-request-id` response header and attached to `ApiError` *(works same-origin; cross-origin still gated on P3)* | ✅ |
+| F3.6 | Request id read off the `x-request-id` response header and attached to `ApiError` (P3 now exposes it cross-origin) | ✅ |
 | F3.7 | Cache `typePolicies` — relay-style pagination for all 12 `*Connection` fields, with `keyArgs` so filters/sorts do not merge | ✅ |
 | F3.8 | `ApolloRootProvider` in the app root; exactly one client instance | ✅ |
 | F3.9 | Depth-limit guard: a build check that fails if any operation exceeds depth 12 | ✅ |

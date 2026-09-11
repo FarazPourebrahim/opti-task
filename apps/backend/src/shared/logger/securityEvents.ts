@@ -18,7 +18,9 @@ type SecurityEvent =
   /** A permission check failed for an authenticated principal. */
   | 'authz.forbidden'
   /** A principal asked for a resource owned by someone else. */
-  | 'authz.ownership_violation';
+  | 'authz.ownership_violation'
+  /** A cookie-authenticated request failed the cross-site request checks. */
+  | 'csrf.rejected';
 
 /**
  * Fields every security line carries. `security: true` gives log pipelines a
