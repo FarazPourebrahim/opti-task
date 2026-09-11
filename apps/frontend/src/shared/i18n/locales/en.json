@@ -21,11 +21,11 @@
     "system": "System"
   },
   "error": {
-    "network": "Can't reach the server. Check your connection and try again.",
+    "network": "Can’t reach the server. Check your connection and try again.",
     "timeout": "That took too long. Try again.",
     "unauthorized": "Your session has expired. Sign in again to continue.",
-    "forbidden": "You don't have permission to do that.",
-    "notFound": "We couldn't find what you were looking for.",
+    "forbidden": "You don’t have permission to do that.",
+    "notFound": "We couldn’t find what you were looking for.",
     "conflict": "That was already changed. Refresh and try again.",
     "validation": "Some of the details below need fixing.",
     "rateLimited": "Too many requests. Wait a moment and try again.",
