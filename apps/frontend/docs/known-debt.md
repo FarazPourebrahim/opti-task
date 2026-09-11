@@ -110,6 +110,26 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 - **Impact**: a component that genuinely hides focusable content behind
   `aria-hidden` would not be flagged at the component level.
 
+- **What**: `Components.page.tsx` uses literal strings; `Tokens.page.tsx` uses
+  i18n keys, and a few `dev.*` keys therefore ship inside `en.json`.
+- **Why**: dev-only pages are never localized, so putting their copy through
+  i18n adds catalogue entries nobody will translate. The tokens gallery predates
+  that decision.
+- **Right fix**: drop the `dev.*` keys from `en.json` and inline the strings in
+  `Tokens.page.tsx`, so dev pages are consistently exempt.
+- **Impact**: a few hundred bytes of dev-only copy in the production
+  translation catalogue. No dev *code* ships — verified by grepping the built
+  bundle for gallery identifiers.
+
+- **What**: no visual verification of any component.
+- **Why**: the suite asserts structure, behaviour, keyboard paths and axe
+  cleanliness, but happy-dom performs no layout — nothing here proves a
+  component *looks* right, or that it holds up at 360px.
+- **Right fix**: open `#/dev/components` and `#/dev/tokens` in a browser at
+  narrow and wide widths; Phase 14 adds the Lighthouse and responsive passes.
+- **Impact**: spacing, overflow and contrast-in-context bugs would not be
+  caught by CI today. This is the single largest gap in Phase 2's coverage.
+
 ## Monorepo / tooling
 
 - **What**: the frontend runs **Vitest 3** while the backend runs Vitest 2.
