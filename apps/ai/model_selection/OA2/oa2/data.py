@@ -67,6 +67,7 @@ def fingerprints(cfg: dict) -> dict[str, str]:
     sp = cfg["story_point"]
     ta = cfg["task_assignment"]
     sp_prep = {k: sp[k] for k in ("buckets", "drop_zero", "split")}
+    sp_prep["train_fraction"] = float(sp.get("train_fraction", 1.0))
     ta_prep = {k: ta[k] for k in ("train_tasks", "val_tasks", "test_tasks", "test_unclassified_tasks",
                                   "n_hard_negatives", "n_random_negatives", "overqualified_min_gap")}
     ta_prep["split"] = sp["split"]
@@ -196,6 +197,18 @@ def chrono_split(df: pd.DataFrame, ratios: dict) -> pd.Series:
 
 # ---------------------------------------------------------------- Task A
 
+def _fraction_per_project(train: pd.DataFrame, frac: float, seed: int) -> pd.DataFrame:
+    """Keep round(frac * n) rows (at least 1) of every project's training rows, chosen at random (seeded),
+    so small projects stay represented. Row order (by Issue_ID) is preserved."""
+    rng = rng_for(seed, "sp_train_fraction")
+    keep = []
+    for _, g in train.groupby("project_key", sort=True):
+        k = min(len(g), max(1, int(np.floor(len(g) * frac + 0.5))))
+        keep.append(rng.choice(g.index.to_numpy(), size=k, replace=False))
+    idx = np.sort(np.concatenate(keep)) if keep else np.array([], dtype=np.int64)
+    return train.loc[idx].reset_index(drop=True)
+
+
 def _build_story_point(base: pd.DataFrame, cfg: dict, fp: str) -> StoryPointData:
     sp_cfg = cfg["story_point"]
     buckets = list(sp_cfg["buckets"])
@@ -213,10 +226,17 @@ def _build_story_point(base: pd.DataFrame, cfg: dict, fp: str) -> StoryPointData
     df = df.rename(columns={"story_point_raw": "raw_sp"})
     cols = ["Issue_ID", "project_key", "type", "type_slice", "changed", "raw_sp", "bucket", "text"]
     parts = {s: df[df["split"] == s][cols].sort_values("Issue_ID").reset_index(drop=True) for s in SPLITS}
+    n_train_available = len(parts["train"])
+    frac = float(sp_cfg.get("train_fraction", 1.0))
+    if frac < 1.0:
+        parts["train"] = _fraction_per_project(parts["train"], frac, cfg["seed"])
+        LOG.info("story_point: train_fraction %.2f -> %d of %d training rows (sampled per project)",
+                 frac, len(parts["train"]), n_train_available)
     raw_map = (df.groupby("raw_sp")["bucket"].first().map(lambda i: buckets[i]))
     meta = {
         "n_with_story_point": n_with_sp, "n_zero_dropped": n_zero if sp_cfg["drop_zero"] else 0,
         "n_rows": len(df), "n_projects": int(df["project_key"].nunique()),
+        "train_fraction": frac, "n_train_available": n_train_available,
         "split_sizes": {s: len(parts[s]) for s in SPLITS},
         "top_types": list(top_types),
         "raw_to_bucket": {str(k): int(v) for k, v in raw_map.items()},

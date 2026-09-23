@@ -10,18 +10,23 @@ tasks: [story_point, task_assignment]
 data:
   max_text_chars: 8000                # descriptions are cut to this many characters at prep time (models read <= 512 tokens)
 
+# Data budget = "scenario B" (reduced runtime). The README defaults are:
+#   story_point.train_fraction 1.0; task_assignment train/val/test/test_unclassified = 50000/2000/5000/1000.
+# Restore those values to run the full-size benchmark (this creates new fingerprints / run IDs).
+
 story_point:
   buckets: [1, 2, 3, 5, 8, 13, 21]
   drop_zero: true
   split: {train: 0.70, val: 0.15, test: 0.15}   # also used for the task_assignment split (README §5.4)
+  train_fraction: 0.25                # share of the train split used, sampled per project; val/test stay full
   heads: [coral]                      # add regression / multiclass for ablations (or per model: heads: [...])
   epochs: 4
 
 task_assignment:
-  train_tasks: 50000
-  val_tasks: 2000
-  test_tasks: 5000
-  test_unclassified_tasks: 1000
+  train_tasks: 5000
+  val_tasks: 500
+  test_tasks: 2000
+  test_unclassified_tasks: 500
   n_hard_negatives: 4
   n_random_negatives: 2
   overqualified_min_gap: 0.10         # Capability - Plausibility gap that marks a pair as over-qualified (bi-encoder extra negative)

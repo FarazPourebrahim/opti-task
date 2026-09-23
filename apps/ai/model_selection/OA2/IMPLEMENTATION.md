@@ -4,6 +4,18 @@ This document describes **how** the benchmark specified in [`README.md`](README.
 
 The README is the specification and is intentionally left unchanged. When this document and the code disagree, the code is the truth — please fix this document.
 
+> **Current data budget: "scenario B" (reduced runtime).** `config.yaml` deliberately runs smaller than the README defaults:
+>
+> | Setting | README default | Configured (scenario B) |
+> |---|---|---|
+> | `story_point.train_fraction` (new key) | 1.0 (~40.5k issues) | **0.25** (~10k issues, sampled per project) |
+> | `task_assignment.train_tasks` | 50,000 | **5,000** |
+> | `task_assignment.val_tasks` | 2,000 | **500** |
+> | `task_assignment.test_tasks` | 5,000 | **2,000** |
+> | `task_assignment.test_unclassified_tasks` | 1,000 | **500** |
+>
+> Task A validation and test stay full size. Every model gets the same budget, so the comparison stays fair, but absolute scores are lower than at full size and larger models may be handicapped more. Rare required levels (Staff ≈ 100, Intern ≈ 40, Principal ≈ 30 training tasks) are thin in Task B. The budget is stated in every report's `context.caveats` and at the top of `SUMMARY.md`. To run at full size, restore the README values in `config.yaml`; that yields new fingerprints and run IDs and never overwrites scenario-B results.
+
 ---
 
 ## Table of contents
@@ -160,6 +172,7 @@ Each unit's log lines go to the console **and** `OA2/logs/<run_id>.log` (a `File
 
 | Key | Purpose |
 |---|---|
+| `story_point.train_fraction` (0.25; README-equivalent 1.0) | Share of the Task A train split that is used, sampled per project (§6.6). Must be in (0, 1]. Part of the Task A fingerprint. |
 | `data.max_text_chars` (8000) | Descriptions are cut to this many characters at prep time. Models read ≤ 512 tokens (~2–3k chars), so this only bounds cache size and tokenization time. Part of the data fingerprint. |
 | `task_assignment.overqualified_min_gap` (0.10) | Minimum `Capability − Plausibility` for the "over-qualified" extra negative (§12.2). Part of the Task B fingerprint. |
 | `task_assignment.query_instruction` | Instruction text substituted into `{instruction}` in query prefixes and the reranker template. |
@@ -192,7 +205,7 @@ Registry decisions in the shipped config:
 `fingerprints(cfg)` returns `{"story_point": fp, "task_assignment": fp}`, each the first 16 hex chars of a SHA-256 over canonical JSON of:
 
 - common: `PREP_VERSION` (`"1"`, bump it when prep logic changes), `seed`, `max_text_chars`, and for each of the 7 used CSVs its `size` and `mtime_ns`;
-- Task A: `buckets`, `drop_zero`, `split`;
+- Task A: `buckets`, `drop_zero`, `split`, `train_fraction`;
 - Task B: `train_tasks`, `val_tasks`, `test_tasks`, `test_unclassified_tasks`, `n_hard_negatives`, `n_random_negatives`, `overqualified_min_gap`, and the (shared) `split`.
 
 **Deviation from the README's single fingerprint:** there is one per task, so changing Task B sampling does not invalidate every Task A result. Each report records the fingerprint of its own task.
@@ -248,12 +261,13 @@ Flooring means small projects give slightly more rows to test than to val. Task 
 - `type_slice`: the 6 most frequent `Type` values over **all** Task A rows (ties broken alphabetically), everything else → `"other"`.
 - `changed`: true if either `*_Changed_After_Estimation` column is `1/true/t/yes`.
 - Stored columns: `Issue_ID, project_key, type, type_slice, changed, raw_sp, bucket, text`, each split sorted by `Issue_ID`.
-- `meta.json` records counts (with SP, zeros dropped, rows, projects), split sizes, the top types, the observed raw→bucket mapping, and per-split label distributions. `--dry-run` prints these; compare them with the README's 60,101 / 2,165.
+- **Training fraction** (`_fraction_per_project`): if `train_fraction < 1`, each project keeps `round(fraction × n)` of its training rows (at least 1), chosen with the seeded generator `rng_for(seed, "sp_train_fraction")`, projects visited in alphabetical order; the result keeps `Issue_ID` order. Sampling per project keeps small projects represented. Validation and test are never reduced. The type slices are computed before sampling, so they do not depend on the fraction.
+- `meta.json` records counts (with SP, zeros dropped, rows, projects), `train_fraction`, `n_train_available` (train rows before sampling), split sizes (after sampling), the top types, the observed raw→bucket mapping, and per-split label distributions. `--dry-run` prints these; compare them with the README's 60,101 / 2,165.
 
 ### 6.7 Task B tasks
 
 1. Split all issues (§6.5), join `Task_Profile.Primary_Area` and `Required_Level`, flag `unclassified = Primary_Area == "Unclassified"`.
-2. Sample deterministically (each with its own generator, §19):
+2. Sample deterministically (each with its own generator, §19). Sizes below are the config keys; scenario B uses 5,000 / 500 / 2,000 + 500:
    - train: `train_tasks` from train ∧ classified
    - val: `val_tasks` from val ∧ classified (**val is classified-only** — model selection on the clean labels)
    - test: `test_tasks` from test ∧ classified **plus** `test_unclassified_tasks` from test ∧ unclassified
@@ -479,7 +493,7 @@ All three families expose the same function, `score_tasks(list_of_task_texts) �
 
 - Input: tokenizer pair encoding `(task, profile)` → `[CLS] task [SEP] profile [SEP]` (model-specific specials), `truncation="only_first"`.
 - Mean pooling → `Linear(d, 1)` → logit. Loss: BCE-with-logits against the soft target (Plausibility for positives, 0 for hard/random negatives). Score = `sigmoid(logit)`.
-- Training items = **pairs**: per task, all positives + hard negatives + random negatives (~10 per task → ~500k pairs for 50k tasks). The epoch shuffle mixes pairs across tasks.
+- Training items = **pairs**: per task, all positives + hard negatives + random negatives (~10 per task → ~50k pairs for the scenario-B 5k tasks, ~500k at the README default of 50k). The epoch shuffle mixes pairs across tasks.
 - Scoring flattens `(task, member)` pairs, ordered by task text length, and runs `eval_batch` pairs at a time.
 - No zero-shot measurement (the head is random before training).
 
@@ -507,9 +521,9 @@ Score: the last position's logits for the `yes` and `no` tokens; `d = logit_yes 
 
 ### 12.4 Evaluation outputs
 
-- Headline `val` and `test` metrics are computed on the **classified** tasks (val is classified-only anyway; test has 5,000 classified + 1,000 unclassified).
+- Headline `val` and `test` metrics are computed on the **classified** tasks (val is classified-only anyway; test has `test_tasks` classified + `test_unclassified_tasks` unclassified: 2,000 + 500 in scenario B, 5,000 + 1,000 at the README defaults).
 - `slices`: `all_tasks`, `primary_area:*`, `required_level:*`, `classified` (= the headline), `unclassified`, `held_out_members`.
-- Predictions: one row per test (task, member): `Issue_ID, User_ID, score, plausibility (0 if absent), rank_true (empty if absent)` — 6,000 × 48 = 288k rows, gzip-compressed.
+- Predictions: one row per test (task, member): `Issue_ID, User_ID, score, plausibility (0 if absent), rank_true (empty if absent)` — 2,500 × 48 = 120k rows in scenario B (6,000 × 48 = 288k at the README defaults), gzip-compressed.
 
 ---
 
@@ -596,7 +610,7 @@ Timings include tokenization (what a product call would pay). Bi-encoders use pr
 Written for every unit — completed, failed and skipped — following README §10.1. Additions and specifics:
 
 - `smoke`: `true` for `--limit-train` runs (they also get a leading caveat).
-- `context.caveats`: a common list plus task-specific ones.
+- `context.caveats`: a common list plus task-specific ones, plus the data budget when it is reduced (Task A: the fraction and row counts; Task B: the sampled split sizes and the thin rare-level warning).
 - `model.revision_sha`: the SHA that was actually downloaded; `null` for baselines and units skipped before verification.
 - `data`: `fingerprint`, `n_train` (rows for Task A; **pairs** for pointwise Task B recipes, **tuples** for bi-encoders, tasks for baselines), `n_val`, `n_test`, `label_distribution` from the prep metadata, plus `split_sizes` (Task A) or `sampled_split_sizes` and `held_out_member_ids` (Task B).
 - `training.hyperparameters`: the resolved unit hyperparameters plus `per_device_batch_used`, `precision`, `grad_accumulation`, `optimizer` (models only).
@@ -626,7 +640,7 @@ Written for **completed** units only, atomically, gzip, floats with 6 significan
 
 Regenerated after every unit and at the end of a run:
 
-1. A context paragraph (project, both tasks, caveats).
+1. A context paragraph (project, both tasks, caveats), followed by the **training-data budget** of the current config (`report.data_budget_lines`; `regenerate(output_dir, cfg)` receives the config for this). Each run's JSON remains the authoritative record of the budget it was trained with.
 2. Per task: a Markdown table of the main leaderboard columns (params shown in millions), then
    - **best by the primary metric** (over all rows, baselines included — a baseline winning is a finding), and
    - **efficiency-adjusted pick**: among *pretrained* models within 0.01 of the best pretrained model's primary metric, the one with the fewest parameters, ties broken by bs1 latency.
@@ -776,6 +790,8 @@ Everything below is where the README was silent or ambiguous. Each item is also 
 | Top-6 types | Computed over all Task A rows, ties alphabetical. |
 | Negative story points | Dropped (none expected). |
 | Held-out rule | "Only member at their level" read team-wide → only the Principal is protected (§6.8). |
+| Data budget | Scenario B instead of the README defaults (top of this document). |
+| Task A training fraction | New `story_point.train_fraction`, sampled per project. |
 | Task B validation | Classified tasks only. |
 | Task B headline test metrics | Classified tasks only; unclassified and all-tasks are slices. |
 | Over-qualified hard negatives | Impossible as relevance-0 in this data; used as a bi-encoder extra negative for the top positive (§6.9). |
@@ -805,7 +821,7 @@ Everything below is where the README was silent or ambiguous. Each item is also 
 1. **No mid-training resume.** An interrupted unit restarts from epoch 0. On slow hardware a single Task B unit can take a day or more, so an interruption loses all of it. This is the most valuable improvement to add (save optimizer/scheduler/scaler/epoch each epoch or every N steps, resume from it, fill `resumed_from_epoch`).
 2. **Untested ML paths** (§1). Likely first-run issues: library API drift (transformers 4.57 / sentence-transformers 5.1 / peft 0.17 as pinned), remote-code models (NeoBERT may need `xformers`), gated access.
 3. **Qwen-specific templates.** The reranker/generative recipes assume the Qwen chat format and single `yes`/`no` tokens. Adding a non-Qwen generative or reranker model needs new templates in `YES_NO_TEMPLATES` / `GEN_PROMPT_*`.
-4. **Training budget at defaults is large.** Cross-encoders and yes/no scorers train on ~500k pairs × 2 epochs; validation scores 2,000 × 48 pairs per epoch; generative Task A inference is 7× a normal forward pass.
+4. **Training budget at the README defaults is large.** Cross-encoders and yes/no scorers would train on ~500k pairs × 2 epochs and validation would score 2,000 × 48 pairs per epoch; that is why the config uses scenario B (~50k pairs, 500 × 48 validation pairs). Generative Task A inference is 7× a normal forward pass at any budget.
 5. **In-batch negatives depend on the micro-batch**, so an OOM retry changes the bi-encoder's effective negative pool (recorded via `oom_retry` and `per_device_batch_used`).
 6. **The LR schedule is sized for the maximum epochs**; early-stopped runs never reach LR 0.
 7. **Touching the dataset files** (new mtime) changes every fingerprint and run ID → everything re-runs (old results are kept).
@@ -818,6 +834,7 @@ Everything below is where the README was silent or ambiguous. Each item is also 
 14. **`peak_gpu_mem_mb`** covers the final attempt only and includes evaluation and latency passes.
 15. **`shutil.rmtree(onerror=…)`** is deprecated in Python 3.12+ (warning only).
 16. **The `held_out_members` slice** includes unclassified tasks (it is defined over all test tasks).
+17. **Scenario B budget** (see the note at the top): 5k Task B training tasks and 25% of Task A training data were chosen from runtime arithmetic, not from a learning curve. Confirm the top models at a larger budget before choosing one for production.
 
 ---
 
@@ -827,7 +844,15 @@ Everything below is where the README was silent or ambiguous. Each item is also 
 - Full fine-tuning keeps fp32 weights + AdamW states: ~16 bytes/parameter before activations. ModernBERT (149M) ≈ 2.4 GB, DeBERTa-v3 (184M) ≈ 3 GB, NeoBERT (250M) ≈ 4 GB → NeoBERT and probably DeBERTa will hit `failed: oom` even after the retry. That is a legitimate, reported outcome.
 - LoRA models (≥ 300M) keep base weights in fp16 (~1.2 GB for 0.6B) and are more likely to fit with gradient checkpointing at micro-batch 4 → 2.
 - EmbeddingGemma runs in fp32 (required), with LoRA.
-- Expect the full benchmark to take **days**. Useful levers (each changes run IDs, all models treated equally): lower `task_assignment.train_tasks`, `story_point.epochs`, or `max_seq_len`; disable models with `enabled: false`; run one task at a time with `--task`.
+- Rough totals from the planning estimates (±2×, to be recalibrated with the smoke test):
+
+  | Machine | README defaults | Scenario B (configured) |
+  |---|---|---|
+  | GTX 1650, 4 GB | ~1,000 h (~6 weeks) | ~140 h (~6 days) |
+  | RTX 4050 laptop, 6 GB | ~240 h (~10 days) | ~35–40 h |
+  | A10 server, 24 GB | ~85–90 h (~4 days) | ~12–14 h |
+
+- Further levers (each changes run IDs, all models treated equally): lower `task_assignment.train_tasks`, `story_point.train_fraction`, `story_point.epochs`, or `max_seq_len`; disable models with `enabled: false`; run one task at a time with `--task`.
 
 ---
 

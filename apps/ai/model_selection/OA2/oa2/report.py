@@ -113,6 +113,16 @@ def build_report(unit, *, status, reason, result, revision, fingerprint, data_me
     training = result.get("training", {})
     metrics = result.get("metrics", {})
     caveats = CAVEATS["common"] + CAVEATS[unit.task]
+    dm = data_meta or {}
+    if unit.task == "story_point" and float(dm.get("train_fraction", 1.0)) < 1.0:
+        caveats.append(f"Reduced training budget: {float(dm['train_fraction']):.0%} of the train split "
+                       f"({(dm.get('split_sizes') or {}).get('train')} of {dm.get('n_train_available')} rows, sampled "
+                       "per project); validation and test are the full splits.")
+    if unit.task == "task_assignment" and dm.get("sampled_split_sizes"):
+        s = dm["sampled_split_sizes"]
+        caveats.append(f"Sampled tasks: train {s.get('train')} / val {s.get('val')} / test {s.get('test')} "
+                       f"(of which {dm.get('test_unclassified')} unclassified). Rare required levels (Staff, "
+                       "Intern, Principal) have few training examples at small sample sizes.")
     if unit.smoke:
         caveats = ["SMOKE RUN (--limit-train): not comparable, excluded from the leaderboard."] + caveats
     hp = dict(unit.hparams)
@@ -241,7 +251,20 @@ def build_leaderboard(output_dir: Path, task: str) -> pd.DataFrame:
     return df[COMMON_COLS + TASK_COLS[task]]
 
 
-def regenerate(output_dir: Path) -> None:
+def data_budget_lines(cfg: dict | None) -> list[str]:
+    """Human-readable training-data budget from the config (reported because it is below the README defaults)."""
+    if not cfg:
+        return []
+    sp, ta = cfg["story_point"], cfg["task_assignment"]
+    frac = float(sp.get("train_fraction", 1.0))
+    return [
+        f"Task A: {frac:.0%} of the chronological train split (sampled per project); validation and test are full.",
+        f"Task B: {ta['train_tasks']} train / {ta['val_tasks']} val / {ta['test_tasks']} classified + "
+        f"{ta['test_unclassified_tasks']} unclassified test tasks.",
+    ]
+
+
+def regenerate(output_dir: Path, cfg: dict | None = None) -> None:
     """Rebuild both leaderboards and SUMMARY.md from the run JSON files."""
     boards = {}
     for task in TASK_INFO:
@@ -254,7 +277,7 @@ def regenerate(output_dir: Path) -> None:
         except PermissionError as e:  # e.g. the CSV is open in Excel on Windows
             LOG.warning("Could not write %s (%s); it will be rebuilt after the next unit.", path, e)
     try:
-        atomic_write_text(Path(output_dir) / "SUMMARY.md", _summary(output_dir, boards))
+        atomic_write_text(Path(output_dir) / "SUMMARY.md", _summary(output_dir, boards, data_budget_lines(cfg)))
     except PermissionError as e:
         LOG.warning("Could not write SUMMARY.md (%s).", e)
 
@@ -310,7 +333,7 @@ def _picks(df: pd.DataFrame, primary: str) -> list[str]:
     return out
 
 
-def _summary(output_dir: Path, boards: dict) -> str:
+def _summary(output_dir: Path, boards: dict, budget: list[str]) -> str:
     parts = [
         "# OA2 model selection — summary",
         "",
@@ -324,6 +347,9 @@ def _summary(output_dir: Path, boards: dict) -> str:
         "read the final issue text; single seed, no hyperparameter search. Smoke runs are excluded.",
         "",
     ]
+    if budget:
+        parts += ["**Training-data budget (current config; each run's JSON records its own):**", ""]
+        parts += [f"- {line}" for line in budget] + [""]
     cols = {
         "story_point": ["model_key", "recipe", "finetune_method", "total_params", "test_qwk", "test_mae_bucket",
                         "test_within_one_acc", "test_macro_f1", "test_ece", "delta_qwk_vs_tfidf", "train_time_s",

@@ -53,6 +53,9 @@ def load_config(path: Path) -> dict:
     dupes = sorted({k for k in keys if keys.count(k) > 1})
     if dupes:
         raise SystemExit(f"duplicate model keys in config: {dupes}")
+    frac = float(cfg["story_point"].get("train_fraction", 1.0))
+    if not 0.0 < frac <= 1.0:
+        raise SystemExit(f"story_point.train_fraction must be in (0, 1], got {frac}")
     if not Path(cfg["dataset_dir"]).is_dir():
         raise SystemExit(f"dataset_dir not found: {cfg['dataset_dir']}")
     return cfg
@@ -120,6 +123,8 @@ def dry_run(cfg, units, fps, store) -> int:
         print(f"story_point  fingerprint {fps['story_point']}")
         print(f"  issues with story points: {m.get('n_with_story_point')}, zeros dropped: {m.get('n_zero_dropped')}, "
               f"rows: {m.get('n_rows')}, projects: {m.get('n_projects')}")
+        print(f"  train_fraction: {m.get('train_fraction', 1.0)} -> {m.get('split_sizes', {}).get('train')} of "
+              f"{m.get('n_train_available')} training rows (sampled per project)")
         print(f"  split sizes: {m.get('split_sizes')}")
         print(f"  train label distribution: {m['label_distribution']['train']}")
     if "task_assignment" in prepared:
@@ -261,7 +266,7 @@ def run_unit(u, cfg, dat, store, args, stop, env, keep_repo: bool) -> str:
             if preds is not None and status == "completed":
                 report.write_predictions(preds, report.predictions_path(out, u))
             report.write_report(out, u, rep)
-            report.regenerate(out)
+            report.regenerate(out, cfg)
         del preds, result
 
         freed = 0
@@ -302,7 +307,7 @@ def run_all(cfg, units, fps, store, args, stop) -> int:
     if not queue:
         LOG.info("Nothing to run.")
         with stop.critical():
-            report.regenerate(out)
+            report.regenerate(out, cfg)
         return 0
     LOG.info("Queue: %d unit(s), starting with %s", len(queue), queue[0].run_id)
     tasks = [t for t in registry.TASKS if any(u.task == t for u in queue)]
@@ -313,7 +318,7 @@ def run_all(cfg, units, fps, store, args, stop) -> int:
         keep_repo = bool(nxt and not nxt.is_baseline and u.repo and nxt.repo == u.repo)
         run_unit(u, cfg, prepared[u.task], store, args, stop, env, keep_repo)
     with stop.critical():
-        report.regenerate(out)
+        report.regenerate(out, cfg)
     LOG.info("Done. State: %s", _counts(units, store))
     LOG.info("Reports: %s", out)
     return 0
