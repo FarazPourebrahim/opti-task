@@ -1,0 +1,69 @@
+/*
+ * The single stylesheet entry point, imported once at the app root.
+ *
+ * Import order matters: the reset and every token file must land before any
+ * rule that consumes them. Nothing component-level or page-level belongs in
+ * this file — it sets document defaults only.
+ */
+
+/* Self-hosted variable fonts (no CDN). */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/* Reset first. */
+@import './resets.css';
+
+/* Then tokens, colors before shadows (which consume --color-focus-ring). */
+@import './colors.css';
+@import './typography.css';
+@import './measures.css';
+@import './shadows.css';
+@import './animations.css';
+
+html {
+  -webkit-text-size-adjust: 100%;
+  font-family: var(--font-family-sans);
+  font-size: 100%;
+}
+
+body {
+  background-color: var(--color-surface-300);
+  color: var(--color-text-400);
+  font-size: var(--fs-400);
+  font-weight: var(--fw-300);
+  letter-spacing: var(--ls-300);
+  line-height: var(--lh-500);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * One focus style for the whole app. `:focus-visible` so a pointer click does
+ * not paint a ring, while keyboard navigation always does.
+ */
+:focus-visible {
+  outline: var(--bw-300) solid var(--color-focus-ring);
+  outline-offset: var(--bw-300);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-opposite);
+}
+
+/* Scrollbars, themed rather than left to the OS default. */
+* {
+  scrollbar-color: var(--color-border-400) transparent;
+  scrollbar-width: thin;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-family-mono);
+}

@@ -1,0 +1,188 @@
+/*
+ * Nesting mirrors DatePicker.tsx:
+ *   .datePicker > (.datePickerTrigger > (.datePickerIcon, .datePickerValue),
+ *                  .datePickerClear)
+ *   .datePickerContent > .datePickerCalendar
+ *
+ * The calendar grid is react-day-picker's own markup, so its classes are
+ * reached through :global. The library's base stylesheet is imported by
+ * DatePicker.tsx — these rules re-skin it onto our tokens, they do not lay it
+ * out. Variable names below are react-day-picker v10's public API.
+ */
+
+.datePicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-200);
+
+  .datePickerTrigger {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-200);
+    min-inline-size: 0;
+    padding-block: var(--space-300);
+    padding-inline: var(--space-300);
+    border: var(--bw-100) solid var(--color-border-400);
+    border-radius: var(--br-400);
+    background-color: var(--color-surface-500);
+    box-shadow: var(--shadow-100);
+    color: var(--color-text-400);
+    cursor: pointer;
+    font-size: var(--fs-400);
+    text-align: start;
+    transition:
+      border-color var(--animation-duration-300) var(--easing-standard),
+      box-shadow var(--animation-duration-300) var(--easing-standard);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+    }
+
+    &[data-placeholder] {
+      color: var(--color-text-300);
+    }
+
+    &[data-invalid] {
+      border-color: var(--color-danger);
+    }
+
+    &:disabled {
+      background-color: var(--color-surface-400);
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .datePickerIcon {
+      flex-shrink: 0;
+      inline-size: var(--space-400);
+      block-size: var(--space-400);
+      color: var(--color-text-300);
+    }
+
+    .datePickerValue {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .datePickerClear {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-200);
+    border: none;
+    border-radius: var(--br-300);
+    background: none;
+    color: var(--color-text-300);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--color-surface-500);
+      color: var(--color-danger);
+    }
+
+    & > svg {
+      inline-size: var(--space-300);
+      block-size: var(--space-300);
+    }
+  }
+}
+
+.datePickerContent {
+  z-index: 60;
+  padding: var(--space-400);
+  border: var(--bw-100) solid var(--color-border-300);
+  border-radius: var(--br-500);
+  background-color: var(--color-surface-500);
+  box-shadow: var(--shadow-blur-500);
+
+  .datePickerCalendar {
+    /* react-day-picker v10 public custom properties. */
+    --rdp-accent-color: var(--color-primary);
+    --rdp-accent-background-color: var(--color-primary);
+    --rdp-today-color: var(--color-primary);
+    --rdp-day-height: var(--space-600);
+    --rdp-day-width: var(--space-600);
+    --rdp-nav-height: var(--space-600);
+    --rdp-outside-opacity: 0.45;
+    --rdp-disabled-opacity: 0.35;
+    --rdp-weekday-opacity: 1;
+    --rdp-selected-border: none;
+    --rdp-months-gap: var(--space-400);
+
+    margin: 0;
+    color: var(--color-text-400);
+    font-size: var(--fs-300);
+
+    :global(.rdp-month_caption) {
+      padding-block-end: var(--space-200);
+    }
+
+    :global(.rdp-caption_label) {
+      color: var(--color-text-400);
+      font-size: var(--fs-400);
+      font-weight: var(--fw-700);
+      letter-spacing: var(--ls-300);
+    }
+
+    :global(.rdp-nav) {
+      gap: var(--space-100);
+
+      :global(button) {
+        border-radius: var(--br-300);
+        color: var(--color-text-300);
+        transition: background-color var(--animation-duration-300)
+          var(--easing-standard);
+
+        &:hover {
+          background-color: var(--color-surface-400);
+          color: var(--color-text-400);
+        }
+      }
+    }
+
+    :global(.rdp-chevron) {
+      fill: currentcolor;
+    }
+
+    :global(.rdp-weekday) {
+      color: var(--color-text-300);
+      font-size: var(--fs-100);
+      font-weight: var(--fw-700);
+      letter-spacing: var(--ls-700);
+      text-transform: uppercase;
+    }
+
+    :global(.rdp-day_button) {
+      border: none;
+      border-radius: var(--br-300);
+      color: var(--color-text-400);
+      font-size: var(--fs-300);
+      transition: background-color var(--animation-duration-300)
+        var(--easing-standard);
+
+      &:hover {
+        background-color: var(--color-surface-400);
+      }
+    }
+
+    :global(.rdp-today .rdp-day_button) {
+      color: var(--color-primary);
+      font-weight: var(--fw-900);
+    }
+
+    :global(.rdp-selected .rdp-day_button) {
+      background-color: var(--color-primary);
+      color: var(--color-primary-opposite);
+      font-weight: var(--fw-700);
+
+      &:hover {
+        background-color: var(--color-primary-darker);
+      }
+    }
+  }
+}

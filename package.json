@@ -1,0 +1,25 @@
+{
+  "name": "opti-task",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OptiTask — AI-assisted Agile task management platform (monorepo)",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "backend-dev": "cd apps/backend && pnpm run dev",
+    "backend-build": "cd apps/backend && pnpm run build",
+    "backend-start": "cd apps/backend && pnpm run start",
+    "backend-test": "cd apps/backend && pnpm run test",
+    "backend-lint": "cd apps/backend && pnpm run lint",
+    "backend-typecheck": "cd apps/backend && pnpm run typecheck",
+
+    "frontend-dev": "cd apps/frontend && pnpm run dev",
+    "frontend-build": "cd apps/frontend && pnpm run build",
+    "frontend-preview": "cd apps/frontend && pnpm run preview",
+    "frontend-test": "cd apps/frontend && pnpm run test",
+    "frontend-lint": "cd apps/frontend && pnpm run lint",
+    "frontend-typecheck": "cd apps/frontend && pnpm run typecheck"
+  }
+}

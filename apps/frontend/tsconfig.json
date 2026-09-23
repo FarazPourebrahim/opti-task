@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "noEmit": true,
+    "types": ["vite/client", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      // Node's ESM resolver rejects a bare scope like "@contracts" as an invalid
+      // package name, so the workspace symlink alone is not enough. This mapping
+      // is what actually resolves it for tsc; vite.config.ts mirrors it for the
+      // dev server, the production build and vitest. Both must stay in sync —
+      // see CLIENT_PLAN.md risk R7.
+      "@contracts": ["../../packages/contracts/src/index.ts"]
+    }
+  },
+  // Unlike the backend, test files are deliberately INCLUDED in the typecheck.
+  // Excluding them lets type errors accumulate unseen (backend known-debt).
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", "coverage"]
+}

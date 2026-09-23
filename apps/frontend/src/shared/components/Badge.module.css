@@ -1,0 +1,190 @@
+/*
+ * Nesting mirrors Badge.tsx:
+ *   .badge > .badgeIcon
+ *   .chip  > (.chipDot, .chipLabel, .chipRemove)
+ *   .kbd
+ *   .progress > (.progressHeader > (.progressLabel, .progressValue),
+ *                .progressTrack  > .progressIndicator)
+ *
+ * `.chipDot`'s colour is set inline from backend label data, which is the one
+ * legitimate source of a non-token colour: it is content, not design.
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  padding-block: var(--space-100);
+  padding-inline: var(--space-200);
+  border: var(--bw-100) solid transparent;
+  border-radius: var(--br-300);
+  font-size: var(--fs-100);
+  font-weight: var(--fw-700);
+  letter-spacing: var(--ls-700);
+  line-height: var(--lh-300);
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &[data-tone='neutral'] {
+    border-color: var(--color-border-300);
+    background-color: var(--color-surface-500);
+    color: var(--color-text-300);
+  }
+
+  &[data-tone='primary'] {
+    background-color: var(--color-primary);
+    color: var(--color-primary-opposite);
+  }
+
+  &[data-tone='success'] {
+    background-color: var(--color-success);
+    color: var(--color-success-opposite);
+  }
+
+  &[data-tone='warning'] {
+    background-color: var(--color-warning);
+    color: var(--color-warning-opposite);
+  }
+
+  &[data-tone='danger'] {
+    background-color: var(--color-danger);
+    color: var(--color-danger-opposite);
+  }
+
+  &[data-tone='info'] {
+    background-color: var(--color-info);
+    color: var(--color-info-opposite);
+  }
+
+  .badgeIcon {
+    display: inline-flex;
+    align-items: center;
+
+    & > svg {
+      inline-size: 1em;
+      block-size: 1em;
+    }
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-200);
+  padding-block: var(--space-100);
+  padding-inline: var(--space-300);
+  border: var(--bw-100) solid var(--color-border-300);
+  border-radius: var(--br-pill);
+  background-color: var(--color-surface-500);
+  color: var(--color-text-400);
+  font-size: var(--fs-200);
+  max-inline-size: 100%;
+
+  .chipDot {
+    flex-shrink: 0;
+    inline-size: var(--space-200);
+    block-size: var(--space-200);
+    border-radius: var(--br-round);
+  }
+
+  .chipLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chipRemove {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: var(--br-round);
+    background: none;
+    color: var(--color-text-300);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-danger);
+    }
+
+    & > svg {
+      inline-size: var(--space-300);
+      block-size: var(--space-300);
+    }
+  }
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: var(--space-400);
+  padding-block: var(--space-100);
+  padding-inline: var(--space-200);
+  border: var(--bw-100) solid var(--color-border-400);
+  border-block-end-width: var(--bw-300);
+  border-radius: var(--br-200);
+  background-color: var(--color-surface-500);
+  color: var(--color-text-300);
+  font-family: var(--font-family-mono);
+  font-size: var(--fs-100);
+  line-height: var(--lh-100);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+
+  .progressHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-300);
+
+    .progressLabel {
+      color: var(--color-text-300);
+      font-size: var(--fs-200);
+      font-weight: var(--fw-500);
+    }
+
+    .progressValue {
+      color: var(--color-text-400);
+      font-family: var(--font-family-mono);
+      font-size: var(--fs-200);
+      font-weight: var(--fw-700);
+    }
+  }
+
+  .progressTrack {
+    position: relative;
+    block-size: var(--space-200);
+    overflow: hidden;
+    border-radius: var(--br-pill);
+    background-color: var(--color-surface-500);
+
+    &[data-tone='primary'] .progressIndicator {
+      background-color: var(--color-primary);
+    }
+
+    &[data-tone='success'] .progressIndicator {
+      background-color: var(--color-success);
+    }
+
+    &[data-tone='warning'] .progressIndicator {
+      background-color: var(--color-warning);
+    }
+
+    &[data-tone='danger'] .progressIndicator {
+      background-color: var(--color-danger);
+    }
+
+    .progressIndicator {
+      block-size: 100%;
+      border-radius: var(--br-pill);
+      transition: inline-size var(--animation-duration-500)
+        var(--easing-decelerate);
+    }
+  }
+}

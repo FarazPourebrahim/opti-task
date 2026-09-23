@@ -1,0 +1,96 @@
+/*
+ * Motion tokens. Same 100–900 convention: 100 is the fastest/subtlest.
+ *
+ * Numeric names only — no `-fast` / `-slow` adjectives, so every token family
+ * in the system is scanned the same way.
+ */
+
+:root {
+  --animation-duration-100: 0.1s;
+  --animation-duration-300: 0.2s;
+  --animation-duration-500: 0.3s;
+  --animation-duration-700: 0.5s;
+  --animation-duration-900: 1s;
+
+  /* Easing. Standard for most moves; the others for entering/exiting. */
+  --easing-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-200));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+ * Sweeps a highlight band left-to-right across a placeholder. The band is
+ * narrower than the element (see .skeleton's background-size), so it starts and
+ * ends fully offscreen instead of appearing to pulse in place.
+ */
+@keyframes shimmer {
+  from {
+    background-position: -150% 0;
+  }
+  to {
+    background-position: 250% 0;
+  }
+}
+
+/* Indicator appearing inside a control — checkbox tick, radio dot. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * Reduced motion is honored globally rather than per component, so a new
+ * component cannot forget it. Durations collapse to near-zero instead of 0 so
+ * transitionend/animationend handlers still fire.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-duration-100: 0.01ms;
+    --animation-duration-300: 0.01ms;
+    --animation-duration-500: 0.01ms;
+    --animation-duration-700: 0.01ms;
+    --animation-duration-900: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

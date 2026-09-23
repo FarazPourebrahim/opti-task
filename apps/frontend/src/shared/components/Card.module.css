@@ -1,0 +1,127 @@
+/*
+ * Nesting mirrors Card.tsx:
+ *   .card
+ *   .cardHeader > (.cardHeaderText > (.cardTitle, .cardDescription),
+ *                  .cardActions)
+ *   .breadcrumbs > .breadcrumbsList > .breadcrumbsItem >
+ *                    (.breadcrumbsLink | .breadcrumbsCurrent,
+ *                     .breadcrumbsSeparator)
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-400);
+  border: var(--bw-100) solid var(--color-border-300);
+  border-radius: var(--br-500);
+  background-color: var(--color-surface-400);
+  box-shadow: var(--shadow-blur-100);
+
+  &[data-padding='sm'] {
+    padding: var(--space-300);
+  }
+
+  &[data-padding='md'] {
+    padding: var(--space-400);
+  }
+
+  &[data-padding='lg'] {
+    padding: var(--space-500);
+  }
+
+  &[data-interactive] {
+    cursor: pointer;
+    transition:
+      border-color var(--animation-duration-300) var(--easing-standard),
+      box-shadow var(--animation-duration-300) var(--easing-standard),
+      transform var(--animation-duration-300) var(--easing-standard);
+
+    &:hover {
+      border-color: var(--color-border-400);
+      box-shadow: var(--shadow-blur-400);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-400);
+
+  .cardHeaderText {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-100);
+    min-inline-size: 0;
+
+    .cardTitle {
+      color: var(--color-text-400);
+      font-size: var(--fs-500);
+      font-weight: var(--fw-700);
+      letter-spacing: var(--ls-300);
+      line-height: var(--lh-300);
+    }
+
+    .cardDescription {
+      color: var(--color-text-300);
+      font-size: var(--fs-300);
+      line-height: var(--lh-500);
+    }
+  }
+
+  .cardActions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--space-200);
+  }
+}
+
+.breadcrumbs {
+  min-inline-size: 0;
+
+  .breadcrumbsList {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-100);
+
+    .breadcrumbsItem {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-100);
+      min-inline-size: 0;
+      font-size: var(--fs-300);
+
+      .breadcrumbsLink {
+        overflow: hidden;
+        color: var(--color-text-300);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: color var(--animation-duration-300) var(--easing-standard);
+
+        &:hover {
+          color: var(--color-text-400);
+          text-decoration: underline;
+        }
+      }
+
+      .breadcrumbsCurrent {
+        overflow: hidden;
+        color: var(--color-text-400);
+        font-weight: var(--fw-500);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .breadcrumbsSeparator {
+        flex-shrink: 0;
+        inline-size: var(--space-300);
+        block-size: var(--space-300);
+        color: var(--color-text-300);
+      }
+    }
+  }
+}
