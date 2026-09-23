@@ -1,0 +1,82 @@
+/*
+ * Nesting mirrors Components.page.tsx:
+ *   .componentsPage > (.pageHeader > (.pageTitle, .pageSubtitle),
+ *                      .section > (.sectionTitle, .sectionBody))
+ * with .row, .formGrid, .progressGrid and .stateGrid used inside sections.
+ */
+
+.componentsPage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-700);
+  max-inline-size: var(--layout-content-max);
+  margin-inline: auto;
+  padding-block: var(--space-600);
+  padding-inline: var(--space-500);
+
+  .pageHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-100);
+    padding-block-end: var(--space-400);
+    border-block-end: var(--bw-100) solid var(--color-border-300);
+
+    .pageTitle {
+      color: var(--color-text-400);
+      font-size: var(--fs-800);
+      font-weight: var(--fw-900);
+      letter-spacing: var(--ls-100);
+      line-height: var(--lh-300);
+    }
+
+    .pageSubtitle {
+      color: var(--color-text-300);
+      font-size: var(--fs-500);
+    }
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-400);
+
+    .sectionTitle {
+      color: var(--color-text-400);
+      font-size: var(--fs-600);
+      font-weight: var(--fw-700);
+      letter-spacing: var(--ls-300);
+    }
+
+    .sectionBody {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-500);
+    }
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-400);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-400);
+}
+
+.progressGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-500);
+}
+
+.stateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-400);
+  align-items: start;
+}

@@ -1,0 +1,115 @@
+/*
+ * Nesting mirrors Input.tsx:
+ *   .inputShell > (.inputIcon, .inputControl, .inputEnd)
+ *   .textarea (standalone)
+ */
+
+.inputShell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-200);
+  padding-inline: var(--space-300);
+  border: var(--bw-100) solid var(--color-border-400);
+  border-radius: var(--br-400);
+  background-color: var(--color-surface-500);
+  box-shadow: var(--shadow-100);
+  transition:
+    border-color var(--animation-duration-300) var(--easing-standard),
+    box-shadow var(--animation-duration-300) var(--easing-standard);
+
+  &:hover:not(:focus-within):not([data-disabled]) {
+    border-color: var(--color-primary);
+  }
+
+  /* The ring lives on the shell, not the inner input, so the whole control
+     reads as focused rather than just the text box. */
+  &:focus-within {
+    border-color: var(--color-focus-ring);
+    box-shadow: var(--shadow-focus);
+  }
+
+  &[data-invalid] {
+    border-color: var(--color-danger);
+  }
+
+  &[data-disabled] {
+    background-color: var(--color-surface-400);
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .inputIcon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    color: var(--color-text-300);
+
+    & > svg {
+      inline-size: var(--space-400);
+      block-size: var(--space-400);
+    }
+  }
+
+  .inputControl {
+    flex: 1;
+    min-inline-size: 0;
+    padding-block: var(--space-300);
+    border: none;
+    background: none;
+    color: var(--color-text-400);
+    font-size: var(--fs-400);
+    outline: none;
+
+    &::placeholder {
+      color: var(--color-text-300);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  .inputEnd {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    color: var(--color-text-300);
+  }
+}
+
+.textarea {
+  padding-block: var(--space-300);
+  padding-inline: var(--space-300);
+  border: var(--bw-100) solid var(--color-border-400);
+  border-radius: var(--br-400);
+  background-color: var(--color-surface-500);
+  box-shadow: var(--shadow-100);
+  color: var(--color-text-400);
+  font-size: var(--fs-400);
+  line-height: var(--lh-500);
+  resize: vertical;
+  transition:
+    border-color var(--animation-duration-300) var(--easing-standard),
+    box-shadow var(--animation-duration-300) var(--easing-standard);
+
+  &::placeholder {
+    color: var(--color-text-300);
+  }
+
+  &:focus {
+    border-color: var(--color-focus-ring);
+    box-shadow: var(--shadow-focus);
+    outline: none;
+  }
+
+  &[data-invalid] {
+    border-color: var(--color-danger);
+  }
+
+  &:disabled {
+    background-color: var(--color-surface-400);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}

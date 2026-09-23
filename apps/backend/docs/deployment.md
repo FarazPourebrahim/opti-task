@@ -17,6 +17,19 @@ How to run OptiTask in production and the continuous-integration pipeline.
 - Secrets via environment (never in code): `JWT_ACCESS_SECRET`,
   `JWT_REFRESH_SECRET` (long random strings). The app **fails fast** at boot if
   these or `DATABASE_URL` are missing in production.
+- **`CORS_ORIGINS`** — the browser origins allowed to send credentialed
+  requests, comma-separated and required in production. List bare origins
+  (`https://app.example.com`), never a path or trailing slash; the value is
+  validated at boot. Omitting it stops the app from starting, because a
+  credentialed CORS response cannot use `*` and every browser request would be
+  rejected by the browser itself.
+
+> **Cookie `SameSite`.** The auth cookies are `SameSite=Lax`, which covers a web
+> client served from the same registrable domain as the API (including a
+> different subdomain). A genuinely cross-site deployment — say the client on
+> `app.example.net` and the API on `api.example.com` — needs `SameSite=None;
+> Secure` instead, at which point the `x-optitask-client` header check becomes
+> the primary CSRF control rather than a second line of defence.
 
 ### 2. Build & migrate
 This is a pnpm workspace — install from the repository root so `@contracts` is

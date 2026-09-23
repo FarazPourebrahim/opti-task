@@ -1,0 +1,139 @@
+/*
+ * The color system. Every color in the app resolves to a variable defined here
+ * — component stylesheets never contain a raw hex, rgb() or hsl() value.
+ *
+ * Syntax: HSL, comma form, used consistently throughout. Do not mix in the
+ * space-separated form.
+ *
+ * Structure:
+ *   1. Grayscale      — one spectrum, named by lightness percentage.
+ *   2. Semantic hues  — each with -opposite / -lighter / base / -darker.
+ *   3. Theme layers   — body.light / body.dark remap SURFACE and TEXT tokens
+ *                       onto the palette above. Themes never redefine a hue.
+ */
+
+:root {
+  /*
+   * Grayscale — a near-neutral slate (hue 225) rather than pure gray. Steps run
+   * in 10-point increments through the middle, with 5- and 2-point half-steps
+   * at each end where surface layering needs finer separation than a full step.
+   * Saturation rises slightly toward both extremes so the darkest and lightest
+   * surfaces keep a hint of color instead of going flat.
+   */
+  --color-gray-100: hsl(225, 25%, 100%);
+  --color-gray-98: hsl(225, 25%, 98%);
+  --color-gray-95: hsl(225, 24%, 95%);
+  --color-gray-90: hsl(225, 22%, 90%);
+  --color-gray-80: hsl(225, 20%, 80%);
+  --color-gray-70: hsl(225, 16%, 70%);
+  --color-gray-60: hsl(225, 14%, 60%);
+  --color-gray-50: hsl(225, 12%, 50%);
+  --color-gray-40: hsl(225, 13%, 40%);
+  --color-gray-30: hsl(225, 15%, 30%);
+  --color-gray-20: hsl(225, 18%, 20%);
+  --color-gray-15: hsl(225, 20%, 15%);
+  --color-gray-10: hsl(225, 24%, 10%);
+
+  /* Primary — indigo. The product's identity color. */
+  --color-primary-opposite: var(--color-gray-100);
+  --color-primary-lighter: hsl(250, 72%, 62%);
+  --color-primary: hsl(250, 72%, 52%);
+  --color-primary-darker: hsl(250, 72%, 44%);
+
+  /* Accent — teal. Pairs with indigo for charts and highlights. */
+  --color-accent-opposite: hsl(190, 90%, 8%);
+  --color-accent-lighter: hsl(190, 80%, 52%);
+  --color-accent: hsl(190, 80%, 42%);
+  --color-accent-darker: hsl(190, 80%, 34%);
+
+  /* Success — green. */
+  --color-success-opposite: hsl(155, 90%, 8%);
+  --color-success-lighter: hsl(155, 72%, 46%);
+  --color-success: hsl(155, 72%, 38%);
+  --color-success-darker: hsl(155, 72%, 30%);
+
+  /* Warning — amber. */
+  --color-warning-opposite: hsl(40, 95%, 10%);
+  --color-warning-lighter: hsl(40, 95%, 62%);
+  --color-warning: hsl(40, 95%, 52%);
+  --color-warning-darker: hsl(40, 95%, 42%);
+
+  /* Danger — red. */
+  --color-danger-opposite: var(--color-gray-100);
+  --color-danger-lighter: hsl(358, 68%, 56%);
+  --color-danger: hsl(358, 68%, 46%);
+  --color-danger-darker: hsl(358, 68%, 38%);
+
+  /* Info — blue. */
+  --color-info-opposite: var(--color-gray-100);
+  --color-info-lighter: hsl(212, 80%, 54%);
+  --color-info: hsl(212, 80%, 44%);
+  --color-info-darker: hsl(212, 80%, 36%);
+}
+
+/*
+ * Theme layers.
+ *
+ * A theme remaps surface, text and border roles onto the palette above. It must
+ * never redefine a raw hue or saturation — if a theme needs a color that does
+ * not exist, the palette gains a step, not the theme.
+ *
+ * Surfaces ascend 300 → 500 from the page backdrop to the most raised layer.
+ * Text descends 400 → 300 from primary to muted.
+ */
+body.light {
+  color-scheme: light;
+
+  --color-surface-300: var(--color-gray-95);
+  --color-surface-400: var(--color-gray-98);
+  --color-surface-500: var(--color-gray-100);
+
+  --color-text-400: var(--color-gray-15);
+  --color-text-300: var(--color-gray-40);
+
+  --color-border-400: var(--color-gray-60);
+  --color-border-300: var(--color-gray-90);
+
+  /* Unchecked switch track: a filled "off" state reads as a control, where a
+     hairline outline reads as a stray box. */
+  --color-control-off: var(--color-gray-50);
+
+  /* Placeholder shimmer. Deliberately NOT surface-400 → surface-500: those sit
+     two lightness steps apart in light theme, so the sweep was invisible. */
+  --color-skeleton-base: var(--color-gray-90);
+  --color-skeleton-highlight: var(--color-gray-98);
+
+  --color-focus-ring: var(--color-primary);
+  --color-overlay: hsl(225, 24%, 10%, 0.45);
+
+  /* Inverted surface for tooltips and toasts: reads as "on top of the UI"
+     rather than part of it, and must flip with the theme or it vanishes
+     against a same-lightness surface. */
+  --color-inverse-surface: var(--color-gray-20);
+  --color-inverse-text: var(--color-gray-98);
+}
+
+body.dark {
+  color-scheme: dark;
+
+  --color-surface-300: var(--color-gray-10);
+  --color-surface-400: var(--color-gray-15);
+  --color-surface-500: var(--color-gray-20);
+
+  --color-text-400: var(--color-gray-95);
+  --color-text-300: var(--color-gray-70);
+
+  --color-border-400: var(--color-gray-50);
+  --color-border-300: var(--color-gray-20);
+
+  --color-control-off: var(--color-gray-50);
+
+  --color-skeleton-base: var(--color-gray-20);
+  --color-skeleton-highlight: var(--color-gray-30);
+
+  --color-focus-ring: var(--color-primary-lighter);
+  --color-overlay: hsl(225, 24%, 4%, 0.6);
+
+  --color-inverse-surface: var(--color-gray-90);
+  --color-inverse-text: var(--color-gray-10);
+}

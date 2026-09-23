@@ -1,0 +1,124 @@
+{
+  "app": {
+    "name": "OptiTask",
+    "tagline": "AI-assisted Agile task management"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "search": "Search"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "error": {
+    "network": "Can’t reach the server. Check your connection and try again.",
+    "timeout": "That took too long. Try again.",
+    "unauthorized": "Your session has expired. Sign in again to continue.",
+    "forbidden": "You don’t have permission to do that.",
+    "notFound": "We couldn’t find what you were looking for.",
+    "conflict": "That was already changed. Refresh and try again.",
+    "validation": "Some of the details below need fixing.",
+    "rateLimited": "Too many requests. Wait a moment and try again.",
+    "serviceUnavailable": "The AI service is unavailable right now. Nothing was saved.",
+    "server": "Something went wrong on our end.",
+    "unknown": "Something went wrong.",
+    "requestId": "Reference: {{requestId}}"
+  },
+  "dev": {
+    "tokens": {
+      "title": "Design tokens",
+      "subtitle": "Every token in the system, rendered in the active theme.",
+      "grayscale": "Grayscale",
+      "semantic": "Semantic colors",
+      "surfaces": "Surfaces and text",
+      "typography": "Typography",
+      "spacing": "Spacing",
+      "radius": "Border radius",
+      "shadows": "Elevation",
+      "motion": "Motion",
+      "sample": "The quick brown fox jumps over the lazy dog",
+      "opposite": "Aa"
+    },
+    "components": {
+      "title": "Component library"
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "createAccount": "Create account",
+    "loginTitle": "Sign in to OptiTask",
+    "loginSubtitle": "Plan, track and ship your team’s work.",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "Start organising your team’s work in minutes.",
+    "email": "Email",
+    "name": "Full name",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordHint": "At least 8 characters, including a letter and a number.",
+    "noAccount": "Don’t have an account?",
+    "haveAccount": "Already have an account?",
+    "forgotPassword": "Forgot your password?",
+    "signingIn": "Signing in…",
+    "creatingAccount": "Creating account…",
+    "invalidCredentials": "That email and password don’t match an account.",
+    "emailTaken": "An account with that email already exists.",
+    "sessionExpired": "Your session has expired. Sign in again to continue.",
+    "changePassword": {
+      "title": "Change password",
+      "submit": "Update password",
+      "success": "Your password has been updated.",
+      "wrongCurrent": "That current password is not correct."
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "submit": "Continue",
+      "unavailableTitle": "Password reset isn’t available yet",
+      "unavailableBody": "This build cannot send reset emails. Ask an administrator to set a new password for you.",
+      "backToSignIn": "Back to sign in"
+    },
+    "sessions": {
+      "title": "Active sessions",
+      "subtitle": "Devices currently signed in to your account.",
+      "current": "This device",
+      "signedInAt": "Signed in {{when}}",
+      "expiresAt": "Expires {{when}}",
+      "unknownDevice": "Unknown device",
+      "revoke": "Sign out",
+      "revokeConfirmTitle": "Sign out this device?",
+      "revokeConfirmBody": "That device will need to sign in again to use OptiTask.",
+      "revoked": "That device has been signed out.",
+      "empty": "No other devices are signed in.",
+      "loadFailed": "Could not load your sessions."
+    },
+    "invite": {
+      "title": "Join the organisation",
+      "accepting": "Accepting your invitation…",
+      "accepted": "You’ve joined {{name}}.",
+      "invalid": "This invitation link is no longer valid.",
+      "signInFirst": "Sign in to accept this invitation."
+    },
+    "validation": {
+      "emailInvalid": "Enter a valid email address.",
+      "nameRequired": "Enter your name.",
+      "nameTooLong": "Name must be 100 characters or fewer.",
+      "passwordRequired": "Enter your password.",
+      "passwordTooShort": "Use at least 8 characters.",
+      "passwordTooLong": "Use 100 characters or fewer.",
+      "passwordNeedsLetter": "Include at least one letter.",
+      "passwordNeedsNumber": "Include at least one number.",
+      "passwordUnchanged": "Choose a password different from your current one."
+    }
+  }
+}

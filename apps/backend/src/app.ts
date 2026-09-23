@@ -1,5 +1,4 @@
 import express, { type Express } from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -7,6 +6,8 @@ import { buildSchema } from '@/shared/graphql/schema';
 import { createContext, type GraphQLContext } from '@/shared/graphql/context';
 import { formatError } from '@/shared/graphql/formatError';
 import { depthLimit } from '@/shared/graphql/depthLimit';
+import { corsMiddleware } from '@/shared/middleware/cors';
+import { csrfGuard } from '@/shared/middleware/csrf';
 import { rateLimitMiddleware } from '@/shared/middleware/rateLimit';
 import { requestLogger } from '@/shared/middleware/requestLogger';
 import { isProduction } from '@/shared/config';
@@ -30,7 +31,9 @@ export async function createApp(): Promise<Express> {
   // Structured per-request logging. First in the chain so every later line
   // carries the same request id.
   app.use(requestLogger);
-  app.use(cors({ credentials: true }));
+  // Explicit origin allowlist. A credentialed response may not use `*`, so a
+  // wildcard here would make the browser reject every authenticated request.
+  app.use(corsMiddleware);
   app.use(cookieParser());
 
   // Liveness: the process is up. Readiness: the process can reach its DB.
@@ -56,6 +59,9 @@ export async function createApp(): Promise<Express> {
   app.use(
     '/graphql',
     rateLimitMiddleware,
+    // Runs after cookieParser (it inspects the session cookie) and before the
+    // body is parsed, so a forged request is refused as cheaply as possible.
+    csrfGuard,
     express.json({ limit: '1mb' }),
     expressMiddleware(apollo, {
       context: async ({ req, res }) => createContext({ req, res }),
