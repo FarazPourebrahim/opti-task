@@ -1,0 +1,151 @@
+# OA2 model-selection benchmark configuration. See README.md §11.
+# Paths are relative to this file's folder. Never put tokens here: gated models read HF_TOKEN from the environment.
+
+seed: 20260916
+dataset_dir: ../../datasets/TAWOS/TAWOS_staffing_dataset
+output_dir: .
+hf_cache_dir: null                    # optional; null = default Hugging Face cache
+tasks: [story_point, task_assignment]
+
+data:
+  max_text_chars: 8000                # descriptions are cut to this many characters at prep time (models read <= 512 tokens)
+
+story_point:
+  buckets: [1, 2, 3, 5, 8, 13, 21]
+  drop_zero: true
+  split: {train: 0.70, val: 0.15, test: 0.15}   # also used for the task_assignment split (README §5.4)
+  heads: [coral]                      # add regression / multiclass for ablations (or per model: heads: [...])
+  epochs: 4
+
+task_assignment:
+  train_tasks: 50000
+  val_tasks: 2000
+  test_tasks: 5000
+  test_unclassified_tasks: 1000
+  n_hard_negatives: 4
+  n_random_negatives: 2
+  overqualified_min_gap: 0.10         # Capability - Plausibility gap that marks a pair as over-qualified (bi-encoder extra negative)
+  epochs: 2
+  query_instruction: "Given a software task description, retrieve team member profiles suited to do the task"
+
+training:
+  effective_batch: 32
+  per_device_batch: 8                 # micro-batch; gradient accumulation fills up to effective_batch
+  eval_batch: 32
+  max_seq_len: 512
+  lr_full: 2.0e-5
+  lr_lora: 2.0e-4
+  lr_head: 1.0e-3
+  warmup_ratio: 0.06
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lora: {r: 16, alpha: 32, dropout: 0.05}
+  lora_param_threshold_m: 300         # embedders above this many million parameters are LoRA-tuned
+  early_stopping_patience: 1
+  gradient_checkpointing: true
+  latency_samples: 200                # test items (Task A) / tasks (Task B) timed for latency
+  latency_warmup: 10
+  latency_batch_tasks: 8              # Task B: tasks per call for the batched latency figure
+
+# Registry (README §6.1). Optional per-model keys:
+#   max_seq_len, per_device_batch, precision (fp32|fp16|bf16), heads, query_prefix, doc_prefix,
+#   trust_remote_code, revision, enabled: false
+# query_prefix may contain "{instruction}" (task_assignment.query_instruction).
+models:
+  - key: minilm_l6
+    hf_repo_id: sentence-transformers/all-MiniLM-L6-v2
+    family: embedder
+    params_m: 23
+    license: Apache-2.0
+    tasks: [story_point, task_assignment]
+    max_seq_len: 256
+
+  - key: modernbert_base
+    hf_repo_id: answerdotai/ModernBERT-base
+    family: encoder
+    params_m: 149
+    license: Apache-2.0
+    tasks: [story_point, task_assignment]
+
+  - key: deberta_v3_base
+    hf_repo_id: microsoft/deberta-v3-base
+    family: encoder
+    params_m: 184
+    license: MIT
+    tasks: [story_point, task_assignment]
+
+  - key: neobert
+    hf_repo_id: chandar-lab/NeoBERT
+    family: encoder
+    params_m: 250
+    license: MIT
+    tasks: [story_point, task_assignment]
+    trust_remote_code: true
+
+  - key: embeddinggemma_300m
+    hf_repo_id: google/embeddinggemma-300m   # gated: accept the license on HF and export HF_TOKEN
+    family: embedder
+    params_m: 308
+    license: Gemma
+    tasks: [story_point, task_assignment]
+    precision: fp32                     # EmbeddingGemma activations do not support fp16
+    query_prefix: "task: search result | query: "
+    doc_prefix: "title: none | text: "
+
+  - key: e5_large_instruct
+    hf_repo_id: intfloat/multilingual-e5-large-instruct
+    family: embedder
+    params_m: 560
+    license: MIT
+    tasks: [story_point, task_assignment]
+    per_device_batch: 4
+    query_prefix: "Instruct: {instruction}\nQuery: "
+
+  - key: bge_m3
+    hf_repo_id: BAAI/bge-m3
+    family: embedder
+    params_m: 568
+    license: MIT
+    tasks: [story_point, task_assignment]
+    per_device_batch: 4
+
+  - key: qwen3_embedding_0_6b
+    hf_repo_id: Qwen/Qwen3-Embedding-0.6B
+    family: embedder
+    params_m: 596
+    license: Apache-2.0
+    tasks: [story_point, task_assignment]
+    per_device_batch: 4
+    query_prefix: "Instruct: {instruction}\nQuery:"
+
+  - key: harrier_0_6b
+    hf_repo_id: null                    # verify on HF (Microsoft Harrier-OSS-v1-0.6B); unit is skipped until set
+    family: embedder
+    params_m: 600
+    license: MIT
+    tasks: [story_point, task_assignment]
+    per_device_batch: 4
+
+  - key: bitnet_embedding_0_6b
+    hf_repo_id: null                    # verify on HF (Microsoft BitNet-Embedding-0.6B); unit is skipped until set
+    family: embedder
+    params_m: 600
+    license: MIT
+    tasks: [task_assignment]
+    per_device_batch: 4
+
+  - key: qwen3_reranker_0_6b
+    hf_repo_id: Qwen/Qwen3-Reranker-0.6B
+    family: reranker
+    params_m: 596
+    license: Apache-2.0
+    tasks: [task_assignment]
+    per_device_batch: 4
+
+  - key: qwen3_0_6b
+    hf_repo_id: Qwen/Qwen3-0.6B
+    family: generative
+    params_m: 596
+    license: Apache-2.0
+    tasks: [story_point, task_assignment]
+    per_device_batch: 4

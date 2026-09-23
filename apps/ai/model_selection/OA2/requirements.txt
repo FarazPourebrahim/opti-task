@@ -1,0 +1,18 @@
+# OA2 model-selection benchmark (Python >= 3.10).
+# Install the CUDA build of torch first, matching your driver, e.g.:
+#   pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+# then: pip install -r requirements.txt
+torch==2.8.0
+transformers==4.57.1
+sentence-transformers==5.1.2
+peft==0.17.1
+accelerate==1.11.0
+huggingface_hub==0.36.0
+pandas==2.2.3
+pyarrow==23.0.0
+numpy==2.3.5
+scikit-learn==1.8.0
+scipy==1.17.1
+pyyaml==6.0.3
+sentencepiece==0.2.1
+protobuf==5.29.5
