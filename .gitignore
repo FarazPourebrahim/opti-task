@@ -24,3 +24,7 @@ coverage/
 # logs
 logs/
 *.log
+
+# datasets
+apps/ai/datasets/TAWOS/TAWOS_staffing_dataset/
+apps/ai/datasets/TAWOS/TAWOS_staffing_dataset.zip
