@@ -15,7 +15,8 @@
     "search": "Search",
     "optional": "Optional",
     "loadMore": "Load more",
-    "showing": "Showing {{shown}} of {{total}}"
+    "showing": "Showing {{shown}} of {{total}}",
+    "noMatchingPeople": "No one matches that."
   },
   "error": {
     "network": "Can’t reach the server. Check your connection and try again.",
@@ -119,7 +120,10 @@
     "settings": "Settings",
     "profile": "Profile",
     "people": "People",
-    "person": "Person"
+    "person": "Person",
+    "project": "Project",
+    "teams": "Teams",
+    "team": "Team"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -181,6 +185,11 @@
       "BUSY": "Busy",
       "AWAY": "Away",
       "OFFLINE": "Offline"
+    },
+    "projectRole": {
+      "ADMIN": "Admin",
+      "MEMBER": "Member",
+      "VIEWER": "Viewer"
     }
   },
   "organization": {
@@ -271,7 +280,8 @@
       "urlInvalid": "Enter a full link, starting with https://.",
       "urlTooLong": "That link is too long.",
       "emailInvalid": "Enter a valid email address."
-    }
+    },
+    "projectNew": "New project"
   },
   "user": {
     "profileTitle": "Profile",
@@ -313,6 +323,135 @@
       "tagRequired": "Enter an area of expertise.",
       "tagTooLong": "Use 50 characters or fewer.",
       "confidenceRange": "Enter a whole number from 0 to 100."
+    }
+  },
+  "project": {
+    "loadFailed": "Could not load this project.",
+    "name": "Name",
+    "description": "Description",
+    "createTitle": "Create a project",
+    "createDescription": "You will be added to it as an admin.",
+    "create": "Create project",
+    "created": "{{name}} has been created.",
+    "updated": "Project details saved.",
+    "sections": "Project sections",
+    "tabs": {
+      "overview": "Overview",
+      "members": "Members",
+      "teams": "Teams",
+      "settings": "Settings"
+    },
+    "lifecycleTitle": "Lifecycle",
+    "peopleTitle": "People",
+    "status": "Status",
+    "statusChange": "Change status",
+    "statusChanged": "The project is now {{status}}.",
+    "statusFinal": "An archived project cannot be reopened.",
+    "transition": {
+      "PLANNING": "Move to planning",
+      "ACTIVE": "Mark as active",
+      "COMPLETED": "Mark as completed",
+      "ARCHIVED": "Archive"
+    },
+    "membersEmpty": "This project has no members yet.",
+    "memberAddTitle": "Add a member",
+    "memberPickerLabel": "Person",
+    "memberPickerHint": "Anyone in this organisation who is not on the project yet.",
+    "memberRole": "Role",
+    "memberAdd": "Add to project",
+    "memberAdded": "{{name}} has been added to the project.",
+    "memberConflict": "That person is already on this project.",
+    "noCandidatesTitle": "No one to add",
+    "noCandidatesBody": "Everyone you can see in this organisation is already on the project.",
+    "memberColumns": {
+      "member": "Member",
+      "role": "Role",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "memberRoleLabel": "Role for {{name}}",
+    "memberRoleUpdated": "{{name}} is now {{role}}.",
+    "memberRemove": "Remove",
+    "memberRemoved": "{{name}} has been removed from the project.",
+    "memberRemoveConfirmTitle": "Remove {{name}}?",
+    "memberRemoveConfirmBody": "{{name}} will lose access to {{project}}.",
+    "settingsTitle": "Details",
+    "settingsReadOnlyTitle": "You can’t change these details",
+    "settingsReadOnlyBody": "Only a project or organisation admin can edit them.",
+    "workflowTitle": "Workflow configuration",
+    "workflowNoticeTitle": "This is stored as-is and not used yet",
+    "workflowNoticeBody": "The server saves any JSON object here without checking its shape, and task statuses still follow the fixed flow. Edit it only if you know what will read it.",
+    "workflowLabel": "Workflow (JSON)",
+    "workflowInvalid": "Enter a valid JSON object, such as { \"columns\": [] }.",
+    "workflowSave": "Save workflow",
+    "workflowSaved": "Workflow configuration saved.",
+    "deleteTitle": "Delete project",
+    "deleteBody": "Deleting a project removes its teams, sprints and tasks for everyone. This cannot be undone.",
+    "delete": "Delete project",
+    "deleted": "{{name}} has been deleted.",
+    "deleteConfirmTitle": "Delete {{name}}?",
+    "deleteConfirmBody": "Every team, sprint and task in it will be deleted for all members. This cannot be undone.",
+    "validation": {
+      "nameRequired": "Enter a name.",
+      "nameTooLong": "Use 120 characters or fewer.",
+      "descriptionTooLong": "Use 2,000 characters or fewer.",
+      "memberRequired": "Choose a person."
+    },
+    "statusRejected": "That status change isn’t allowed from the project’s current status. Reload to see where it stands."
+  },
+  "team": {
+    "loadFailed": "Could not load this team.",
+    "new": "New team",
+    "empty": "This project has no teams yet.",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "name": "Name",
+    "description": "Description",
+    "createTitle": "Create a team",
+    "create": "Create team",
+    "created": "{{name}} has been created.",
+    "edit": "Edit team",
+    "editTitle": "Edit team",
+    "updated": "Team details saved.",
+    "delete": "Delete team",
+    "deleted": "{{name}} has been deleted.",
+    "deleteConfirmTitle": "Delete {{name}}?",
+    "deleteConfirmBody": "Its members stay on the project, but the team and their roles in it are removed. This cannot be undone.",
+    "membersEmpty": "This team has no members yet.",
+    "memberAddTitle": "Add a member",
+    "memberPickerLabel": "Person",
+    "memberPickerHint": "Anyone on this project who is not on the team yet.",
+    "noCandidates": "Everyone on this project is already on the team.",
+    "memberRole": "Role",
+    "memberAvailability": "Availability",
+    "memberWorkload": "Workload",
+    "memberWorkloadHint": "A whole number from 0 to 1000.",
+    "memberResponsibilities": "Responsibilities",
+    "noResponsibilities": "None recorded",
+    "memberAdd": "Add to team",
+    "memberAdded": "{{name}} has been added to the team.",
+    "memberConflict": "That person is already on this team.",
+    "memberEditTitle": "Edit {{name}}",
+    "memberUpdated": "{{name}} has been updated.",
+    "memberRemove": "Remove",
+    "memberRemoved": "{{name}} has been removed from the team.",
+    "memberRemoveConfirmTitle": "Remove {{name}}?",
+    "memberRemoveConfirmBody": "{{name}} will leave {{team}} but stay on the project.",
+    "memberColumns": {
+      "member": "Member",
+      "role": "Role",
+      "availability": "Availability",
+      "workload": "Workload",
+      "responsibilities": "Responsibilities",
+      "actions": "Actions"
+    },
+    "validation": {
+      "nameRequired": "Enter a name.",
+      "nameTooLong": "Use 120 characters or fewer.",
+      "descriptionTooLong": "Use 2,000 characters or fewer.",
+      "responsibilitiesTooLong": "Use 2,000 characters or fewer.",
+      "workloadRange": "Enter a whole number from 0 to 1000.",
+      "memberRequired": "Choose a person."
     }
   }
 }

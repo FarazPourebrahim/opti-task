@@ -65,6 +65,27 @@ const OrganizationSettingsPage = lazy(async () => ({
   default: (await import('@/modules/organization/OrganizationSettings.page'))
     .OrganizationSettingsPage,
 }));
+const ProjectPage = lazy(async () => ({
+  default: (await import('@/modules/project/Project.page')).ProjectPage,
+}));
+const ProjectOverviewPage = lazy(async () => ({
+  default: (await import('@/modules/project/ProjectOverview.page'))
+    .ProjectOverviewPage,
+}));
+const ProjectMembersPage = lazy(async () => ({
+  default: (await import('@/modules/project/ProjectMembers.page'))
+    .ProjectMembersPage,
+}));
+const ProjectSettingsPage = lazy(async () => ({
+  default: (await import('@/modules/project/ProjectSettings.page'))
+    .ProjectSettingsPage,
+}));
+const TeamsPage = lazy(async () => ({
+  default: (await import('@/modules/team/Teams.page')).TeamsPage,
+}));
+const TeamPage = lazy(async () => ({
+  default: (await import('@/modules/team/Team.page')).TeamPage,
+}));
 const AppLayout = lazy(async () => ({
   default: (await import('@/modules/shell/components/AppLayout')).AppLayout,
 }));
@@ -171,6 +192,42 @@ export const routes: RouteObject[] = [
                             } satisfies RouteHandle,
                           },
                         ],
+                      },
+                    ],
+                  },
+                  {
+                    path: ROUTES.project,
+                    element: <ProjectPage />,
+                    handle: {
+                      crumb: 'nav.project',
+                      crumbId: CRUMB_IDS.project,
+                    } satisfies RouteHandle,
+                    children: [
+                      { index: true, element: <ProjectOverviewPage /> },
+                      {
+                        path: ROUTES.projectMembers,
+                        element: <ProjectMembersPage />,
+                        handle: { crumb: 'nav.members' } satisfies RouteHandle,
+                      },
+                      {
+                        path: ROUTES.projectTeams,
+                        handle: { crumb: 'nav.teams' } satisfies RouteHandle,
+                        children: [
+                          { index: true, element: <TeamsPage /> },
+                          {
+                            path: ROUTES.team,
+                            element: <TeamPage />,
+                            handle: {
+                              crumb: 'nav.team',
+                              crumbId: CRUMB_IDS.team,
+                            } satisfies RouteHandle,
+                          },
+                        ],
+                      },
+                      {
+                        path: ROUTES.projectSettings,
+                        element: <ProjectSettingsPage />,
+                        handle: { crumb: 'nav.settings' } satisfies RouteHandle,
                       },
                     ],
                   },
