@@ -1,16 +1,14 @@
+import { Button, Input } from '@averoui/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FormEvent } from 'react';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
 import { FormError } from '@/modules/auth/components/FormError';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import {
-  loginSchema,
-  toFieldErrors,
-} from '@/modules/auth/schemas/auth.schema';
-import { Button, Field, Input } from '@/shared/components';
+import { loginSchema, toFieldErrors } from '@/modules/auth/schemas/auth.schema';
+import { LinkButton } from '@/modules/auth/components/LinkButton';
+import { FormField } from '@/shared/components';
 import { ApiError } from '@/shared/lib/apiError';
-import styles from './Auth.page.module.css';
 
 type LoginPageProps = {
   /** Phase 5 supplies real navigation; until then the caller decides. */
@@ -77,37 +75,32 @@ export function LoginPage({
       footer={
         <>
           <span>{t('auth.noAccount')}</span>
-          <button
-            type="button"
-            className={styles.linkButton}
-            onClick={onGoToRegister}
-          >
+          <LinkButton onClick={onGoToRegister}>
             {t('auth.createAccount')}
-          </button>
+          </LinkButton>
         </>
       }
     >
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <FormError message={formError} />
 
-        <Field
+        <FormField
           label={t('auth.email')}
-          error={fieldErrors['email'] ? t(fieldErrors['email'] as never) : undefined}
+          error={
+            fieldErrors['email'] ? t(fieldErrors['email'] as never) : undefined
+          }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Field
+        <FormField
           label={t('auth.password')}
           error={
             fieldErrors['password']
@@ -115,30 +108,23 @@ export function LoginPage({
               : undefined
           }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Button type="submit" isLoading={isPending} fullWidth size="lg">
+        <Button type="submit" loading={isPending} block size="lg">
           {isPending ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
 
-        <button
-          type="button"
-          className={styles.linkButton}
-          onClick={onGoToForgotPassword}
-        >
+        <LinkButton onClick={onGoToForgotPassword}>
           {t('auth.forgotPassword')}
-        </button>
+        </LinkButton>
       </form>
     </AuthLayout>
   );

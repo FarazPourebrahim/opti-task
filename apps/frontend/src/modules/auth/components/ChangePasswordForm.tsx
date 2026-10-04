@@ -1,4 +1,12 @@
 import { useMutation } from '@apollo/client/react';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  Input,
+  useToast,
+} from '@averoui/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FormEvent } from 'react';
@@ -8,9 +16,8 @@ import {
   changePasswordSchema,
   toFieldErrors,
 } from '@/modules/auth/schemas/auth.schema';
-import { Button, Card, CardHeader, Field, Input, useToast } from '@/shared/components';
+import { FormField } from '@/shared/components';
 import { ApiError } from '@/shared/lib/apiError';
-import styles from './ChangePasswordForm.module.css';
 
 export function ChangePasswordForm() {
   const { t } = useTranslation();
@@ -55,11 +62,13 @@ export function ChangePasswordForm() {
 
   return (
     <Card>
-      <CardHeader title={t('auth.changePassword.title')} />
-      <form className={styles.changePasswordForm} onSubmit={handleSubmit} noValidate>
+      <CardHeader>
+        <CardTitle>{t('auth.changePassword.title')}</CardTitle>
+      </CardHeader>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <FormError message={formError} />
 
-        <Field
+        <FormField
           label={t('auth.currentPassword')}
           error={
             fieldErrors['currentPassword']
@@ -67,19 +76,16 @@ export function ChangePasswordForm() {
               : undefined
           }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="password"
-              autoComplete="current-password"
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              disabled={loading}
-            />
-          )}
-        </Field>
+          <Input
+            type="password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            disabled={loading}
+          />
+        </FormField>
 
-        <Field
+        <FormField
           label={t('auth.newPassword')}
           hint={t('auth.passwordHint')}
           error={
@@ -88,20 +94,17 @@ export function ChangePasswordForm() {
               : undefined
           }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="password"
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              disabled={loading}
-            />
-          )}
-        </Field>
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            disabled={loading}
+          />
+        </FormField>
 
-        <div className={styles.changePasswordActions}>
-          <Button type="submit" isLoading={loading}>
+        <div className="flex justify-end">
+          <Button type="submit" loading={loading}>
             {t('auth.changePassword.submit')}
           </Button>
         </div>
