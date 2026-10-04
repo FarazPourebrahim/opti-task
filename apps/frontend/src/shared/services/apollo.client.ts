@@ -20,6 +20,7 @@ import {
 import {
   clearAccessToken,
   getAccessToken,
+  notifySessionExpired,
   onAccessTokenChange,
 } from '@/shared/services/session.store';
 
@@ -232,6 +233,7 @@ export function createApolloClient(
     clearAccessToken();
     // Nothing cached belongs to a signed-out user.
     void client?.clearStore();
+    notifySessionExpired();
     onSessionExpired?.();
   };
 
