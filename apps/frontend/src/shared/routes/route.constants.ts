@@ -13,12 +13,47 @@ export const ROUTES = {
   account: '/account',
   accountSessions: '/account/sessions',
   accountSecurity: '/account/security',
+  accountProfile: '/account/profile',
+  organizations: '/organizations',
+  organization: '/organizations/:organizationId',
+  organizationMembers: '/organizations/:organizationId/members',
+  organizationInvitations: '/organizations/:organizationId/invitations',
+  organizationSettings: '/organizations/:organizationId/settings',
+  user: '/users/:userId',
 } as const;
 
 export const ROUTE_PARAMS = {
   invitationToken: 'token',
+  organizationId: 'organizationId',
+  userId: 'userId',
+} as const;
+
+/** Ids a route hands to `useBreadcrumbLabel` so its crumb shows a real name. */
+export const CRUMB_IDS = {
+  organization: 'organization',
+  user: 'user',
 } as const;
 
 export function acceptInvitationPath(token: string): string {
   return `/invitations/${encodeURIComponent(token)}`;
+}
+
+export function organizationPath(organizationId: string): string {
+  return `/organizations/${encodeURIComponent(organizationId)}`;
+}
+
+export function organizationMembersPath(organizationId: string): string {
+  return `${organizationPath(organizationId)}/members`;
+}
+
+export function organizationInvitationsPath(organizationId: string): string {
+  return `${organizationPath(organizationId)}/invitations`;
+}
+
+export function organizationSettingsPath(organizationId: string): string {
+  return `${organizationPath(organizationId)}/settings`;
+}
+
+export function userPath(userId: string): string {
+  return `/users/${encodeURIComponent(userId)}`;
 }
