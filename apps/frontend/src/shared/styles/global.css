@@ -22,6 +22,7 @@
  * with structure but no styling.
  */
 @source '../../../node_modules/@averoui/react/dist';
+@source '../../../node_modules/@averoui/charts/dist';
 
 @theme {
   /*
