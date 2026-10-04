@@ -54,7 +54,8 @@ def _finish(ctx, data, train_df, predict, fit_out, total, trainable, method, run
     return {
         "total_params": total, "trainable_params": trainable, "finetune_method": method,
         "n_train": len(train_df), "n_val": len(data.val), "n_test": len(test),
-        "training": {**{k_: v for k_, v in fit_out.items() if k_ != "best_val_metrics"}, "train_time_s": train_time},
+        "training": {**{k_: v for k_, v in fit_out.items() if k_ != "best_val_metrics"},
+                     "train_time_s": train_time + fit_out.get("train_time_prior_s", 0.0)},  # + time before a resume
         "metrics": {"zero_shot_val": None, "val": fit_out["best_val_metrics"], "test": test_metrics, "slices": slices},
         "efficiency": eff,
         "predictions": _predictions_frame(test, pred, probs, k),

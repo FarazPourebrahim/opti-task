@@ -349,7 +349,7 @@ Keeping a model's units adjacent is what lets the erase step keep the download f
 - `GatedRepoError` → `skipped: gated_access_denied`; `RevisionNotFoundError` → `skipped: revision_not_found`; `RepositoryNotFoundError` → `skipped: repo_not_found`.
 - Any other error (network, 5xx, …) propagates → the unit is **failed** (retryable with `--retry-failed`), not skipped.
 
-`pull(repo, sha, cache_dir)`: `snapshot_download` of **that exact SHA** into the HF cache (or `hf_cache_dir`), ignoring ONNX/OpenVINO/TF/Flax/Rust/TFLite/CoreML/GGUF artifacts to save disk. Gated errors (or HTTP 401/403) → `skipped: gated_access_denied`. For gated repos, `model_info` usually succeeds without a token (metadata is public), so the skip normally happens here.
+`pull(repo, sha, cache_dir)`: `snapshot_download` of **that exact SHA** into the HF cache (or `hf_cache_dir`), ignoring ONNX/OpenVINO/TF/Flax/Rust/TFLite/CoreML/GGUF artifacts to save disk, with `max_workers=1` (on Windows without symlink rights, `huggingface_hub`'s per-folder symlink probe races between its download threads and fails with `WinError 1314`; serial download avoids it at negligible cost). Gated errors (or HTTP 401/403) → `skipped: gated_access_denied`. For gated repos, `model_info` usually succeeds without a token (metadata is public), so the skip normally happens here.
 
 All models are then loaded **from the returned local snapshot folder**, never by repo name, so the revision that was verified is the revision that was trained. `HF_TOKEN` is read from the environment by `huggingface_hub`; it is never written anywhere.
 
@@ -614,7 +614,7 @@ Written for every unit — completed, failed and skipped — following README §
 - `model.revision_sha`: the SHA that was actually downloaded; `null` for baselines and units skipped before verification.
 - `data`: `fingerprint`, `n_train` (rows for Task A; **pairs** for pointwise Task B recipes, **tuples** for bi-encoders, tasks for baselines), `n_val`, `n_test`, `label_distribution` from the prep metadata, plus `split_sizes` (Task A) or `sampled_split_sizes` and `held_out_member_ids` (Task B).
 - `training.hyperparameters`: the resolved unit hyperparameters plus `per_device_batch_used`, `precision`, `grad_accumulation`, `optimizer` (models only).
-- `training.resumed_from_epoch`: always `null` (mid-training resume is not implemented, §21).
+- `training.resumed_from_epoch`: `null`, or the epoch a unit resumed at after an interruption (§17.9); the notes then give the micro-batch too.
 - `efficiency`: the §15 fields plus `n_timed`.
 - `environment`: Python, torch, transformers, sentence-transformers, peft, huggingface_hub, scikit-learn, pandas, numpy versions, CUDA version, GPU name, OS, and a 12-hex SHA-256 of the hostname.
 - `notes`: every implementation decision relevant to that unit (pooling, prefixes, templates, masking, OOM retry, smoke mode, BitNet caveat, …).
@@ -681,7 +681,7 @@ A unit absent from the file is `pending`. Every transition rewrites the whole fi
 pending ──► running ──► completed
                    ├──► failed    (exception; --retry-failed re-queues)
                    └──► skipped   (unverified / missing / gated repo)
-running (found at start-up) = interrupted ──► restarted from scratch
+running (found at start-up) = interrupted ──► resumed from its checkpoint (§17.9), else restarted from scratch
 ```
 
 ### 17.3 Building the queue
@@ -733,10 +733,24 @@ Because the unit is left `running`, the next start treats it as interrupted and 
 
 | Crash point | Effect on next start |
 |---|---|
-| During training / evaluation | Unit is `running` → restarted from scratch. |
+| During training | Unit is `running` → resumed from its last resume checkpoint (≤ 15 min of training lost, §17.9). |
+| During the test pass / latency / report | Unit is `running` → training is skipped (checkpoint says finished), best weights restored, test re-run. |
 | After report written, before state → `completed` | Unit is `running` → restarted; the finished report is archived, not lost. |
 | During the erase step | Unit is `running` → restarted; anything not yet deleted is deleted by the restart's cleanup (work dir) or reused (HF cache). |
 | During data preparation | The `.tmp` cache folder is ignored and rebuilt. |
+
+
+### 17.9 Mid-unit resume (resume checkpoints)
+
+Added after the first pre-flight, for machines with power cuts. Implemented in `training.fit` plus the orchestrator.
+
+- **What is saved:** `.work/<run_id>/resume.pt` = trainable parameters, optimizer, LR scheduler, grad scaler, torch CPU/CUDA RNG states, and the loop state (epoch, next micro-batch, running loss, history, best score/epoch/metrics, early-stopping counter, training seconds so far). A small `resume_meta.json` sidecar records the per-device batch. Both are written atomically (temp file + rename), so a crash mid-save keeps the previous checkpoint.
+- **When:** every `OA2_RESUME_EVERY_MIN` minutes (environment variable, default 15), only right after an optimizer step (so no gradient is half-accumulated); after each epoch's training pass (before validation); and after each validation. The interval is deliberately **not** a config key: it would change every run ID.
+- **Resume:** a unit found `running` (interrupted), or `failed` for a non-OOM reason and re-queued with `--retry-failed`, keeps its work dir when `resume_meta.json` exists. `fit` reloads everything and continues at the saved micro-batch of the saved epoch with the same deterministic data order (`micro_batches(seed, epoch)`) and restored RNG, so the result matches an uninterrupted run up to GPU floating-point non-determinism. A checkpoint that does not match (different item count / micro-batch / accumulation / epochs) is discarded with a warning. If the interrupted attempt had already done its OOM retry, the resume happens at the reduced micro-batch and no second retry is allowed.
+- **Guards:** a checkpoint whose `best.pt` is missing is discarded (never test the wrong weights); the erase step deletes the resume files *before* the rest of the work dir; `--force` always starts fresh; a non-OOM failure (e.g. network down while verifying the repo after a power cut) keeps the checkpoint for `--retry-failed`.
+- **Zero-shot:** the pre-fine-tuning validation metrics (bi-encoders, reranker) are cached as `zero_shot.json` in the work dir and reused on resume.
+- **Reporting:** `training.resumed_from_epoch` is filled; a note gives the resume point; `train_time_s` = time before the interruption (up to the last checkpoint) + time after it.
+- **Cost:** a full fine-tune checkpoint holds weights + AdamW moments (~12 bytes/parameter: ~2.2 GB for DeBERTa-v3-base, a few seconds to write); LoRA checkpoints are tens of MB. Tensors are saved straight from the GPU, one storage at a time, so saving does not need a second full host copy.
 
 ---
 
@@ -818,7 +832,7 @@ Everything below is where the README was silent or ambiguous. Each item is also 
 
 ## 21. Known limitations and gotchas
 
-1. **No mid-training resume.** An interrupted unit restarts from epoch 0. On slow hardware a single Task B unit can take a day or more, so an interruption loses all of it. This is the most valuable improvement to add (save optimizer/scheduler/scaler/epoch each epoch or every N steps, resume from it, fill `resumed_from_epoch`).
+1. **Mid-unit resume is at training granularity** (§17.9). Up to `OA2_RESUME_EVERY_MIN` (15) minutes of training, a validation pass in progress, or the test/latency pass in progress are redone after an interruption. Model load and download happen again on resume.
 2. **Untested ML paths** (§1). Likely first-run issues: library API drift (transformers 4.57 / sentence-transformers 5.1 / peft 0.17 as pinned), remote-code models (NeoBERT may need `xformers`), gated access.
 3. **Qwen-specific templates.** The reranker/generative recipes assume the Qwen chat format and single `yes`/`no` tokens. Adding a non-Qwen generative or reranker model needs new templates in `YES_NO_TEMPLATES` / `GEN_PROMPT_*`.
 4. **Training budget at the README defaults is large.** Cross-encoders and yes/no scorers would train on ~500k pairs × 2 epochs and validation would score 2,000 × 48 pairs per epoch; that is why the config uses scenario B (~50k pairs, 500 × 48 validation pairs). Generative Task A inference is 7× a normal forward pass at any budget.
@@ -876,6 +890,6 @@ Everything below is where the README was silent or ambiguous. Each item is also 
 | `skipped: repo_id_unverified` | Fill in a verified `hf_repo_id` in `config.yaml` (this creates a new run ID). |
 | `failed: oom` | Lower that model's `per_device_batch` / `max_seq_len` in the config, or accept the result. |
 | Failed with a network error | `--retry-failed`. |
-| Unit keeps restarting from scratch | Expected after interruptions (§21.1). |
+| Unit keeps restarting from scratch | Its resume checkpoint was missing or did not match (logged as a warning), or it was re-run with `--force` / after `failed: oom`. |
 | Leaderboard not updated | The CSV was open in another program; it is rebuilt after the next unit or at the end of the run. |
 | Want to inspect a trained model | Run with `--keep-weights`; `best.pt` stays in `.work/<run_id>/` and the download stays in the HF cache. |

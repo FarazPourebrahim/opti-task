@@ -170,7 +170,7 @@ def build_report(unit, *, status, reason, result, revision, fingerprint, data_me
             "epochs_run": training.get("epochs_run"),
             "history": training.get("history", []),
             "oom_retry": bool(oom_retry),
-            "resumed_from_epoch": None,
+            "resumed_from_epoch": (training.get("resumed_from") or {}).get("epoch"),
             "train_time_s": training.get("train_time_s"),
             "peak_gpu_mem_mb": peak_mem_mb,
         },

@@ -142,7 +142,13 @@ def load_hf_encoder(path: str, entry: dict, max_len: int):
 
 def load_st(path: str, entry: dict):
     from sentence_transformers import SentenceTransformer
-    return SentenceTransformer(path, device="cpu", trust_remote_code=bool(entry.get("trust_remote_code", False)))
+    st = SentenceTransformer(path, device="cpu", trust_remote_code=bool(entry.get("trust_remote_code", False)))
+    # SentenceTransformer <-> model_card_data reference each other, and in practice that cycle was never collected:
+    # every finished unit left its whole model on the GPU until later units ran out of memory (seen in the
+    # pre-flight). The model card is only used when saving/publishing a model, which the benchmark never does.
+    if getattr(getattr(st, "model_card_data", None), "model", None) is st:
+        st.model_card_data.model = None
+    return st
 
 
 def st_backbone(st):

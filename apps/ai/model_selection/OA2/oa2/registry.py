@@ -146,7 +146,10 @@ def pull(repo: str, revision: str, cache_dir: str | None) -> str:
 
     LOG.info("Pulling %s @ %s ...", repo, revision[:12] if revision else None)
     try:
-        return snapshot_download(repo, revision=revision, cache_dir=cache_dir, ignore_patterns=_IGNORE)
+        # max_workers=1: on Windows without symlink rights, huggingface_hub's per-folder symlink probe races between
+        # its download threads (one thread sees "supported" before the probe fails) -> WinError 1314. Serial download
+        # avoids the race; the large weight file dominates either way, so the cost is negligible.
+        return snapshot_download(repo, revision=revision, cache_dir=cache_dir, ignore_patterns=_IGNORE, max_workers=1)
     except GatedRepoError as e:
         raise UnitSkipped("gated_access_denied", str(e)) from e
     except HfHubHTTPError as e:

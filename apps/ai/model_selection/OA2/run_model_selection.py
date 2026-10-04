@@ -165,12 +165,13 @@ def _execute_model(u, cfg, dat, path, precision, pdb, work, args, run_state):
     """Run the unit's recipe; on CUDA OOM retry once at half the micro-batch (same effective batch)."""
     import torch
     from oa2.recipes import RunContext, assignment, story_point
-    from oa2.training import free_memory, is_oom
+    from oa2.training import free_memory, is_oom, resume_meta
 
     recipe = story_point if u.task == "story_point" else assignment
 
-    def attempt(batch):
-        rmtree(work)
+    def attempt(batch, fresh):
+        if fresh:
+            rmtree(work)
         if torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
         ctx = RunContext(u, cfg, path, precision, batch, work, args.limit_train, [])
@@ -178,17 +179,27 @@ def _execute_model(u, cfg, dat, path, precision, pdb, work, args, run_state):
         res["notes"] = ctx.notes
         return res
 
+    meta = resume_meta(work)
+    if meta and int(meta["per_device_batch"]) != pdb:
+        # The interrupted attempt had already been OOM-retried at a smaller micro-batch: resume at that size.
+        pdb = int(meta["per_device_batch"])
+        run_state["oom_retry"] = True
+        run_state["per_device_batch"] = pdb
+        LOG.info("Resuming at the OOM-retry micro-batch %d.", pdb)
     try:
-        return attempt(pdb)
+        res = attempt(pdb, fresh=meta is None)
+        if run_state["oom_retry"]:
+            res["notes"].insert(0, f"OOM retry happened before an interruption; resumed at per-device batch {pdb}.")
+        return res
     except Exception as e:  # noqa: BLE001
-        if not is_oom(e) or pdb <= 1:
+        if not is_oom(e) or pdb <= 1 or run_state["oom_retry"]:
             raise
         LOG.warning("CUDA out of memory at per-device batch %d; retrying once at %d (accumulation doubled).",
                     pdb, pdb // 2)
     free_memory()  # outside the except block so the failed attempt's frames are released
     run_state["oom_retry"] = True
     run_state["per_device_batch"] = pdb // 2
-    res = attempt(pdb // 2)
+    res = attempt(pdb // 2, fresh=True)
     res["notes"].insert(0, f"OOM at per-device batch {pdb}; retried once at {pdb // 2} with doubled gradient "
                            "accumulation (effective batch unchanged).")
     return res
@@ -199,19 +210,25 @@ def run_unit(u, cfg, dat, store, args, stop, env, keep_repo: bool) -> str:
     from oa2.cleanup import erase_unit
     from oa2.models import resolve_precision
     from oa2.recipes import RunContext, baselines
-    from oa2.training import is_oom
+    from oa2.training import RESUME_EVERY_S, is_oom, resume_meta
 
     out = Path(cfg["output_dir"])
     work = out / ".work" / u.run_id
     prev = store.status(u.run_id)
+    forced = u.run_id in args.force or u.model_key in args.force
+    # Interrupted units (and failed ones retried with --retry-failed) continue from their resume checkpoint, if any.
+    resumable = prev in ("running", "failed") and not forced and resume_meta(work) is not None
     with unit_log_file(report.log_path(out, u)):
         LOG.info("=" * 100)
         LOG.info("Unit %d: %s  (previous state: %s)", u.order, u.run_id, "interrupted" if prev == "running" else prev)
         with stop.critical():
-            if prev == "running":
+            if resumable:
+                LOG.warning("Unit has a resume checkpoint (%s): continuing from it.", resume_meta(work))
+            elif prev == "running":
                 LOG.warning("Unit was interrupted last time: wiping its work dir and partial outputs, restarting.")
             report.preserve_previous_outputs(out, u, partial=(prev == "running"))
-            rmtree(work)
+            if not resumable:
+                rmtree(work)
             store.set(u.run_id, "running", task=u.task, model_key=u.model_key, recipe=u.recipe, smoke=u.smoke,
                       started_at=now_iso(), attempts=int(store.get(u.run_id).get("attempts", 0)) + 1)
 
@@ -221,6 +238,8 @@ def run_unit(u, cfg, dat, store, args, stop, env, keep_repo: bool) -> str:
         precision = "fp32" if u.is_baseline else resolve_precision(u.hparams.get("precision_override"))
         notes = []
         cuda = torch.cuda.is_available() and not u.is_baseline
+        if cuda:  # so a unit failing before training does not report the previous unit's peak
+            torch.cuda.reset_peak_memory_stats()
         try:
             if u.is_baseline:
                 ctx = RunContext(u, cfg, None, "fp32", 1, work, args.limit_train, notes)
@@ -252,7 +271,12 @@ def run_unit(u, cfg, dat, store, args, stop, env, keep_repo: bool) -> str:
         peak = round(torch.cuda.max_memory_allocated() / 2 ** 20, 1) if cuda else None
         if not u.is_baseline:
             notes.append("train_time_s covers the fit loop including the per-epoch validation passes.")
-            notes.append("Mid-training resume is not implemented: an interrupted unit restarts from scratch.")
+            notes.append(f"Mid-unit resume: a resume checkpoint is written every {RESUME_EVERY_S / 60:.0f} min and at "
+                         "each epoch boundary; an interrupted unit continues from it (same data order and RNG state).")
+            resumed = ((result or {}).get("training") or {}).get("resumed_from")
+            if resumed:
+                notes.append(f"This unit was RESUMED after an interruption: {resumed}. train_time_s adds the time "
+                             "trained before the interruption; work lost since the last checkpoint is not counted.")
         if u.smoke:
             notes.append("SMOKE RUN: excluded from the leaderboard.")
 
@@ -270,10 +294,16 @@ def run_unit(u, cfg, dat, store, args, stop, env, keep_repo: bool) -> str:
         del preds, result
 
         freed = 0
+        # A non-OOM failure (e.g. the network was down when verifying the repo after a power cut) keeps the unit's
+        # resume checkpoint so --retry-failed continues from it instead of starting over.
+        keep_work = status == "failed" and reason != "oom" and resume_meta(work) is not None
         if args.keep_weights:
             LOG.warning("--keep-weights: not erasing %s or the HF cache.", work)
         else:
-            freed = erase_unit(work, None if u.is_baseline else u.repo, cfg.get("hf_cache_dir"), keep_repo)
+            if keep_work:
+                LOG.warning("Keeping %s (resume checkpoint) for --retry-failed.", work)
+            freed = erase_unit(work, None if u.is_baseline else u.repo, cfg.get("hf_cache_dir"), keep_repo,
+                               keep_work=keep_work)
         with stop.critical():
             rep["disk_freed_mb"] = round(freed / 2 ** 20, 1)
             report.write_report(out, u, rep)

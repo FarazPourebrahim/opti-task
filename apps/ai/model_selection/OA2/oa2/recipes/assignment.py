@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..common import LOG, seed_everything
+from ..common import LOG, atomic_write_json, read_json, seed_everything
 from ..data import AssignmentData
 from ..metrics import assignment_eval
 from ..models import (CausalScorer, STEncoder, apply_lora, autocast, compose_ids, count_params,
@@ -112,11 +112,27 @@ def _finish(ctx, data, score_tasks, fit_out, zero_shot, total, trainable, method
     return {
         "total_params": total, "trainable_params": trainable, "finetune_method": method,
         "n_train": n_train, "n_val": len(data.split("val")), "n_test": len(test),
-        "training": {**{k: v for k, v in fit_out.items() if k != "best_val_metrics"}, "train_time_s": train_time},
+        "training": {**{k: v for k, v in fit_out.items() if k != "best_val_metrics"},
+                     "train_time_s": train_time + fit_out.get("train_time_prior_s", 0.0)},  # + time before a resume
         "metrics": {"zero_shot_val": zero_shot, "val": fit_out["best_val_metrics"], "test": overall, "slices": slices},
         "efficiency": eff,
         "predictions": _predictions(data, test, scores),
     }
+
+
+def _zero_shot(ctx, val_eval, module) -> dict:
+    """Validation metrics of the pretrained model before fine-tuning. Cached in the unit's work dir so a unit resumed
+    after an interruption does not recompute them (the work dir is wiped on every fresh start)."""
+    path = ctx.work_dir / "zero_shot.json"
+    cached = read_json(path)
+    if cached is not None:
+        LOG.info("Zero-shot metrics reused from the interrupted attempt.")
+        return cached
+    with torch.no_grad():
+        module.eval()
+        _, zero_shot = val_eval()
+    atomic_write_json(path, zero_shot)
+    return zero_shot
 
 
 def _val_eval(data, score_tasks, before_eval=None):
@@ -249,9 +265,7 @@ def _run_bi_encoder(ctx: RunContext, data: AssignmentData) -> dict:
         return np.concatenate(out, 0) if out else np.zeros((0, len(look.profiles)))
 
     val_eval = _val_eval(data, score_tasks, refresh_members)
-    with torch.no_grad():
-        enc.eval()
-        _, zero_shot = val_eval()
+    zero_shot = _zero_shot(ctx, val_eval, enc)
     LOG.info("Zero-shot val ndcg@10: %s", zero_shot.get("ndcg@10"))
     t0 = time.perf_counter()
     fit_out = fit(modules=[enc], param_groups=[{"params": [p for p in enc.parameters() if p.requires_grad],
@@ -309,9 +323,7 @@ def _run_yes_no(ctx: RunContext, data: AssignmentData) -> dict:
     val_eval = _val_eval(data, score_tasks)
     zero_shot = None
     if fam == "reranker":
-        with torch.no_grad():
-            model.eval()
-            _, zero_shot = val_eval()
+        zero_shot = _zero_shot(ctx, val_eval, model)
         LOG.info("Zero-shot val ndcg@10: %s", zero_shot.get("ndcg@10"))
     t0 = time.perf_counter()
     fit_out = fit(modules=[model], param_groups=[{"params": [p for p in model.parameters() if p.requires_grad],
