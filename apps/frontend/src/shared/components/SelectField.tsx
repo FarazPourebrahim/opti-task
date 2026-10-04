@@ -61,7 +61,10 @@ export function SelectField<Value extends string>({
         }}
       >
         <FieldControl>
-          <SelectTrigger>
+          {/* Named explicitly as well as by the label: the trigger is a button
+              with the combobox role, whose text is its value, not its name,
+              and not every tool follows a `<label for>` to a button. */}
+          <SelectTrigger aria-label={label}>
             <SelectValue />
           </SelectTrigger>
         </FieldControl>
