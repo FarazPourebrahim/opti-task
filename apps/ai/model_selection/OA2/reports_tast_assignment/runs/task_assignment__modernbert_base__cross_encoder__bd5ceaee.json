@@ -1,0 +1,457 @@
+{
+  "schema_version": "1.0",
+  "run_id": "task_assignment__modernbert_base__cross_encoder__bd5ceaee",
+  "status": "completed",
+  "status_reason": null,
+  "smoke": false,
+  "context": {
+    "project": "Opti-Task",
+    "benchmark": "OA2 model selection",
+    "task": "task_assignment",
+    "task_description": "Learning to rank: score a (task text, team-member profile) pair for suitability and sort all 48 members, for suggesting a ranked assignee shortlist on task creation.",
+    "primary_metric": "ndcg@10",
+    "dataset": "TAWOS v1.1 staffing extension (synthetic 48-member team)",
+    "caveats": [
+      "TAWOS is public open-source Jira data (39 projects); results may not transfer to other teams' conventions.",
+      "Models see the final issue text; some issues were edited after estimation (see the text_changed_after_estimation slice for the gap).",
+      "Single seed, no hyperparameter search: every model gets the same fixed budget.",
+      "Team is synthetic; Task B labels are a scorer's opinion (Plausibility), not observed outcomes.",
+      "Headline test metrics use classified tasks only; 'Unclassified' tasks are a separate slice.",
+      "Nine members (one per area) are held out of training entirely to measure cold start.",
+      "Sampled tasks: train 5000 / val 500 / test 2500 (of which 500 unclassified). Rare required levels (Staff, Intern, Principal) have few training examples at small sample sizes."
+    ]
+  },
+  "model": {
+    "key": "modernbert_base",
+    "hf_repo_id": "answerdotai/ModernBERT-base",
+    "revision_sha": "8949b909ec900327062f0ebf497f51aef5e6f0c8",
+    "family": "encoder",
+    "license": "Apache-2.0",
+    "total_params": 149014272,
+    "trainable_params": 149015041,
+    "recipe": "cross_encoder",
+    "finetune_method": "full"
+  },
+  "data": {
+    "fingerprint": "7ba294912a0820ce",
+    "n_train": 44058,
+    "n_val": 500,
+    "n_test": 2500,
+    "label_distribution": {
+      "train": {
+        "n_pairs": 23383,
+        "n_tasks": 5000,
+        "mean_relevant_per_task": 4.6766,
+        "plausibility_quantiles": {
+          "q10": 0.4718,
+          "q25": 0.547,
+          "q50": 0.6755,
+          "q75": 0.8128,
+          "q90": 0.8694
+        }
+      },
+      "val": {
+        "n_pairs": 2400,
+        "n_tasks": 500,
+        "mean_relevant_per_task": 4.8,
+        "plausibility_quantiles": {
+          "q10": 0.4677,
+          "q25": 0.5285,
+          "q50": 0.6617,
+          "q75": 0.8009,
+          "q90": 0.8694
+        }
+      },
+      "test": {
+        "n_pairs": 10840,
+        "n_tasks": 2500,
+        "mean_relevant_per_task": 4.336,
+        "plausibility_quantiles": {
+          "q10": 0.4197,
+          "q25": 0.4932,
+          "q50": 0.628,
+          "q75": 0.7711,
+          "q90": 0.8692
+        }
+      }
+    },
+    "held_out_member_ids": [
+      7,
+      15,
+      21,
+      28,
+      29,
+      33,
+      39,
+      41,
+      47
+    ],
+    "sampled_split_sizes": {
+      "train": 5000,
+      "val": 500,
+      "test": 2500
+    }
+  },
+  "training": {
+    "hyperparameters": {
+      "effective_batch": 32,
+      "per_device_batch": 8,
+      "eval_batch": 32,
+      "max_seq_len": 512,
+      "lr_full": 2e-05,
+      "lr_lora": 0.0002,
+      "lr_head": 0.001,
+      "warmup_ratio": 0.06,
+      "weight_decay": 0.01,
+      "max_grad_norm": 1.0,
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.05
+      },
+      "lora_param_threshold_m": 300,
+      "early_stopping_patience": 1,
+      "gradient_checkpointing": true,
+      "latency_samples": 200,
+      "latency_warmup": 10,
+      "latency_batch_tasks": 8,
+      "precision_override": null,
+      "epochs": 2,
+      "seed": 20260916,
+      "query_instruction": "Given a software task description, retrieve team member profiles suited to do the task",
+      "query_prefix": "",
+      "doc_prefix": "",
+      "n_hard_negatives": 4,
+      "n_random_negatives": 2,
+      "per_device_batch_used": 8,
+      "precision": "bf16",
+      "grad_accumulation": 4,
+      "optimizer": "AdamW, linear decay with warmup"
+    },
+    "best_epoch": 2,
+    "epochs_run": 2,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 0.5083308882440508,
+        "val_primary": 0.6314216579791683,
+        "epoch_time_s": 1833.78
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.423529336979706,
+        "val_primary": 0.6882004422703831,
+        "epoch_time_s": 1826.7
+      }
+    ],
+    "oom_retry": false,
+    "resumed_from_epoch": null,
+    "train_time_s": 3667.5664160999004,
+    "peak_gpu_mem_mb": 3011.4
+  },
+  "metrics": {
+    "zero_shot_val": null,
+    "val": {
+      "n_tasks": 500,
+      "ndcg@10": 0.6882004422703831,
+      "ndcg@5": 0.6109647427734293,
+      "recall@5": 0.565059484959485,
+      "recall@10": 0.7861629953379954,
+      "hit@1": 0.194,
+      "mrr": 0.3914725625123941,
+      "spearman_plausibility": 0.40809398506212174,
+      "overqualified_top1_rate": 0.312,
+      "underqualified_top1_rate": 0.134
+    },
+    "test": {
+      "n_tasks": 2000,
+      "ndcg@10": 0.6978768917912009,
+      "ndcg@5": 0.6207922362573538,
+      "recall@5": 0.5692827796386619,
+      "recall@10": 0.794295794320059,
+      "hit@1": 0.2145,
+      "mrr": 0.3982317759665793,
+      "spearman_plausibility": 0.408555046577212,
+      "overqualified_top1_rate": 0.3355,
+      "underqualified_top1_rate": 0.098,
+      "latency_ms_per_task": 165.8441000035964
+    },
+    "slices": {
+      "all_tasks": {
+        "n_tasks": 2500,
+        "ndcg@10": 0.6211334303560687,
+        "ndcg@5": 0.5356687564373356,
+        "recall@5": 0.5086594837841896,
+        "recall@10": 0.7586590713534832,
+        "hit@1": 0.1828,
+        "mrr": 0.35700604624422694,
+        "spearman_plausibility": 0.3633392671052071,
+        "overqualified_top1_rate": 0.3272,
+        "underqualified_top1_rate": 0.1068
+      },
+      "primary_area:API/Integration": {
+        "n_tasks": 254,
+        "ndcg@10": 0.5671301912280254,
+        "ndcg@5": 0.4642561962695225,
+        "recall@5": 0.4329798591609615,
+        "recall@10": 0.6825321769219406,
+        "hit@1": 0.19291338582677164,
+        "mrr": 0.35953367923405694,
+        "spearman_plausibility": 0.3562701508763687,
+        "overqualified_top1_rate": 0.2559055118110236,
+        "underqualified_top1_rate": 0.13385826771653545
+      },
+      "primary_area:Backend": {
+        "n_tasks": 138,
+        "ndcg@10": 0.5411814272119098,
+        "ndcg@5": 0.4603298383407549,
+        "recall@5": 0.483837861011774,
+        "recall@10": 0.6977162933684673,
+        "hit@1": 0.10144927536231885,
+        "mrr": 0.2607085249294235,
+        "spearman_plausibility": 0.33247297382187624,
+        "overqualified_top1_rate": 0.4057971014492754,
+        "underqualified_top1_rate": 0.09420289855072464
+      },
+      "primary_area:Database": {
+        "n_tasks": 277,
+        "ndcg@10": 0.6701191996728072,
+        "ndcg@5": 0.5869962450726706,
+        "recall@5": 0.5195920405306687,
+        "recall@10": 0.7398874190390435,
+        "hit@1": 0.3140794223826715,
+        "mrr": 0.46753374355233457,
+        "spearman_plausibility": 0.3880658840960071,
+        "overqualified_top1_rate": 0.4368231046931408,
+        "underqualified_top1_rate": 0.07581227436823104
+      },
+      "primary_area:DevOps": {
+        "n_tasks": 216,
+        "ndcg@10": 0.5798743949687128,
+        "ndcg@5": 0.48056268684063663,
+        "recall@5": 0.4812346347068569,
+        "recall@10": 0.7412942253220031,
+        "hit@1": 0.18518518518518517,
+        "mrr": 0.3652630874309041,
+        "spearman_plausibility": 0.3591891361060338,
+        "overqualified_top1_rate": 0.4027777777777778,
+        "underqualified_top1_rate": 0.17592592592592593
+      },
+      "primary_area:Documentation": {
+        "n_tasks": 124,
+        "ndcg@10": 0.6910676504217094,
+        "ndcg@5": 0.609275364839039,
+        "recall@5": 0.5820020481310806,
+        "recall@10": 0.8024449564772146,
+        "hit@1": 0.3790322580645161,
+        "mrr": 0.5208039516546072,
+        "spearman_plausibility": 0.3726187285269701,
+        "overqualified_top1_rate": 0.1774193548387097,
+        "underqualified_top1_rate": 0.14516129032258066
+      },
+      "primary_area:Frontend": {
+        "n_tasks": 560,
+        "ndcg@10": 0.8502986896810024,
+        "ndcg@5": 0.7915367177316333,
+        "recall@5": 0.6663515254586683,
+        "recall@10": 0.9022295660688517,
+        "hit@1": 0.11428571428571428,
+        "mrr": 0.3426506322126703,
+        "spearman_plausibility": 0.5137340471099038,
+        "overqualified_top1_rate": 0.22678571428571428,
+        "underqualified_top1_rate": 0.060714285714285714
+      },
+      "primary_area:Infrastructure": {
+        "n_tasks": 121,
+        "ndcg@10": 0.5544797857019085,
+        "ndcg@5": 0.4397665846349826,
+        "recall@5": 0.4480903380636001,
+        "recall@10": 0.7281825126744913,
+        "hit@1": 0.08264462809917356,
+        "mrr": 0.26496741439881405,
+        "spearman_plausibility": 0.3761524126951405,
+        "overqualified_top1_rate": 0.45454545454545453,
+        "underqualified_top1_rate": 0.09917355371900827
+      },
+      "primary_area:QA/Testing": {
+        "n_tasks": 154,
+        "ndcg@10": 0.7388575539429509,
+        "ndcg@5": 0.6857771432624811,
+        "recall@5": 0.641957843743558,
+        "recall@10": 0.7968743558029272,
+        "hit@1": 0.38961038961038963,
+        "mrr": 0.561124784065126,
+        "spearman_plausibility": 0.35542618339186877,
+        "overqualified_top1_rate": 0.6038961038961039,
+        "underqualified_top1_rate": 0.06493506493506493
+      },
+      "primary_area:Security": {
+        "n_tasks": 156,
+        "ndcg@10": 0.7910770396271267,
+        "ndcg@5": 0.7442707484327374,
+        "recall@5": 0.7406399156399157,
+        "recall@10": 0.8865046990046991,
+        "hit@1": 0.3717948717948718,
+        "mrr": 0.5501424947809188,
+        "spearman_plausibility": 0.39430280931769124,
+        "overqualified_top1_rate": 0.28846153846153844,
+        "underqualified_top1_rate": 0.10256410256410256
+      },
+      "primary_area:Unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.3141595846155391,
+        "ndcg@5": 0.1951748371572625,
+        "recall@5": 0.2661663003663004,
+        "recall@10": 0.6161121794871794,
+        "hit@1": 0.056,
+        "mrr": 0.19210312735481722,
+        "spearman_plausibility": 0.18247614921718752,
+        "overqualified_top1_rate": 0.294,
+        "underqualified_top1_rate": 0.142
+      },
+      "required_level:Intern": {
+        "n_tasks": 11,
+        "ndcg@10": 0.14305204671151106,
+        "ndcg@5": 0.07753358523439839,
+        "recall@5": 0.16666666666666666,
+        "recall@10": 0.3181818181818182,
+        "hit@1": 0.0,
+        "mrr": 0.059908051731862595,
+        "spearman_plausibility": 0.10536510002090381,
+        "overqualified_top1_rate": 1.0,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Junior": {
+        "n_tasks": 254,
+        "ndcg@10": 0.4722905274427793,
+        "ndcg@5": 0.3705548422436238,
+        "recall@5": 0.3788452579791162,
+        "recall@10": 0.6740959936826079,
+        "hit@1": 0.023622047244094488,
+        "mrr": 0.20053307969645265,
+        "spearman_plausibility": 0.27046678622515585,
+        "overqualified_top1_rate": 1.0,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Mid-level": {
+        "n_tasks": 1745,
+        "ndcg@10": 0.690532238424384,
+        "ndcg@5": 0.6089454823196474,
+        "recall@5": 0.550656136192964,
+        "recall@10": 0.8042773548997213,
+        "hit@1": 0.22063037249283668,
+        "mrr": 0.4009676734282841,
+        "spearman_plausibility": 0.40710185086167366,
+        "overqualified_top1_rate": 0.3163323782234957,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Senior": {
+        "n_tasks": 427,
+        "ndcg@10": 0.49642606263810024,
+        "ndcg@5": 0.40476797256859315,
+        "recall@5": 0.4584942769954479,
+        "recall@10": 0.6689226659367175,
+        "hit@1": 0.1522248243559719,
+        "mrr": 0.3102882652421274,
+        "spearman_plausibility": 0.27628875932746677,
+        "overqualified_top1_rate": 0.00234192037470726,
+        "underqualified_top1_rate": 0.477751756440281
+      },
+      "required_level:Staff": {
+        "n_tasks": 50,
+        "ndcg@10": 0.24891738059438873,
+        "ndcg@5": 0.15139657339767262,
+        "recall@5": 0.28833333333333333,
+        "recall@10": 0.5666666666666667,
+        "hit@1": 0.02,
+        "mrr": 0.14837676860937243,
+        "spearman_plausibility": 0.16564003448629896,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 1.0
+      },
+      "required_level:Principal": {
+        "n_tasks": 13,
+        "ndcg@10": 0.14612735224159384,
+        "ndcg@5": 0.09095939395556751,
+        "recall@5": 0.19230769230769232,
+        "recall@10": 0.34615384615384615,
+        "hit@1": 0.0,
+        "mrr": 0.10155438287731688,
+        "spearman_plausibility": 0.1415812500641795,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 1.0
+      },
+      "classified": {
+        "n_tasks": 2000,
+        "ndcg@10": 0.6978768917912009,
+        "ndcg@5": 0.6207922362573538,
+        "recall@5": 0.5692827796386619,
+        "recall@10": 0.794295794320059,
+        "hit@1": 0.2145,
+        "mrr": 0.3982317759665793,
+        "spearman_plausibility": 0.408555046577212,
+        "overqualified_top1_rate": 0.3355,
+        "underqualified_top1_rate": 0.098,
+        "latency_ms_per_task": 165.8441000035964
+      },
+      "unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.3141595846155391,
+        "ndcg@5": 0.1951748371572625,
+        "recall@5": 0.2661663003663004,
+        "recall@10": 0.6161121794871794,
+        "hit@1": 0.056,
+        "mrr": 0.19210312735481722,
+        "spearman_plausibility": 0.18247614921718752,
+        "overqualified_top1_rate": 0.294,
+        "underqualified_top1_rate": 0.142
+      },
+      "held_out_members": {
+        "n_tasks": 1452,
+        "ndcg@10": 0.6990290013341494,
+        "ndcg@5": 0.6243377075323339,
+        "recall@5": 0.5312797203201919,
+        "recall@10": 0.7700184063379858,
+        "hit@1": 0.18526170798898073,
+        "mrr": 0.36827173852646033,
+        "spearman_plausibility": 0.4321759289570652,
+        "overqualified_top1_rate": 0.349862258953168,
+        "underqualified_top1_rate": 0.07369146005509641
+      }
+    }
+  },
+  "efficiency": {
+    "latency_ms_bs1_median": 165.8441000035964,
+    "latency_ms_batched_median": 239.22561250219587,
+    "batch_size_for_latency": 8,
+    "throughput_items_per_s": 4.180154413820639,
+    "n_timed": 200
+  },
+  "environment": {
+    "python": "3.13.0",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "sentence_transformers": "5.1.2",
+    "peft": "0.17.1",
+    "huggingface_hub": "0.36.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.2.3",
+    "numpy": "2.3.5",
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "os": "Windows 11 (10.0.26200)",
+    "hostname_hash": "f835105b6100"
+  },
+  "timestamps": {
+    "started": "2026-09-29T16:01:42+00:00",
+    "finished": "2026-09-29T17:14:26+00:00"
+  },
+  "disk_freed_mb": 3417.9,
+  "notes": [
+    "Cross-encoder input: tokenizer pair encoding (task, profile) = [CLS] task [SEP] profile [SEP]; only the task text is truncated. Pooling: attention-masked mean -> linear -> 1 logit; score = sigmoid(logit). Loss: BCE with soft target Plausibility.",
+    "Training pairs (pointwise): 44058 from 5000 tasks.",
+    "train_time_s covers the fit loop including the per-epoch validation passes.",
+    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
+  ],
+  "error": null
+}

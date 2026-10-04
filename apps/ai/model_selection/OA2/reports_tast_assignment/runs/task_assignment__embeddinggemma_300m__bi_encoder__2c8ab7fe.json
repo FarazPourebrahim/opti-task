@@ -1,0 +1,175 @@
+{
+  "schema_version": "1.0",
+  "run_id": "task_assignment__embeddinggemma_300m__bi_encoder__2c8ab7fe",
+  "status": "skipped",
+  "status_reason": "gated_access_denied",
+  "smoke": false,
+  "context": {
+    "project": "Opti-Task",
+    "benchmark": "OA2 model selection",
+    "task": "task_assignment",
+    "task_description": "Learning to rank: score a (task text, team-member profile) pair for suitability and sort all 48 members, for suggesting a ranked assignee shortlist on task creation.",
+    "primary_metric": "ndcg@10",
+    "dataset": "TAWOS v1.1 staffing extension (synthetic 48-member team)",
+    "caveats": [
+      "TAWOS is public open-source Jira data (39 projects); results may not transfer to other teams' conventions.",
+      "Models see the final issue text; some issues were edited after estimation (see the text_changed_after_estimation slice for the gap).",
+      "Single seed, no hyperparameter search: every model gets the same fixed budget.",
+      "Team is synthetic; Task B labels are a scorer's opinion (Plausibility), not observed outcomes.",
+      "Headline test metrics use classified tasks only; 'Unclassified' tasks are a separate slice.",
+      "Nine members (one per area) are held out of training entirely to measure cold start.",
+      "Sampled tasks: train 5000 / val 500 / test 2500 (of which 500 unclassified). Rare required levels (Staff, Intern, Principal) have few training examples at small sample sizes."
+    ]
+  },
+  "model": {
+    "key": "embeddinggemma_300m",
+    "hf_repo_id": "google/embeddinggemma-300m",
+    "revision_sha": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+    "family": "embedder",
+    "license": "Gemma",
+    "total_params": null,
+    "trainable_params": null,
+    "recipe": "bi_encoder",
+    "finetune_method": null
+  },
+  "data": {
+    "fingerprint": "7ba294912a0820ce",
+    "n_train": null,
+    "n_val": null,
+    "n_test": null,
+    "label_distribution": {
+      "train": {
+        "n_pairs": 23383,
+        "n_tasks": 5000,
+        "mean_relevant_per_task": 4.6766,
+        "plausibility_quantiles": {
+          "q10": 0.4718,
+          "q25": 0.547,
+          "q50": 0.6755,
+          "q75": 0.8128,
+          "q90": 0.8694
+        }
+      },
+      "val": {
+        "n_pairs": 2400,
+        "n_tasks": 500,
+        "mean_relevant_per_task": 4.8,
+        "plausibility_quantiles": {
+          "q10": 0.4677,
+          "q25": 0.5285,
+          "q50": 0.6617,
+          "q75": 0.8009,
+          "q90": 0.8694
+        }
+      },
+      "test": {
+        "n_pairs": 10840,
+        "n_tasks": 2500,
+        "mean_relevant_per_task": 4.336,
+        "plausibility_quantiles": {
+          "q10": 0.4197,
+          "q25": 0.4932,
+          "q50": 0.628,
+          "q75": 0.7711,
+          "q90": 0.8692
+        }
+      }
+    },
+    "held_out_member_ids": [
+      7,
+      15,
+      21,
+      28,
+      29,
+      33,
+      39,
+      41,
+      47
+    ],
+    "sampled_split_sizes": {
+      "train": 5000,
+      "val": 500,
+      "test": 2500
+    }
+  },
+  "training": {
+    "hyperparameters": {
+      "effective_batch": 32,
+      "per_device_batch": 8,
+      "eval_batch": 32,
+      "max_seq_len": 512,
+      "lr_full": 2e-05,
+      "lr_lora": 0.0002,
+      "lr_head": 0.001,
+      "warmup_ratio": 0.06,
+      "weight_decay": 0.01,
+      "max_grad_norm": 1.0,
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.05
+      },
+      "lora_param_threshold_m": 300,
+      "early_stopping_patience": 1,
+      "gradient_checkpointing": true,
+      "latency_samples": 200,
+      "latency_warmup": 10,
+      "latency_batch_tasks": 8,
+      "precision_override": "fp32",
+      "epochs": 2,
+      "seed": 20260916,
+      "query_instruction": "Given a software task description, retrieve team member profiles suited to do the task",
+      "query_prefix": "task: search result | query: ",
+      "doc_prefix": "title: none | text: ",
+      "n_hard_negatives": 4,
+      "n_random_negatives": 2,
+      "per_device_batch_used": 8,
+      "precision": "fp32",
+      "grad_accumulation": null,
+      "optimizer": "AdamW, linear decay with warmup"
+    },
+    "best_epoch": null,
+    "epochs_run": null,
+    "history": [],
+    "oom_retry": false,
+    "resumed_from_epoch": null,
+    "train_time_s": null,
+    "peak_gpu_mem_mb": 64.0
+  },
+  "metrics": {
+    "zero_shot_val": null,
+    "val": null,
+    "test": null,
+    "slices": null
+  },
+  "efficiency": null,
+  "environment": {
+    "python": "3.13.0",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "sentence_transformers": "5.1.2",
+    "peft": "0.17.1",
+    "huggingface_hub": "0.36.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.2.3",
+    "numpy": "2.3.5",
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "os": "Windows 11 (10.0.26200)",
+    "hostname_hash": "f835105b6100"
+  },
+  "timestamps": {
+    "started": "2026-09-30T02:51:57+00:00",
+    "finished": "2026-09-30T02:51:59+00:00"
+  },
+  "disk_freed_mb": 0.0,
+  "notes": [
+    "train_time_s covers the fit loop including the per-epoch validation passes.",
+    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
+  ],
+  "error": {
+    "type": "UnitSkipped",
+    "message": "403 Client Error. (Request ID: Root=1-6abc794f-068a84f7082b4d7b46b34139;9bfc5d56-35a9-4927-a1fe-32959fa743ac)\n\nCannot access gated repo for url https://huggingface.co/google/embeddinggemma-300m/resolve/57c266a740f537b4dc058e1b0cda161fd15afa75/.gitattributes.\nAccess to model google/embeddinggemma-300m is restricted and you are not in the authorized list. Visit https://huggingface.co/google/embeddinggemma-300m to ask for access.",
+    "traceback": null
+  }
+}

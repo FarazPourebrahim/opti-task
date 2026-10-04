@@ -1,0 +1,418 @@
+{
+  "schema_version": "1.0",
+  "run_id": "task_assignment__baseline_random__random__12da73e3",
+  "status": "completed",
+  "status_reason": null,
+  "smoke": false,
+  "context": {
+    "project": "Opti-Task",
+    "benchmark": "OA2 model selection",
+    "task": "task_assignment",
+    "task_description": "Learning to rank: score a (task text, team-member profile) pair for suitability and sort all 48 members, for suggesting a ranked assignee shortlist on task creation.",
+    "primary_metric": "ndcg@10",
+    "dataset": "TAWOS v1.1 staffing extension (synthetic 48-member team)",
+    "caveats": [
+      "TAWOS is public open-source Jira data (39 projects); results may not transfer to other teams' conventions.",
+      "Models see the final issue text; some issues were edited after estimation (see the text_changed_after_estimation slice for the gap).",
+      "Single seed, no hyperparameter search: every model gets the same fixed budget.",
+      "Team is synthetic; Task B labels are a scorer's opinion (Plausibility), not observed outcomes.",
+      "Headline test metrics use classified tasks only; 'Unclassified' tasks are a separate slice.",
+      "Nine members (one per area) are held out of training entirely to measure cold start.",
+      "Sampled tasks: train 5000 / val 500 / test 2500 (of which 500 unclassified). Rare required levels (Staff, Intern, Principal) have few training examples at small sample sizes."
+    ]
+  },
+  "model": {
+    "key": "baseline_random",
+    "hf_repo_id": null,
+    "revision_sha": null,
+    "family": "baseline",
+    "license": null,
+    "total_params": 0,
+    "trainable_params": 0,
+    "recipe": "random",
+    "finetune_method": "none"
+  },
+  "data": {
+    "fingerprint": "7ba294912a0820ce",
+    "n_train": 0,
+    "n_val": 500,
+    "n_test": 2500,
+    "label_distribution": {
+      "train": {
+        "n_pairs": 23383,
+        "n_tasks": 5000,
+        "mean_relevant_per_task": 4.6766,
+        "plausibility_quantiles": {
+          "q10": 0.4718,
+          "q25": 0.547,
+          "q50": 0.6755,
+          "q75": 0.8128,
+          "q90": 0.8694
+        }
+      },
+      "val": {
+        "n_pairs": 2400,
+        "n_tasks": 500,
+        "mean_relevant_per_task": 4.8,
+        "plausibility_quantiles": {
+          "q10": 0.4677,
+          "q25": 0.5285,
+          "q50": 0.6617,
+          "q75": 0.8009,
+          "q90": 0.8694
+        }
+      },
+      "test": {
+        "n_pairs": 10840,
+        "n_tasks": 2500,
+        "mean_relevant_per_task": 4.336,
+        "plausibility_quantiles": {
+          "q10": 0.4197,
+          "q25": 0.4932,
+          "q50": 0.628,
+          "q75": 0.7711,
+          "q90": 0.8692
+        }
+      }
+    },
+    "held_out_member_ids": [
+      7,
+      15,
+      21,
+      28,
+      29,
+      33,
+      39,
+      41,
+      47
+    ],
+    "sampled_split_sizes": {
+      "train": 5000,
+      "val": 500,
+      "test": 2500
+    }
+  },
+  "training": {
+    "hyperparameters": {
+      "seed": 20260916,
+      "tfidf": {
+        "ngram_range": [
+          1,
+          2
+        ],
+        "max_features": 50000
+      },
+      "ridge_alpha": 1.0
+    },
+    "best_epoch": null,
+    "epochs_run": 0,
+    "history": [],
+    "oom_retry": false,
+    "resumed_from_epoch": null,
+    "train_time_s": 0.0,
+    "peak_gpu_mem_mb": null
+  },
+  "metrics": {
+    "zero_shot_val": null,
+    "val": {
+      "n_tasks": 500,
+      "ndcg@10": 0.15425252379818144,
+      "ndcg@5": 0.1131585414561739,
+      "recall@5": 0.10655826950826951,
+      "recall@10": 0.2044050088800089,
+      "hit@1": 0.026,
+      "mrr": 0.09113580410250512,
+      "spearman_plausibility": -0.0010525444107666706,
+      "overqualified_top1_rate": 0.268,
+      "underqualified_top1_rate": 0.372
+    },
+    "test": {
+      "n_tasks": 2000,
+      "ndcg@10": 0.15152952832692063,
+      "ndcg@5": 0.1077881493992309,
+      "recall@5": 0.10759217718555954,
+      "recall@10": 0.2103166513225337,
+      "hit@1": 0.024,
+      "mrr": 0.09330525338992716,
+      "spearman_plausibility": -0.002726913075666536,
+      "overqualified_top1_rate": 0.3015,
+      "underqualified_top1_rate": 0.323,
+      "latency_ms_per_task": 0.07529999129474163
+    },
+    "slices": {
+      "all_tasks": {
+        "n_tasks": 2500,
+        "ndcg@10": 0.14277336833381665,
+        "ndcg@5": 0.09957081972161023,
+        "recall@5": 0.1029373864370923,
+        "recall@10": 0.20774573864044452,
+        "hit@1": 0.022,
+        "mrr": 0.09214029456829567,
+        "spearman_plausibility": -0.0034974997298797914,
+        "overqualified_top1_rate": 0.3176,
+        "underqualified_top1_rate": 0.3168
+      },
+      "primary_area:API/Integration": {
+        "n_tasks": 254,
+        "ndcg@10": 0.15371141805788852,
+        "ndcg@5": 0.11327366858068172,
+        "recall@5": 0.11910735808373606,
+        "recall@10": 0.21669846994650144,
+        "hit@1": 0.03543307086614173,
+        "mrr": 0.10431599635996232,
+        "spearman_plausibility": 0.004511480790779988,
+        "overqualified_top1_rate": 0.2952755905511811,
+        "underqualified_top1_rate": 0.3110236220472441
+      },
+      "primary_area:Backend": {
+        "n_tasks": 138,
+        "ndcg@10": 0.1471655403643045,
+        "ndcg@5": 0.09898415041666102,
+        "recall@5": 0.11534417675722024,
+        "recall@10": 0.22829302340171903,
+        "hit@1": 0.036231884057971016,
+        "mrr": 0.10998196294001125,
+        "spearman_plausibility": 0.008863573370839973,
+        "overqualified_top1_rate": 0.36231884057971014,
+        "underqualified_top1_rate": 0.32608695652173914
+      },
+      "primary_area:Database": {
+        "n_tasks": 277,
+        "ndcg@10": 0.15445339186386928,
+        "ndcg@5": 0.10718188052644889,
+        "recall@5": 0.10505518348478636,
+        "recall@10": 0.21435349648346036,
+        "hit@1": 0.018050541516245487,
+        "mrr": 0.09247001277584331,
+        "spearman_plausibility": -0.0035138406713107464,
+        "overqualified_top1_rate": 0.23104693140794225,
+        "underqualified_top1_rate": 0.3898916967509025
+      },
+      "primary_area:DevOps": {
+        "n_tasks": 216,
+        "ndcg@10": 0.14129553104657355,
+        "ndcg@5": 0.09898861877576459,
+        "recall@5": 0.10942844449788894,
+        "recall@10": 0.21298383971995083,
+        "hit@1": 0.023148148148148147,
+        "mrr": 0.0937696578037876,
+        "spearman_plausibility": -0.0007742826570719592,
+        "overqualified_top1_rate": 0.2175925925925926,
+        "underqualified_top1_rate": 0.4166666666666667
+      },
+      "primary_area:Documentation": {
+        "n_tasks": 124,
+        "ndcg@10": 0.15155206503928337,
+        "ndcg@5": 0.09979519748326357,
+        "recall@5": 0.1077988991295443,
+        "recall@10": 0.22671210957501278,
+        "hit@1": 0.024193548387096774,
+        "mrr": 0.09148066789682316,
+        "spearman_plausibility": 0.008987648711195848,
+        "overqualified_top1_rate": 0.31451612903225806,
+        "underqualified_top1_rate": 0.3548387096774194
+      },
+      "primary_area:Frontend": {
+        "n_tasks": 560,
+        "ndcg@10": 0.16248080240574128,
+        "ndcg@5": 0.1202871601441153,
+        "recall@5": 0.10529162801484229,
+        "recall@10": 0.20052128427128427,
+        "hit@1": 0.023214285714285715,
+        "mrr": 0.08757586394117871,
+        "spearman_plausibility": -0.010925189176577354,
+        "overqualified_top1_rate": 0.33214285714285713,
+        "underqualified_top1_rate": 0.2625
+      },
+      "primary_area:Infrastructure": {
+        "n_tasks": 121,
+        "ndcg@10": 0.12789006865333405,
+        "ndcg@5": 0.08362853364605227,
+        "recall@5": 0.08236818143235254,
+        "recall@10": 0.18924867467648215,
+        "hit@1": 0.008264462809917356,
+        "mrr": 0.07340323494097291,
+        "spearman_plausibility": -0.02456535259044414,
+        "overqualified_top1_rate": 0.3140495867768595,
+        "underqualified_top1_rate": 0.36363636363636365
+      },
+      "primary_area:QA/Testing": {
+        "n_tasks": 154,
+        "ndcg@10": 0.15773155450233342,
+        "ndcg@5": 0.11595505582347845,
+        "recall@5": 0.12269377447948876,
+        "recall@10": 0.22052411873840444,
+        "hit@1": 0.025974025974025976,
+        "mrr": 0.09985623653465454,
+        "spearman_plausibility": -0.001221059482927173,
+        "overqualified_top1_rate": 0.37012987012987014,
+        "underqualified_top1_rate": 0.2597402597402597
+      },
+      "primary_area:Security": {
+        "n_tasks": 156,
+        "ndcg@10": 0.13369887520521026,
+        "ndcg@5": 0.09206734822731207,
+        "recall@5": 0.09669867169867169,
+        "recall@10": 0.20155770155770153,
+        "hit@1": 0.019230769230769232,
+        "mrr": 0.09245227380586495,
+        "spearman_plausibility": 0.009498409262968448,
+        "overqualified_top1_rate": 0.30128205128205127,
+        "underqualified_top1_rate": 0.3141025641025641
+      },
+      "primary_area:Unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.1077487283614009,
+        "ndcg@5": 0.0667015010111276,
+        "recall@5": 0.08431822344322344,
+        "recall@10": 0.19746208791208789,
+        "hit@1": 0.014,
+        "mrr": 0.08748045928176965,
+        "spearman_plausibility": -0.006579846346732823,
+        "overqualified_top1_rate": 0.382,
+        "underqualified_top1_rate": 0.292
+      },
+      "required_level:Intern": {
+        "n_tasks": 11,
+        "ndcg@10": 0.14735063773311652,
+        "ndcg@5": 0.07708414322825219,
+        "recall@5": 0.09090909090909091,
+        "recall@10": 0.28787878787878785,
+        "hit@1": 0.0,
+        "mrr": 0.06586100308351894,
+        "spearman_plausibility": -0.013317941480075389,
+        "overqualified_top1_rate": 1.0,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Junior": {
+        "n_tasks": 254,
+        "ndcg@10": 0.1654569589807624,
+        "ndcg@5": 0.11694467396297491,
+        "recall@5": 0.12579705945847677,
+        "recall@10": 0.2512549567667678,
+        "hit@1": 0.03543307086614173,
+        "mrr": 0.10619059092432377,
+        "spearman_plausibility": 0.01732828418774724,
+        "overqualified_top1_rate": 0.7362204724409449,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Mid-level": {
+        "n_tasks": 1745,
+        "ndcg@10": 0.1423187436989714,
+        "ndcg@5": 0.10033248725910865,
+        "recall@5": 0.09523474367271771,
+        "recall@10": 0.19602235386577205,
+        "hit@1": 0.018911174785100286,
+        "mrr": 0.08762353169131025,
+        "spearman_plausibility": -0.006158813620328216,
+        "overqualified_top1_rate": 0.3146131805157593,
+        "underqualified_top1_rate": 0.25501432664756446
+      },
+      "required_level:Senior": {
+        "n_tasks": 427,
+        "ndcg@10": 0.1309660521154044,
+        "ndcg@5": 0.08424816647482544,
+        "recall@5": 0.10801651510082425,
+        "recall@10": 0.2177671664791103,
+        "hit@1": 0.0234192037470726,
+        "mrr": 0.09725924802778531,
+        "spearman_plausibility": -0.007195331421168957,
+        "overqualified_top1_rate": 0.11007025761124122,
+        "underqualified_top1_rate": 0.6791569086651054
+      },
+      "required_level:Staff": {
+        "n_tasks": 50,
+        "ndcg@10": 0.1487089775285728,
+        "ndcg@5": 0.11868332765579202,
+        "recall@5": 0.20166666666666663,
+        "recall@10": 0.29666666666666663,
+        "hit@1": 0.04,
+        "mrr": 0.13075461191352103,
+        "spearman_plausibility": 0.020524429560126393,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 0.9
+      },
+      "required_level:Principal": {
+        "n_tasks": 13,
+        "ndcg@10": 0.12171810415017513,
+        "ndcg@5": 0.10668098517188782,
+        "recall@5": 0.15384615384615385,
+        "recall@10": 0.19230769230769232,
+        "hit@1": 0.07692307692307693,
+        "mrr": 0.12948946055118749,
+        "spearman_plausibility": -0.015793949676991353,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 0.9230769230769231
+      },
+      "classified": {
+        "n_tasks": 2000,
+        "ndcg@10": 0.15152952832692063,
+        "ndcg@5": 0.1077881493992309,
+        "recall@5": 0.10759217718555954,
+        "recall@10": 0.2103166513225337,
+        "hit@1": 0.024,
+        "mrr": 0.09330525338992716,
+        "spearman_plausibility": -0.002726913075666536,
+        "overqualified_top1_rate": 0.3015,
+        "underqualified_top1_rate": 0.323,
+        "latency_ms_per_task": 0.07529999129474163
+      },
+      "unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.1077487283614009,
+        "ndcg@5": 0.0667015010111276,
+        "recall@5": 0.08431822344322344,
+        "recall@10": 0.19746208791208789,
+        "hit@1": 0.014,
+        "mrr": 0.08748045928176965,
+        "spearman_plausibility": -0.006579846346732823,
+        "overqualified_top1_rate": 0.382,
+        "underqualified_top1_rate": 0.292
+      },
+      "held_out_members": {
+        "n_tasks": 1452,
+        "ndcg@10": 0.1574698084709293,
+        "ndcg@5": 0.11467575605692308,
+        "recall@5": 0.10230266259829944,
+        "recall@10": 0.20406914202490284,
+        "hit@1": 0.024793388429752067,
+        "mrr": 0.09310858880397868,
+        "spearman_plausibility": -0.006493897992586269,
+        "overqualified_top1_rate": 0.32575757575757575,
+        "underqualified_top1_rate": 0.2940771349862259
+      }
+    }
+  },
+  "efficiency": {
+    "latency_ms_bs1_median": 0.07529999129474163,
+    "latency_ms_batched_median": 0.04394999996293336,
+    "batch_size_for_latency": 8,
+    "throughput_items_per_s": 22753.128574365917,
+    "n_timed": 200
+  },
+  "environment": {
+    "python": "3.13.0",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "sentence_transformers": "5.1.2",
+    "peft": "0.17.1",
+    "huggingface_hub": "0.36.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.2.3",
+    "numpy": "2.3.5",
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "os": "Windows 11 (10.0.26200)",
+    "hostname_hash": "f835105b6100"
+  },
+  "timestamps": {
+    "started": "2026-09-29T15:19:59+00:00",
+    "finished": "2026-09-29T15:19:59+00:00"
+  },
+  "disk_freed_mb": 0.0,
+  "notes": [
+    "Uniform random scores, seeded per split.",
+    "Baseline: CPU only; latency measured on CPU."
+  ],
+  "error": null
+}

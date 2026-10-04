@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "run_id": "story_point__qwen3_0_6b__generative_sft__f0336cc3",
+  "status": "failed",
+  "status_reason": "ConnectionError",
+  "smoke": false,
+  "context": {
+    "project": "Opti-Task",
+    "benchmark": "OA2 model selection",
+    "task": "story_point",
+    "task_description": "Ordinal classification of Jira issue text into story-point buckets [1,2,3,5,8,13,21], for suggesting estimates on task creation.",
+    "primary_metric": "qwk",
+    "dataset": "TAWOS v1.1 staffing extension (synthetic 48-member team)",
+    "caveats": [
+      "TAWOS is public open-source Jira data (39 projects); results may not transfer to other teams' conventions.",
+      "Models see the final issue text; some issues were edited after estimation (see the text_changed_after_estimation slice for the gap).",
+      "Single seed, no hyperparameter search: every model gets the same fixed budget.",
+      "Story points are project-relative; the project key is part of the input and per-project metrics are reported.",
+      "Raw story points are mapped to 7 log-scale buckets; 0-point issues are excluded.",
+      "Reduced training budget: 25% of the train split (10139 of 40538 rows, sampled per project); validation and test are the full splits."
+    ]
+  },
+  "model": {
+    "key": "qwen3_0_6b",
+    "hf_repo_id": "Qwen/Qwen3-0.6B",
+    "revision_sha": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "family": "generative",
+    "license": "Apache-2.0",
+    "total_params": null,
+    "trainable_params": null,
+    "recipe": "generative_sft",
+    "finetune_method": null
+  },
+  "data": {
+    "fingerprint": "74acaad6fd8e80d1",
+    "n_train": null,
+    "n_val": null,
+    "n_test": null,
+    "label_distribution": {
+      "train": {
+        "1": 2703,
+        "2": 1950,
+        "3": 1353,
+        "5": 2080,
+        "8": 1136,
+        "13": 421,
+        "21": 496
+      },
+      "val": {
+        "1": 2445,
+        "2": 1959,
+        "3": 1292,
+        "5": 1731,
+        "8": 747,
+        "13": 257,
+        "21": 260
+      },
+      "test": {
+        "1": 2407,
+        "2": 2056,
+        "3": 1309,
+        "5": 1760,
+        "8": 714,
+        "13": 214,
+        "21": 247
+      }
+    },
+    "split_sizes": {
+      "train": 10139,
+      "val": 8691,
+      "test": 8707
+    }
+  },
+  "training": {
+    "hyperparameters": {
+      "effective_batch": 32,
+      "per_device_batch": 4,
+      "eval_batch": 32,
+      "max_seq_len": 512,
+      "lr_full": 2e-05,
+      "lr_lora": 0.0002,
+      "lr_head": 0.001,
+      "warmup_ratio": 0.06,
+      "weight_decay": 0.01,
+      "max_grad_norm": 1.0,
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.05
+      },
+      "lora_param_threshold_m": 300,
+      "early_stopping_patience": 1,
+      "gradient_checkpointing": true,
+      "latency_samples": 200,
+      "latency_warmup": 10,
+      "latency_batch_tasks": 8,
+      "precision_override": null,
+      "epochs": 4,
+      "seed": 20260916,
+      "per_device_batch_used": 4,
+      "precision": "bf16",
+      "grad_accumulation": null,
+      "optimizer": "AdamW, linear decay with warmup"
+    },
+    "best_epoch": null,
+    "epochs_run": null,
+    "history": [],
+    "oom_retry": false,
+    "resumed_from_epoch": null,
+    "train_time_s": null,
+    "peak_gpu_mem_mb": 0.0
+  },
+  "metrics": {
+    "zero_shot_val": null,
+    "val": null,
+    "test": null,
+    "slices": null
+  },
+  "efficiency": null,
+  "environment": {
+    "python": "3.13.0",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "sentence_transformers": "5.1.2",
+    "peft": "0.17.1",
+    "huggingface_hub": "0.36.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.2.3",
+    "numpy": "2.3.5",
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "os": "Windows 11 (10.0.26200)",
+    "hostname_hash": "f835105b6100"
+  },
+  "timestamps": {
+    "started": "2026-10-02T23:04:51+00:00",
+    "finished": "2026-10-02T23:14:58+00:00"
+  },
+  "disk_freed_mb": 0.0,
+  "notes": [
+    "train_time_s covers the fit loop including the per-epoch validation passes.",
+    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
+  ],
+  "error": {
+    "type": "ConnectionError",
+    "message": "(ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)), '(Request ID: 7c14fd4a-e656-4135-839d-eeaf0c39c6de)')",
+    "traceback": "Traceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 929, in _error_catcher\n    yield\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1046, in _raw_read\n    data = self._fp_read(amt, read1=read1) if not fp_closed else b\"\"\n           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1029, in _fp_read\n    return self._fp.read(amt) if amt is not None else self._fp.read()\n           ~~~~~~~~~~~~~^^^^^\n  File \"<python>\\Lib\\http\\client.py\", line 479, in read\n    s = self.fp.read(amt)\n  File \"<python>\\Lib\\socket.py\", line 719, in readinto\n    return self._sock.recv_into(b)\n           ~~~~~~~~~~~~~~~~~~~~^^^\n  File \"<python>\\Lib\\ssl.py\", line 1304, in recv_into\n    return self.read(nbytes, buffer)\n           ~~~~~~~~~^^^^^^^^^^^^^^^^\n  File \"<python>\\Lib\\ssl.py\", line 1138, in read\n    return self._sslobj.read(len, buffer)\n           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\nTimeoutError: The read operation timed out\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\requests\\models.py\", line 937, in generate\n    yield from self.raw.stream(chunk_size, decode_content=True)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1291, in stream\n    data = self.read(amt=amt, decode_content=decode_content)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1134, in read\n    data = self._raw_read(amt)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1045, in _raw_read\n    with self._error_catcher():\n         ~~~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\contextlib.py\", line 162, in __exit__\n    self.gen.throw(value)\n    ~~~~~~~~~~~~~~^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 934, in _error_catcher\n    raise ReadTimeoutError(self._pool, None, \"Read timed out.\") from e  # type: ignore[arg-type]\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nurllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='us.aws.cdn.hf.co', port=443): Read timed out.\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 493, in http_get\n    for chunk in r.iter_content(chunk_size=constants.DOWNLOAD_CHUNK_SIZE):\n                 ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\models.py\", line 943, in generate\n    raise ConnectionError(e)\nrequests.exceptions.ConnectionError: HTTPSConnectionPool(host='us.aws.cdn.hf.co', port=443): Read timed out.\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 793, in urlopen\n    response = self._make_request(\n        conn,\n    ...<10 lines>...\n        **response_kw,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 494, in _make_request\n    raise new_e\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 470, in _make_request\n    self._validate_conn(conn)\n    ~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 1125, in _validate_conn\n    conn.connect()\n    ~~~~~~~~~~~~^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 878, in connect\n    wrapped_socket, is_verified = _ssl_wrap_socket_and_match_hostname(\n                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<14 lines>...\n        assert_fingerprint=self.assert_fingerprint,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 1080, in _ssl_wrap_socket_and_match_hostname\n    ssl_sock = ssl_wrap_socket(\n        sock=sock,\n    ...<8 lines>...\n        tls_in_tls=tls_in_tls,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 437, in ssl_wrap_socket\n    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 481, in _ssl_wrap_socket_impl\n    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<python>\\Lib\\ssl.py\", line 455, in wrap_socket\n    return self.sslsocket_class._create(\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<5 lines>...\n        session=session\n        ^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<python>\\Lib\\ssl.py\", line 1076, in _create\n    self.do_handshake()\n    ~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\ssl.py\", line 1372, in do_handshake\n    self._sslobj.do_handshake()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\nConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\requests\\adapters.py\", line 696, in send\n    resp = conn.urlopen(\n        method=request.method,\n    ...<9 lines>...\n        chunked=chunked,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 847, in urlopen\n    retries = retries.increment(\n        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\retry.py\", line 510, in increment\n    raise reraise(type(error), error, _stacktrace)\n          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\util.py\", line 38, in reraise\n    raise value.with_traceback(tb)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 793, in urlopen\n    response = self._make_request(\n        conn,\n    ...<10 lines>...\n        **response_kw,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 494, in _make_request\n    raise new_e\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 470, in _make_request\n    self._validate_conn(conn)\n    ~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 1125, in _validate_conn\n    conn.connect()\n    ~~~~~~~~~~~~^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 878, in connect\n    wrapped_socket, is_verified = _ssl_wrap_socket_and_match_hostname(\n                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<14 lines>...\n        assert_fingerprint=self.assert_fingerprint,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 1080, in _ssl_wrap_socket_and_match_hostname\n    ssl_sock = ssl_wrap_socket(\n        sock=sock,\n    ...<8 lines>...\n        tls_in_tls=tls_in_tls,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 437, in ssl_wrap_socket\n    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 481, in _ssl_wrap_socket_impl\n    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<python>\\Lib\\ssl.py\", line 455, in wrap_socket\n    return self.sslsocket_class._create(\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<5 lines>...\n        session=session\n        ^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<python>\\Lib\\ssl.py\", line 1076, in _create\n    self.do_handshake()\n    ~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\ssl.py\", line 1372, in do_handshake\n    self._sslobj.do_handshake()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\nurllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\run_model_selection.py\", line 254, in run_unit\n    path = registry.pull(u.repo, revision, cfg.get(\"hf_cache_dir\"))\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\oa2\\registry.py\", line 152, in pull\n    return snapshot_download(repo, revision=revision, cache_dir=cache_dir, ignore_patterns=_IGNORE, max_workers=1)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\_snapshot_download.py\", line 332, in snapshot_download\n    thread_map(\n    ~~~~~~~~~~^\n        _inner_hf_hub_download,\n        ^^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        tqdm_class=tqdm_class or hf_tqdm,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\tqdm\\contrib\\concurrent.py\", line 191, in thread_map\n    return _executor_map(ThreadPoolExecutor, fn, *iterables, **tqdm_kwargs)\n  File \"<venv>\\Lib\\site-packages\\tqdm\\contrib\\concurrent.py\", line 163, in _executor_map\n    return list(ex.map(\n        fn, *iterables, timeout=timeout, chunksize=chunksize, **map_kwargs))\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 619, in result_iterator\n    yield _result_or_cancel(fs.pop())\n          ~~~~~~~~~~~~~~~~~^^^^^^^^^^\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 317, in _result_or_cancel\n    return fut.result(timeout)\n           ~~~~~~~~~~^^^^^^^^^\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 456, in result\n    return self.__get_result()\n           ~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 401, in __get_result\n    raise self._exception\n  File \"<python>\\Lib\\concurrent\\futures\\thread.py\", line 58, in run\n    result = self.fn(*self.args, **self.kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\_snapshot_download.py\", line 306, in _inner_hf_hub_download\n    return hf_hub_download(\n        repo_id,\n    ...<15 lines>...\n        headers=headers,\n    )\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 1007, in hf_hub_download\n    return _hf_hub_download_to_cache_dir(\n        # Destination\n    ...<14 lines>...\n        force_download=force_download,\n    )\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 1168, in _hf_hub_download_to_cache_dir\n    _download_to_tmp_and_move(\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^\n        incomplete_path=Path(blob_path + \".incomplete\"),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<8 lines>...\n        xet_file_data=xet_file_data,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 1735, in _download_to_tmp_and_move\n    http_get(\n    ~~~~~~~~^\n        url_to_download,\n        ^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        expected_size=expected_size,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 510, in http_get\n    return http_get(\n        url=url,\n    ...<6 lines>...\n        _tqdm_bar=_tqdm_bar,\n    )\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 423, in http_get\n    r = _request_wrapper(\n        method=\"GET\", url=url, stream=True, proxies=proxies, headers=headers, timeout=constants.HF_HUB_DOWNLOAD_TIMEOUT\n    )\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 306, in _request_wrapper\n    response = http_backoff(method=method, url=url, **params)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_http.py\", line 325, in http_backoff\n    raise err\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_http.py\", line 306, in http_backoff\n    response = session.request(method=method, url=url, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 805, in send\n    history = [resp for resp in gen]\n                                ^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 292, in resolve_redirects\n    resp = self.send(\n        req,\n    ...<6 lines>...\n        **adapter_kwargs,\n    )\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_http.py\", line 95, in send\n    return super().send(request, *args, **kwargs)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\adapters.py\", line 711, in send\n    raise ConnectionError(err, request=request)\nrequests.exceptions.ConnectionError: (ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)), '(Request ID: 7c14fd4a-e656-4135-839d-eeaf0c39c6de)')\n"
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "run_id": "story_point__harrier_0_6b__coral__8a4638bd",
+  "status": "skipped",
+  "status_reason": "repo_id_unverified",
+  "smoke": false,
+  "context": {
+    "project": "Opti-Task",
+    "benchmark": "OA2 model selection",
+    "task": "story_point",
+    "task_description": "Ordinal classification of Jira issue text into story-point buckets [1,2,3,5,8,13,21], for suggesting estimates on task creation.",
+    "primary_metric": "qwk",
+    "dataset": "TAWOS v1.1 staffing extension (synthetic 48-member team)",
+    "caveats": [
+      "TAWOS is public open-source Jira data (39 projects); results may not transfer to other teams' conventions.",
+      "Models see the final issue text; some issues were edited after estimation (see the text_changed_after_estimation slice for the gap).",
+      "Single seed, no hyperparameter search: every model gets the same fixed budget.",
+      "Story points are project-relative; the project key is part of the input and per-project metrics are reported.",
+      "Raw story points are mapped to 7 log-scale buckets; 0-point issues are excluded.",
+      "Reduced training budget: 25% of the train split (10139 of 40538 rows, sampled per project); validation and test are the full splits."
+    ]
+  },
+  "model": {
+    "key": "harrier_0_6b",
+    "hf_repo_id": null,
+    "revision_sha": null,
+    "family": "embedder",
+    "license": "MIT",
+    "total_params": null,
+    "trainable_params": null,
+    "recipe": "coral",
+    "finetune_method": null
+  },
+  "data": {
+    "fingerprint": "74acaad6fd8e80d1",
+    "n_train": null,
+    "n_val": null,
+    "n_test": null,
+    "label_distribution": {
+      "train": {
+        "1": 2703,
+        "2": 1950,
+        "3": 1353,
+        "5": 2080,
+        "8": 1136,
+        "13": 421,
+        "21": 496
+      },
+      "val": {
+        "1": 2445,
+        "2": 1959,
+        "3": 1292,
+        "5": 1731,
+        "8": 747,
+        "13": 257,
+        "21": 260
+      },
+      "test": {
+        "1": 2407,
+        "2": 2056,
+        "3": 1309,
+        "5": 1760,
+        "8": 714,
+        "13": 214,
+        "21": 247
+      }
+    },
+    "split_sizes": {
+      "train": 10139,
+      "val": 8691,
+      "test": 8707
+    }
+  },
+  "training": {
+    "hyperparameters": {
+      "effective_batch": 32,
+      "per_device_batch": 4,
+      "eval_batch": 32,
+      "max_seq_len": 512,
+      "lr_full": 2e-05,
+      "lr_lora": 0.0002,
+      "lr_head": 0.001,
+      "warmup_ratio": 0.06,
+      "weight_decay": 0.01,
+      "max_grad_norm": 1.0,
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.05
+      },
+      "lora_param_threshold_m": 300,
+      "early_stopping_patience": 1,
+      "gradient_checkpointing": true,
+      "latency_samples": 200,
+      "latency_warmup": 10,
+      "latency_batch_tasks": 8,
+      "precision_override": null,
+      "epochs": 4,
+      "seed": 20260916,
+      "per_device_batch_used": 4,
+      "precision": "bf16",
+      "grad_accumulation": null,
+      "optimizer": "AdamW, linear decay with warmup"
+    },
+    "best_epoch": null,
+    "epochs_run": null,
+    "history": [],
+    "oom_retry": false,
+    "resumed_from_epoch": null,
+    "train_time_s": null,
+    "peak_gpu_mem_mb": 64.0
+  },
+  "metrics": {
+    "zero_shot_val": null,
+    "val": null,
+    "test": null,
+    "slices": null
+  },
+  "efficiency": null,
+  "environment": {
+    "python": "3.13.0",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "sentence_transformers": "5.1.2",
+    "peft": "0.17.1",
+    "huggingface_hub": "0.36.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.2.3",
+    "numpy": "2.3.5",
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "os": "Windows 11 (10.0.26200)",
+    "hostname_hash": "f835105b6100"
+  },
+  "timestamps": {
+    "started": "2026-10-03T06:06:08+00:00",
+    "finished": "2026-10-03T06:06:08+00:00"
+  },
+  "disk_freed_mb": 0.0,
+  "notes": [
+    "train_time_s covers the fit loop including the per-epoch validation passes.",
+    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
+  ],
+  "error": {
+    "type": "UnitSkipped",
+    "message": "hf_repo_id None is missing or marked 'verify'; not guessing.",
+    "traceback": null
+  }
+}
