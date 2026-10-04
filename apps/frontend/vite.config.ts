@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 // `vitest/config` re-exports Vite's `defineConfig` widened with the `test`
 // block, so one config can drive the dev server, the build and the test run.
 import { defineConfig } from 'vitest/config';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 
 /**
@@ -16,7 +17,7 @@ const contractsPath = fileURLToPath(
 );
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: [
       { find: /^@\//, replacement: srcPath },
@@ -37,11 +38,9 @@ export default defineConfig({
     setupFiles: ['./src/shared/tests/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     /*
-     * jsdom's CSS parser predates native nesting and dumps every nested
-     * stylesheet to stderr as a parse error, burying real failures. It cannot
-     * lay out or compute styles either, so processing CSS here buys nothing —
-     * `vite build` is what validates the stylesheets. CSS Modules still resolve
-     * to proxied class names, so class-based queries keep working.
+     * The test DOM performs no layout and computes no styles, so running the
+     * Tailwind pipeline here would buy nothing — `vite build` is what compiles
+     * and validates the stylesheet.
      */
     css: false,
     // The env loader fails fast on missing config, so tests need a valid pair.
