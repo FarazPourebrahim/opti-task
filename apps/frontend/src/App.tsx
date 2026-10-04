@@ -95,6 +95,19 @@ const TaskListPage = lazy(async () => ({
 const TaskDetailPage = lazy(async () => ({
   default: (await import('@/modules/task/TaskDetail.page')).TaskDetailPage,
 }));
+const SprintsPage = lazy(async () => ({
+  default: (await import('@/modules/sprint/Sprints.page')).SprintsPage,
+}));
+const SprintDetailPage = lazy(async () => ({
+  default: (await import('@/modules/sprint/SprintDetail.page'))
+    .SprintDetailPage,
+}));
+const EpicsPage = lazy(async () => ({
+  default: (await import('@/modules/epic/Epics.page')).EpicsPage,
+}));
+const EpicDetailPage = lazy(async () => ({
+  default: (await import('@/modules/epic/EpicDetail.page')).EpicDetailPage,
+}));
 const AppLayout = lazy(async () => ({
   default: (await import('@/modules/shell/components/AppLayout')).AppLayout,
 }));
@@ -229,6 +242,36 @@ export const routes: RouteObject[] = [
                             handle: {
                               crumb: 'nav.task',
                               crumbId: CRUMB_IDS.task,
+                            } satisfies RouteHandle,
+                          },
+                        ],
+                      },
+                      {
+                        path: ROUTES.projectSprints,
+                        handle: { crumb: 'nav.sprints' } satisfies RouteHandle,
+                        children: [
+                          { index: true, element: <SprintsPage /> },
+                          {
+                            path: ROUTES.sprint,
+                            element: <SprintDetailPage />,
+                            handle: {
+                              crumb: 'nav.sprint',
+                              crumbId: CRUMB_IDS.sprint,
+                            } satisfies RouteHandle,
+                          },
+                        ],
+                      },
+                      {
+                        path: ROUTES.projectEpics,
+                        handle: { crumb: 'nav.epics' } satisfies RouteHandle,
+                        children: [
+                          { index: true, element: <EpicsPage /> },
+                          {
+                            path: ROUTES.epic,
+                            element: <EpicDetailPage />,
+                            handle: {
+                              crumb: 'nav.epic',
+                              crumbId: CRUMB_IDS.epic,
                             } satisfies RouteHandle,
                           },
                         ],
