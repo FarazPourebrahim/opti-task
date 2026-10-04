@@ -1,5 +1,6 @@
 import { HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { routes } from '@/App';
 import { LoginPage } from '@/modules/auth/Login.page';
 import { RegisterPage } from '@/modules/auth/Register.page';
 import { ForgotPasswordPage } from '@/modules/auth/ForgotPassword.page';
@@ -11,7 +12,9 @@ import {
 } from '@/modules/auth/schemas/auth.schema';
 import { auditA11y } from '@/shared/tests/a11y';
 import { graphql } from '@/shared/tests/graphql';
+import { ROUTES } from '@/shared/routes/route.constants';
 import {
+  renderRoutes,
   renderWithProviders,
   screen,
   waitFor,
@@ -147,14 +150,17 @@ describe('sign in', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
   }
 
-  it('signs in and reports success to the caller', async () => {
+  it('signs in and lands in the app', async () => {
     server.use(loginSucceeds());
-    const onSignedIn = vi.fn();
-    const { user } = renderWithProviders(<LoginPage onSignedIn={onSignedIn} />);
+    const { user, router } = renderRoutes(routes, { route: ROUTES.login });
+    await screen.findByLabelText('Email');
 
     await fillAndSubmit(user);
 
-    await waitFor(() => expect(onSignedIn).toHaveBeenCalledTimes(1));
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome back, Dana Scully' }),
+    ).toBeVisible();
+    expect(router.state.location.pathname).toBe(ROUTES.home);
   });
 
   it('keeps the access token in memory and out of storage', async () => {
@@ -222,13 +228,12 @@ describe('sign in', () => {
 
   it('submits on Enter', async () => {
     server.use(loginSucceeds());
-    const onSignedIn = vi.fn();
-    const { user } = renderWithProviders(<LoginPage onSignedIn={onSignedIn} />);
+    const { user } = renderWithProviders(<LoginPage />);
 
     await user.type(screen.getByLabelText('Email'), 'me@acme.test');
     await user.type(screen.getByLabelText('Password'), 'passw0rd{Enter}');
 
-    await waitFor(() => expect(onSignedIn).toHaveBeenCalled());
+    await waitFor(() => expect(getAccessToken()).toBe('access-123'));
   });
 
   it('disables the inputs while the request is in flight', async () => {
