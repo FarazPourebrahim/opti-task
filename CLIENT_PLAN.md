@@ -301,14 +301,14 @@ line is not done, regardless of whether the feature "works".
 | 6 | Organization & Members | 54% | ✅ |
 | 7 | Project & Team | 61% | ✅ |
 | 8 | Task — Board, List & Detail | 72% | ✅ |
-| 9 | Sprint & Epic | 79% | ⬜ |
+| 9 | Sprint & Epic | 79% | ✅ |
 | 10 | Collaboration — Comments & Attachments | 85% | ⬜ |
 | 11 | Notifications & Realtime | 90% | ⬜ |
 | 12 | AI Recommendations & Approval | 95% | ⬜ |
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 72%** (Phases 0–8 and Amendment A1 complete).
+**Current overall progress: 79%** (Phases 0–9 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -833,31 +833,48 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F9.1 | `Sprints.page.tsx` — list per project, create, update, delete | ⬜ |
-| F9.2 | Sprint state control honoring the machine (`PLANNED → ACTIVE/CANCELLED`, `ACTIVE → COMPLETED/CANCELLED`, both terminal) | ⬜ |
-| F9.3 | `SprintDetail.page.tsx` — goal, dates, capacity, task list, add/remove tasks | ⬜ |
-| F9.4 | Metrics panel — total/completed/remaining points, task counts, completion rate, velocity, capacity, **over-capacity warning** | ⬜ |
-| F9.5 | Burndown chart — ideal vs actual; explicit empty state when start/end dates are unset | ⬜ |
-| F9.6 | Workload distribution chart per assignee | ⬜ |
-| F9.7 | `Epics.page.tsx` + `EpicDetail` — CRUD, live progress bar, child tasks, `refreshEpicProgress` | ⬜ |
-| F9.8 | Milestones — `createMilestone`, `deleteMilestone`, list; no update exists (backend gap — surface honestly) | ⬜ |
+| F9.1 | `Sprints.page.tsx` — list per project (paginated), create; update and delete live on the sprint's own page | ✅ |
+| F9.2 | Sprint state control honoring the machine (`PLANNED → ACTIVE/CANCELLED`, `ACTIVE → COMPLETED/CANCELLED`, both terminal) | ✅ |
+| F9.3 | `SprintDetail.page.tsx` — goal, dates, capacity, task list (paginated), add/remove tasks | ✅ |
+| F9.4 | Metrics panel — total/completed/remaining points, task counts, completion rate, velocity, capacity, **over-capacity warning** | ✅ |
+| F9.5 | Burndown chart (`@averoui/charts` `LineChart`) — ideal vs actual; explicit empty state when start/end dates are unset | ✅ |
+| F9.6 | Workload distribution per assignee — a table with a comparison bar per row, not a chart: Avero ships line and area charts only (see known-debt) | ✅ |
+| F9.7 | `Epics.page.tsx` + `EpicDetail.page.tsx` — CRUD, live progress bar, child tasks, `refreshEpicProgress` | ✅ |
+| F9.8 | Milestones — `createMilestone`, `deleteMilestone`, listed on their epic; no update exists (backend gap — said in the interface) | ✅ |
+| F9.9 | Sprints and Epics tabs on the project frame; routes, breadcrumbs named from data; `Sprint.tasks` paginated in the cache | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Sprint state control offers only legal transitions; terminal states offer none.
-- [ ] Over-capacity is visually unmistakable and uses the `danger`/`warning` tokens.
-- [ ] A sprint **without** start/end dates renders a specific "burndown needs
-      dates" empty state — not an empty chart frame and not a spinner.
-- [ ] Charts are keyboard/screen-reader accessible: every series is also available
-      as a data table.
-- [ ] Chart series colors come from theme tokens (no hard-coded series colors).
-- [ ] Epic progress bar matches the computed `progress` value; `refreshEpicProgress`
-      updates the persisted value and the UI explains the difference between the
-      live and stored figure.
-- [ ] Empty states: no sprints, empty sprint, no epics, epic with no tasks, no milestones.
-- [ ] Milestone UI does not present an edit affordance that does not exist.
-- [ ] Tests: metric rendering against fixtures, empty sprint, over-capacity,
-      illegal transition, `FORBIDDEN`.
+- [x] Sprint state control offers only legal transitions; terminal states offer
+      none and say why. A table test covers all 4 × 4 pairs, and the rendered
+      buttons are asserted for each state.
+- [x] Over-capacity is unmistakable: a `danger` alert that says by how many
+      points, and the capacity bar turns `danger`. It is said in words, never
+      by color alone.
+- [x] A sprint **without** start/end dates renders a specific "burndown needs
+      dates" empty state — not an empty chart frame and not a spinner. A dated
+      sprint with no points yet gets a different one.
+- [x] The burndown's series are also a data table (asserted cell by cell). It is
+      visible to assistive technology only — see known-debt.
+- [x] Chart series colors come from Avero's chart tokens; none is written here.
+- [x] Epic progress bar matches the computed `progress` value, and
+      `refreshEpicProgress` is offered as "Save progress" beside a sentence
+      explaining that the figure shown is always live and saving does not
+      change it. The stored figure itself cannot be shown: the API does not
+      expose it (see known-debt).
+- [x] Empty states: no sprints, empty sprint, no workload, no epics, epic with
+      no tasks, no milestones.
+- [x] Milestone UI presents no edit affordance, and says a milestone cannot be
+      edited (only to someone who can create or delete one).
+- [x] Tests: figures against fixtures, empty sprint, over-capacity, illegal
+      transition, `BAD_USER_INPUT`, `FORBIDDEN`, network failure, pagination,
+      `axe` on all four screens. 84 new tests; the suite is 512 tests in 20
+      files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing has run against the real backend. The burndown in particular has
+> never been drawn: the test DOM has no size, so Recharts renders nothing there
+> and only the chart's data table is asserted.
 
 ---
 
@@ -1100,8 +1117,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `project` | 7 | ✅ |
 | `team` | 7 | ✅ |
 | `task` | 8 | ✅ |
-| `sprint` | 9 | ⬜ |
-| `epic` | 9 | ⬜ |
+| `sprint` | 9 | ✅ |
+| `epic` | 9 | ✅ |
 | `comment` | 10 | ⬜ |
 | `myNotifications` | 11 | ⬜ |
 | `unreadNotificationCount` | 11 | ⬜ |
@@ -1120,8 +1137,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ✅ |
 | Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ✅ |
 | Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ✅ |
-| Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ⬜ |
-| Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ⬜ |
+| Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ✅ |
+| Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ✅ — a milestone is always created on an epic: one without an epic cannot be listed by any query |
 | Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ⬜ |
 | Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ⬜ |
 | AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ⬜ |

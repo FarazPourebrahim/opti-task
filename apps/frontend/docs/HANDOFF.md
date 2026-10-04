@@ -9,9 +9,8 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 
 ## Where things stand
 
-**Progress: 61%** — Phases 0–7 and Amendment A1 are complete. **Phase 8 (Task —
-Board, List & Detail) is built except for pointer dragging and list windowing**,
-which need two packages that could not be installed; see "Phase 8" below.
+**Progress: 79%** — Phases 0–9 and Amendment A1 are complete. Phase 10
+(Collaboration — comments and attachments) is next.
 
 | Phase | What exists |
 |---|---|
@@ -21,16 +20,18 @@ which need two packages that could not be installed; see "Phase 8" below.
 | 5 | Router, guards, app shell, breadcrumbs, command palette, error screens |
 | 6 | Organisations (list, members, invitations, settings), own profile, other users' profiles |
 | 7 | Projects (overview, status, members, workflow, settings), teams and team members |
-| 8 | Tasks: board with keyboard and tap moves, filtered list, detail page with every task mutation |
+| 8 | Tasks: board with drag, keyboard and tap moves and windowed columns, filtered list, detail page with every task mutation |
+| 9 | Sprints (list, detail, lifecycle, figures, burndown, workload, add/remove tasks) and epics (list, detail, progress, milestones) |
 
 Verified at handoff: `pnpm --filter optitask-frontend run verify` exits 0
-(typecheck, lint, query-depth check, **423 tests in 18 files**) and
+(typecheck, lint, query-depth check, **512 tests in 20 files**) and
 `run build` succeeds.
 
 **Never verified:** nothing has been seen in a browser, and nothing has run
 against the real backend. Every response in the tests is a mock shaped from the
-SDL. Eight phases of UI are unseen — a visual pass at 360px and desktop width is
-overdue and has been recommended to the owner more than once.
+SDL. Nine phases of UI are unseen — a visual pass at 360px and desktop width is
+overdue and has been recommended to the owner more than once. Card dragging
+and the burndown chart are the two things tests can say least about.
 
 ---
 
@@ -38,11 +39,11 @@ overdue and has been recommended to the owner more than once.
 
 | Branch | State |
 |---|---|
-| `frontend/F8` | Phase 8 so far. Pushed. **Not merged** — the phase is not complete. |
-| `frontend/main` | Phases 0–7 + A1. Pushed, in sync with origin. |
+| `frontend/F9` | Phase 9. Pushed. **Not merged** — waiting for the owner's go-ahead. |
+| `frontend/main` | Phases 0–8 + A1. Pushed, in sync with origin. |
 | `main` | **Local is 2 commits ahead of `origin/main`** (the merge of the partner's amber `colors.md`). `git push origin main` is **rejected by a repository rule** — do not work around it; the owner must push or open a PR. |
 | `ai/main` | The AI team's branch. Leave it alone. |
-| `frontend/F5`, `F6`, `F7`, `averoui-migration` | Merged; kept locally. |
+| `frontend/F5`, `F6`, `F7`, `F8`, `averoui-migration` | Merged; kept locally. |
 
 Workflow the owner has confirmed, phase by phase:
 
@@ -97,6 +98,10 @@ Still undecided, and worth raising:
 | No member search | Backend | Pickers only see the first 20 loaded members |
 | No "my projects" query | Backend | Projects are reached through their organisation; no sidebar switcher |
 | `workload` has no unit | Backend | A bare 0–1000 integer |
+| Milestones only exist on an epic, and cannot be edited | Backend | No `Project.milestones`, no `updateMilestone` |
+| A task cannot change epic after creation | Backend | `UpdateTaskInput` has no `epicId` |
+| Stored epic progress is unreadable | Backend | `refreshEpicProgress` writes a column no field exposes |
+| Chart data table is screen-reader only; no bar chart; charts pin tokens ^1 | Avero charts | See known-debt, Phase 9 |
 | `main` push rejected | Repo owner | See Git state |
 
 ---
@@ -179,13 +184,20 @@ src/
   Persian, right-to-left.
 - Missing from Avero: classic tabs, keyboard-key, a "load more", an error
   state, an app shell. `DashboardShell` was evaluated and not used.
-- Avero has neither drag-and-drop nor virtualization; see Phase 8 below.
+- Avero has neither drag-and-drop nor virtualization: the board uses
+  `@dnd-kit/core` and `@tanstack/react-virtual`.
 - `DatePicker` reports `YYYY-MM-DD` and parses typed `yyyy/mm/dd`. Convert
   with `dateInputToApi` / `apiToDateInput`.
 - A `Select` cannot hold an empty value: "nothing chosen" needs a named
   sentinel option (see `TaskFilters`).
-- Phase 9/13 charts: `@averoui/charts` (Recharts wrappers) exists but is not
-  installed.
+- Charts: `@averoui/charts` (with `recharts`) is installed. It has `LineChart`,
+  `AreaChart`, `ChartCard` and `ChartDataTable` — no bar or pie chart. A chart
+  already renders its own screen-reader data table; do not add a second.
+  `ChartCard`'s `empty` / `emptyState` props are where an empty state goes.
+  `global.css` has an `@source` line for the package; without it `ChartCard`
+  renders unstyled. Recharts draws nothing in the test DOM (no size), so tests
+  assert the data table. A test file that opens a chart page should preload it
+  in `beforeAll` (see `sprint.test.tsx`), or the first import can time out.
 
 ---
 
@@ -229,30 +241,42 @@ src/
 
 ---
 
-## Phase 8 — what is left
+## What is next — Phase 10
 
-Tracker and exit criteria are in `CLIENT_PLAN.md`. Everything is ✅ except F8.2
-(windowing) and F8.3 (pointer dragging).
+Tracker and exit criteria are in `CLIENT_PLAN.md`: the comment thread, composer,
+mention picker and attachments, all inside the task detail page
+(`modules/task/TaskDetail.page.tsx`), in a new `modules/comment`.
 
-- **Blocked on the network, not on design.** On 2026-10-04 the npm registry
-  refused the TLS handshake from this machine (`curl` to registry.npmjs.org
-  failed; GitHub worked), so `@dnd-kit/core` and `@tanstack/react-virtual`
-  could not be installed. Try again first:
-  `pnpm --filter optitask-frontend add @dnd-kit/core @tanstack/react-virtual`.
-- **Pointer dragging** goes on top of `modules/task/hooks/useBoardMove.ts`,
-  which already owns the move (pick up → target → drop, legal columns only,
-  announcements, focus). A drag start is `pickUp`, entering a column sets the
-  target, a release is `dropOn`. Keep the keyboard path as it is: it does not
-  depend on geometry, which is why it can be tested in a DOM with no layout.
-- **Windowing**: each `BoardColumn` renders its cards as `<li>` children. The
-  test DOM has no layout, so a virtualizer renders nothing there — window only
-  above a threshold, or stub the measured rect in tests.
+Things already in place that Phase 10 leans on:
+
+- `Task.comments` is relay-paginated in the cache (`apollo.client.ts`).
+- Mentions take explicit user ids: feed the picker from the project's members
+  (`useProjectContext().members`), as `TaskAssigneeControl` does. Never the
+  global `users` query — a standing test fails any operation that selects it.
+- Attachments are metadata only (backend debt): no upload control, no download
+  link that pretends to work.
+- Comment bodies render as plain text. No `dangerouslySetInnerHTML`.
+
+### Notes from Phases 8 and 9 worth keeping
+
 - **How the board stays consistent**: `buildBoardColumns`
   (`modules/task/utils/task.utils.ts`) places a card by the task's *current*
   status, not by the list it was fetched in. That is what makes the optimistic
   status change and its rollback work without editing any cached list. Do not
   replace it with per-list cache surgery.
-- **Then Phase 9.** `useProjectPlanning` and `ProjectPlanningQuery` already
-  read `Project.sprints` / `Project.epics` for names; Phase 9's screens use the
-  same cached fields and should take those documents over into their own
-  modules.
+- **One move, three inputs**: `modules/task/hooks/useBoardMove.ts` owns a card
+  move. Dragging (`startDrag` / `aim` / `dropOn`), the keyboard (`pickUp` /
+  `step` / `drop`) and a tap all go through it, and it announces each step.
+  The drag library's own live region is silenced and parked in a hidden
+  element, so there is one announcer.
+- **Testing a drag**: `layOutColumns()` in `task.test.tsx` stubs
+  `getBoundingClientRect` so the columns have places; then `fireEvent`
+  `mouseDown` / `mouseMove` / `mouseUp`.
+- **Windowing**: a column of more than `BOARD_WINDOW_THRESHOLD` (30) cards is
+  windowed. Tests stub `offsetHeight` to give the list a height.
+- **Server-computed figures are re-read, never patched**: adding or removing a
+  sprint's task refetches the sprint (`refetchQueries: [SprintQuery]`); the
+  same for an epic's milestones.
+- **Deleting the entity a page shows**: `removeFromConnection` takes it out of
+  the project's list without evicting the entity, so the page does not flash
+  Not Found before it navigates away.

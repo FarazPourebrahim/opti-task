@@ -421,6 +421,92 @@ same Radix primitives.
   `aria-labelledby`.
 - **Impact**: none; both names are the same text.
 
+## Phase 9 — Sprint & Epic
+
+- **What**: the burndown chart has never been drawn.
+- **Why**: the test DOM has no size, so Recharts' `ResponsiveContainer` renders
+  nothing there; no browser was available to the agent. The tests assert the
+  chart's data table and both empty states instead.
+- **Right fix**: a manual look now, and a screenshot in the Phase 14 browser
+  suite.
+- **Impact**: axis labels, the two lines and the tooltip are unverified. A long
+  sprint's day labels may crowd the x axis.
+
+- **What**: the burndown's data table is visible to assistive technology only.
+- **Why**: Avero's `LineChart` renders its `ChartDataTable` with `sr-only`.
+- **Right fix**: an opt-in visible table (or a "show as table" toggle) in
+  `@averoui/charts`.
+- **Impact**: a sighted person who cannot read the chart — low vision, a
+  small screen — has no figures to fall back on.
+
+- **What**: the sprint page's chunk is about 112 kB gzip, nearly all Recharts.
+- **Why**: `@averoui/charts` wraps Recharts and the page imports it directly.
+- **Right fix**: load the burndown lazily inside the page, so the figures and
+  the task list do not wait on the chart; decide in Phase 14's bundle pass,
+  when Phase 13's charts exist too.
+- **Impact**: the first visit to any sprint downloads the charting library.
+  No other route pays for it.
+
+- **What**: `@averoui/charts` 2.0.0 depends on `@averoui/tokens` ^1, so two
+  token versions are installed (1.0.1 for charts, 2.2.1 for everything else).
+- **Why**: the chart package has not been released against tokens 2.
+- **Right fix**: release `@averoui/charts` against the current tokens.
+- **Impact**: the series colors are Avero's chart palette from the older token
+  set (indigo and rose), unrelated to the amber brand. Consistent with
+  themselves, and none is hard-coded here.
+
+- **What**: workload per assignee is a table with a bar per row, not a chart.
+- **Why**: Avero ships line and area charts only, and a bar chart built here
+  would be a primitive Avero lacks, with raw Recharts colors.
+- **Right fix**: a `BarChart` in `@averoui/charts`, if a chart reads better
+  than the table once seen.
+- **Impact**: none functionally; every figure is shown as a number.
+
+- **What**: the stored epic progress cannot be shown, only the live one.
+- **Why**: `Epic.progress` is always computed on read. `refreshEpicProgress`
+  writes a column no field exposes.
+- **Right fix**: expose the stored value and when it was saved (e.g.
+  `Epic.storedProgress`, `progressRefreshedAt`), or drop the mutation.
+- **Impact**: "Save progress" changes nothing the user can see. The screen
+  says so in a sentence rather than showing two figures.
+
+- **What**: a milestone can only be created on an epic, and cannot be edited.
+- **Why**: `Epic.milestones` is the only place milestones are listed, so one
+  created without an epic would be stored and never seen again; and the API
+  has no `updateMilestone`.
+- **Right fix**: `Project.milestones` and `updateMilestone` on the backend.
+- **Impact**: no project-level milestones. To change one, delete and recreate.
+
+- **What**: a task cannot be moved into or out of an epic after it is created.
+- **Why**: `UpdateTaskInput` has no `epicId`, and no epic mutation takes a
+  task.
+- **Right fix**: `epicId` on `UpdateTaskInput`, or `addTaskToEpic` /
+  `removeTaskFromEpic`.
+- **Impact**: the epic page lists its tasks read-only, and its empty state
+  says a task joins an epic when it is created.
+
+- **What**: the sprint's "add a task" picker offers only the project's 100
+  most recent tasks.
+- **Why**: there is no task search, and no filter for "not in this sprint".
+- **Right fix**: a server-side task search, as for the dependency picker.
+- **Impact**: an older task is added from its own page (Move to sprint).
+
+- **What**: `ProjectPlanningQuery` still lives in the task module.
+- **Why**: it reads sprint and epic names in one request for the task
+  screens; splitting it across the two new modules would turn that into two.
+- **Right fix**: none needed. It and the sprint and epic lists read the same
+  cached `Project.sprints` / `Project.epics`, so a new sprint or epic shows up
+  in the task pickers without a reload.
+- **Impact**: none. The two write the same cached list at different page
+  sizes (100 and 20); whichever answered last decides how many are cached.
+
+- **What**: `sprint.test.tsx` imports the sprint page once before its tests.
+- **Why**: the first import of the charting library under a parallel run can
+  outlast a query's 5s timeout, which failed whichever test opened the page
+  first.
+- **Right fix**: none needed.
+- **Impact**: none; the page is still loaded lazily by the router under test.
+
 ## Amendment A1 — Avero migration
 
 - **What**: Avero's filled primary button is white text on the amber brand
