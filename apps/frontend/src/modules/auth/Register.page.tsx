@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FormEvent } from 'react';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-import { FormError } from '@/modules/auth/components/FormError';
+import { FormError } from '@/shared/components/FormError';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import {
   registerSchema,

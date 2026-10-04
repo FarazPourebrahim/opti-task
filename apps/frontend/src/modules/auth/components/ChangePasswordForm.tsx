@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FormEvent } from 'react';
 import { ChangePasswordMutation } from '@/modules/auth/graphql/auth.operations';
-import { FormError } from '@/modules/auth/components/FormError';
+import { FormError } from '@/shared/components/FormError';
 import {
   changePasswordSchema,
   toFieldErrors,
