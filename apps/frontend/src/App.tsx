@@ -1,22 +1,114 @@
-import { useTranslation } from 'react-i18next';
+import { lazy, useState } from 'react';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router';
+import type { RouteObject } from 'react-router';
+import {
+  GuestRoute,
+  ProtectedRoute,
+} from '@/modules/auth/components/ProtectedRoute';
+import { RootLayout } from '@/modules/shell/components/RootLayout';
+import { RouteErrorBoundary } from '@/modules/shell/components/RouteErrorBoundary';
+import { NotFoundPage } from '@/modules/shell/NotFound.page';
+import { ROUTES } from '@/shared/routes/route.constants';
+import type { RouteHandle } from '@/shared/routes/route.types';
+
+/*
+ * Every page is its own chunk: a visitor on the sign-in screen downloads
+ * neither the app shell nor any feature.
+ */
+const LoginPage = lazy(async () => ({
+  default: (await import('@/modules/auth/Login.page')).LoginPage,
+}));
+const RegisterPage = lazy(async () => ({
+  default: (await import('@/modules/auth/Register.page')).RegisterPage,
+}));
+const ForgotPasswordPage = lazy(async () => ({
+  default: (await import('@/modules/auth/ForgotPassword.page'))
+    .ForgotPasswordPage,
+}));
+const AcceptInvitationPage = lazy(async () => ({
+  default: (await import('@/modules/auth/AcceptInvitation.page'))
+    .AcceptInvitationPage,
+}));
+const SessionsPage = lazy(async () => ({
+  default: (await import('@/modules/auth/Sessions.page')).SessionsPage,
+}));
+const SecurityPage = lazy(async () => ({
+  default: (await import('@/modules/auth/Security.page')).SecurityPage,
+}));
+const AppLayout = lazy(async () => ({
+  default: (await import('@/modules/shell/components/AppLayout')).AppLayout,
+}));
+const HomePage = lazy(async () => ({
+  default: (await import('@/modules/home/Home.page')).HomePage,
+}));
 
 /**
- * Route tree.
- *
- * Phase 5 (F5.1) replaces this with the React Router data router; until then
- * it is a placeholder that stays free of business logic and data fetching.
+ * Route tree: path → page, guards and layout nesting. Nothing else belongs
+ * here — no data fetching, no business logic.
  */
-export function App() {
-  const { t } = useTranslation();
+export const routes: RouteObject[] = [
+  {
+    element: <RootLayout />,
+    errorElement: <RouteErrorBoundary standalone />,
+    children: [
+      {
+        element: <GuestRoute />,
+        children: [
+          { path: ROUTES.login, element: <LoginPage /> },
+          { path: ROUTES.register, element: <RegisterPage /> },
+          { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
+        ],
+      },
+      // Open to both: a signed-out visitor is asked to sign in and come back.
+      { path: ROUTES.acceptInvitation, element: <AcceptInvitationPage /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <AppLayout />,
+            handle: { crumb: 'nav.home' } satisfies RouteHandle,
+            children: [
+              {
+                // Inside the layout, so a failing page leaves the shell up.
+                errorElement: <RouteErrorBoundary />,
+                children: [
+                  { path: ROUTES.home, element: <HomePage /> },
+                  {
+                    path: ROUTES.account,
+                    handle: { crumb: 'nav.account' } satisfies RouteHandle,
+                    children: [
+                      {
+                        index: true,
+                        element: (
+                          <Navigate to={ROUTES.accountSessions} replace />
+                        ),
+                      },
+                      {
+                        path: ROUTES.accountSessions,
+                        element: <SessionsPage />,
+                        handle: { crumb: 'nav.sessions' } satisfies RouteHandle,
+                      },
+                      {
+                        path: ROUTES.accountSecurity,
+                        element: <SecurityPage />,
+                        handle: { crumb: 'nav.security' } satisfies RouteHandle,
+                      },
+                    ],
+                  },
+                  { path: '*', element: <NotFoundPage /> },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
 
-  return (
-    <main className="grid min-h-dvh place-items-center p-6">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-text-strong text-4xl font-bold tracking-tight">
-          {t('app.name')}
-        </h1>
-        <p className="text-text-subtle text-lg">{t('app.tagline')}</p>
-      </div>
-    </main>
-  );
+export function App() {
+  // Created once: a router rebuilt on re-render would reset the history stack.
+  const [router] = useState(() => createBrowserRouter(routes));
+
+  return <RouterProvider router={router} />;
 }
