@@ -316,6 +316,106 @@ same Radix primitives.
   organisation membership before adding someone to a project.
 - **Impact**: none through the UI.
 
+## Phase 8 — Task: Board, List & Detail
+
+- **What**: a card cannot be dragged with a pointer. It is moved by picking it
+  up (its move button) and choosing a column — arrow keys and Enter, or a tap
+  on the column's "Move here".
+- **Why**: `@dnd-kit/core` could not be installed: the npm registry refused the
+  TLS handshake from the build machine on 2026-10-04 (GitHub was reachable).
+- **Right fix**: install it and add a pointer sensor on top of `useBoardMove`,
+  which already holds the whole move: a drag is a pick-up, hovering a column
+  sets the target, releasing is a drop.
+- **Impact**: the board works with a keyboard, a mouse and a touch screen, but
+  not by direct manipulation, which is what people expect of a board.
+
+- **What**: board columns are not windowed. Every loaded card is in the DOM;
+  off-screen ones skip layout and paint through `content-visibility: auto`.
+- **Why**: `@tanstack/react-virtual` could not be installed, for the same
+  reason.
+- **Right fix**: window each column's list, then profile a 200-card board.
+- **Impact**: a column loads 50 cards at a time, so the DOM grows with each
+  "load more". The 60fps exit criterion is unmeasured. `content-visibility` is
+  not supported by older Safari, where every card is laid out.
+
+- **What**: a status change does not move a task between cached lists. The
+  board places a card by the task's current status instead, and corrects each
+  column's count for the cards that have moved (`buildBoardColumns`).
+- **Why**: a task list is cached once per filter, and editing seven lists by
+  hand on every optimistic change and every rollback is where such code breaks.
+- **Right fix**: none needed for the board. The task list is different — see
+  the next entry.
+- **Impact**: none on the board.
+
+- **What**: on the task list, a row whose task no longer matches the filter
+  stays until the list is next fetched.
+- **Why**: the same cached-list design; the list shows what the server last
+  returned for that filter.
+- **Right fix**: Phase 11's `taskUpdated` subscription can refetch the list
+  being shown, or drop the row when its task stops matching.
+- **Impact**: after changing a task elsewhere, a filtered list can show it
+  until a reload or a filter change.
+
+- **What**: the label filter offers only labels seen on tasks loaded so far.
+- **Why**: the API has no list of a project's labels; a label is only ever
+  visible on a task.
+- **Right fix**: a `Project.labels` field.
+- **Impact**: a label used only by tasks beyond the loaded pages cannot be
+  filtered by.
+
+- **What**: a label's `color` is ignored.
+- **Why**: it is a free-form string from the server, and the working agreement
+  rules out inline and arbitrary colors. No mutation sets it anyway.
+- **Right fix**: constrain it server-side to a named palette that maps to
+  theme tokens.
+- **Impact**: none today; every label's color is null.
+
+- **What**: sprints, epics and dependency candidates are read as one page of
+  100, with no "load more".
+- **Why**: they feed pickers and name lookups; the real sprint and epic screens
+  are Phase 9, and there is no task search.
+- **Right fix**: Phase 9 pages the sprint and epic lists; a server-side task
+  search would replace the dependency picker's list.
+- **Impact**: beyond 100, a sprint or epic shows as "no longer listed", and
+  only the 100 most recent tasks can be picked as a dependency.
+
+- **What**: a rejected dependency is always explained as a loop.
+- **Why**: the API returns only `BAD_USER_INPUT`. The picker never offers the
+  task itself or one already depended on, so within this UI a rejection is the
+  cycle check — but a dependency in another project, made by some other
+  client's data, would get the same sentence.
+- **Right fix**: distinct error codes, or field errors, from the API.
+- **Impact**: a wrong explanation in a case this UI cannot produce.
+
+- **What**: the detail page re-reads the whole task after each audited change
+  (status, assignee, estimate, sprint) to pick up the new activity entry.
+- **Why**: the mutations return the task, not the activity they wrote.
+- **Right fix**: Phase 11's `taskUpdated` subscription.
+- **Impact**: one extra request per change, and a paged-out activity list
+  returns to its first page.
+
+- **What**: the assignee picker and the assignee filter list only project
+  members from the first loaded page; an assignee who is not a project member
+  cannot be picked, though the API would accept any user.
+- **Why**: the same scoped-membership rule as Phase 7's pickers.
+- **Right fix**: the membership search described under Phase 7.
+- **Impact**: as Phase 7.
+
+- **What**: `estimatedSeconds` is not shown.
+- **Why**: no mutation sets it, so it is always null.
+- **Right fix**: surface it when the API can write it.
+- **Impact**: none.
+
+- **What**: `SelectField` gives its trigger an `aria-label` in addition to the
+  `<label for>` that already names it.
+- **Why**: the trigger is a `<button role="combobox">`. axe does not follow a
+  label to a button, and a combobox's text is its value, not its name, so every
+  select on a page failed the `button-name` audit. Phase 8 was the first page
+  audit to include one.
+- **Right fix**: have Avero's `Field` label its select trigger with
+  `aria-labelledby`.
+- **Impact**: none; both names are the same text.
+
 ## Amendment A1 — Avero migration
 
 - **What**: Avero's filled primary button is white text on the amber brand
@@ -366,12 +466,14 @@ same Radix primitives.
   lint or test failure. The build check in Amendment A1 (grep the compiled CSS
   for an Avero class) is the only guard; make it a CI step in Phase 14.
 
-- **What**: Avero's `DatePicker` output format is unverified.
-- **Why**: the in-house picker and its RFC-3339 tests were removed; no screen
-  uses a date input yet.
-- **Right fix**: before the first date input (Phase 8), assert the value sent
-  to the API is a full RFC-3339 string — the backend rejects date-only values.
-- **Impact**: none yet.
+- **What**: ~~Avero's `DatePicker` output format is unverified~~ — RESOLVED in
+  Phase 8.
+- **Why**: the in-house picker and its RFC-3339 tests were removed with A1.
+- **Right fix**: done. The picker reports `YYYY-MM-DD`; `dateInputToApi`
+  (`shared/utils/date.utils.ts`) turns it into a full instant, and the create
+  task test asserts the value on the wire.
+- **Impact**: none. A date typed in a shape the picker does not parse is
+  reported as empty, so it is sent as "no date" rather than flagged.
 
 - **What**: Avero has no breadcrumbs, keyboard-key, classic tabs or command
   palette component.
