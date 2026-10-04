@@ -12,15 +12,21 @@ export type BoardAnnouncement =
   | { kind: 'cancelled'; task: MovableTask }
   | { kind: 'noMoves'; task: MovableTask };
 
-type Grab = { task: MovableTask; targets: TaskStatus[]; index: number };
+type Grab = {
+  task: MovableTask;
+  targets: TaskStatus[];
+  /** The chosen column; null while a dragged card is over none it may enter. */
+  index: number | null;
+  byPointer: boolean;
+};
 
 /**
  * Picking a card up, choosing where it goes, and putting it down.
  *
- * The same three steps serve the keyboard (arrow keys choose the column) and a
- * pointer (tap the column). Only the columns the workflow allows from the
- * card's status are ever targets, so an illegal move cannot be made — it is
- * not rejected, it is not offered.
+ * The same three steps serve the keyboard (arrow keys choose the column), a
+ * tap (tap the column) and a drag (hover the column, release). Only the
+ * columns the workflow allows from the card's status are ever targets, so an
+ * illegal move cannot be made — it is not rejected, it is not offered.
  */
 export function useBoardMove(
   onMove: (task: MovableTask, status: TaskStatus) => void,
@@ -39,7 +45,7 @@ export function useBoardMove(
     status: TaskStatus;
   } | null>(null);
 
-  const pickUp = useCallback((task: MovableTask) => {
+  const grabTask = useCallback((task: MovableTask, byPointer: boolean) => {
     const legal = nextTaskStatuses(task.status);
     // In board order, so the arrow keys travel the way the columns read.
     const targets = TASK_STATUSES.filter((status) => legal.includes(status));
@@ -50,9 +56,44 @@ export function useBoardMove(
       return;
     }
 
-    setGrab({ task, targets, index: 0 });
+    // The keyboard starts on the first column it can reach; a dragged card
+    // has no target until the pointer is over one.
+    setGrab({ task, targets, index: byPointer ? null : 0, byPointer });
     setAnnouncement({ kind: 'grabbed', task, target: first });
   }, []);
+
+  const pickUp = useCallback(
+    (task: MovableTask) => grabTask(task, false),
+    [grabTask],
+  );
+
+  const startDrag = useCallback(
+    (task: MovableTask) => grabTask(task, true),
+    [grabTask],
+  );
+
+  /** Points a dragged card at the column under it, or at none. */
+  const aim = useCallback(
+    (status: TaskStatus | null) => {
+      if (!grab) return;
+
+      const found = status ? grab.targets.indexOf(status) : -1;
+      const index = found === -1 ? null : found;
+      if (index === grab.index) return;
+
+      setGrab({ ...grab, index });
+
+      if (status && index !== null) {
+        setAnnouncement({
+          kind: 'target',
+          target: status,
+          position: index + 1,
+          count: grab.targets.length,
+        });
+      }
+    },
+    [grab],
+  );
 
   const cancel = useCallback(() => {
     if (!grab) return;
@@ -67,7 +108,8 @@ export function useBoardMove(
       if (!grab) return;
 
       const count = grab.targets.length;
-      const index = (grab.index + delta + count) % count;
+      const from = grab.index ?? (delta === 1 ? -1 : 0);
+      const index = (from + delta + count) % count;
       const target = grab.targets[index];
       if (!target) return;
 
@@ -89,10 +131,14 @@ export function useBoardMove(
     [grab, onMove],
   );
 
+  /** Puts the card down on the chosen column; with none chosen, lets go. */
   const drop = useCallback(() => {
-    const target = grab?.targets[grab.index];
+    if (!grab) return;
+
+    const target = grab.index === null ? undefined : grab.targets[grab.index];
     if (target) dropOn(target);
-  }, [grab, dropOn]);
+    else cancel();
+  }, [grab, dropOn, cancel]);
 
   const clearFocusTarget = useCallback(() => setFocusTarget(null), []);
 
@@ -100,11 +146,15 @@ export function useBoardMove(
     () => ({
       grabbedTaskId: grab?.task.id ?? null,
       targets: grab?.targets ?? [],
-      activeTarget: grab ? (grab.targets[grab.index] ?? null) : null,
+      activeTarget:
+        grab && grab.index !== null ? (grab.targets[grab.index] ?? null) : null,
+      isDragging: grab?.byPointer ?? false,
       announcement,
       focusTarget,
       clearFocusTarget,
       pickUp,
+      startDrag,
+      aim,
       cancel,
       step,
       drop,
@@ -116,6 +166,8 @@ export function useBoardMove(
       focusTarget,
       clearFocusTarget,
       pickUp,
+      startDrag,
+      aim,
       cancel,
       step,
       drop,

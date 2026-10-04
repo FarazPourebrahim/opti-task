@@ -1,14 +1,19 @@
 import { Badge, Button, EmptyState } from '@averoui/react';
+import { useDroppable } from '@dnd-kit/core';
 import { Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import type { TaskStatus } from '@contracts';
+import { BoardCardList } from '@/modules/task/components/BoardCardList';
 import { BOARD_DROP_ATTRIBUTE } from '@/modules/task/components/TaskMoveButton';
 import { TASK_STATUS_TONES } from '@/modules/task/constants/task.constants';
 
-type BoardColumnProps = {
+type BoardColumnProps<Task extends { id: string }> = {
   status: TaskStatus;
-  shown: number;
+  tasks: Task[];
+  renderCard: (task: Task) => ReactNode;
+  /** A card that has just landed here and must be on screen. */
+  revealTaskId: string | null;
   total: number;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -17,33 +22,45 @@ type BoardColumnProps = {
   isTarget: boolean;
   /** The column the arrow keys currently point at. */
   isActiveTarget: boolean;
+  /** A card is being dragged, so a column is entered rather than tapped. */
+  isDragging: boolean;
   onDropHere: () => void;
-  /** The cards, one `<li>` each. */
-  children: ReactNode;
 };
 
 /** One status on the board: its name, its count and its cards. */
-export function BoardColumn({
+export function BoardColumn<Task extends { id: string }>({
   status,
-  shown,
+  tasks,
+  renderCard,
+  revealTaskId,
   total,
   hasMore,
   isLoadingMore,
   onLoadMore,
   isTarget,
   isActiveTarget,
+  isDragging,
   onDropHere,
-  children,
-}: BoardColumnProps) {
+}: BoardColumnProps<Task>) {
   const { t } = useTranslation();
+  // Only a column the card may enter can be dropped on at all.
+  const { setNodeRef } = useDroppable({ id: status, disabled: !isTarget });
+  const shown = tasks.length;
   const name = t(`enums.taskStatus.${status}`);
   const headingId = `board-column-${status}`;
 
   return (
     <section
+      ref={setNodeRef}
       aria-labelledby={headingId}
       className={`bg-surface-muted flex w-72 shrink-0 flex-col gap-3 rounded-2xl p-3 ${
-        isActiveTarget ? 'ring-primary ring-2' : ''
+        isActiveTarget
+          ? 'ring-primary ring-2'
+          : isDragging && isTarget
+            ? 'ring-primary/40 ring-2'
+            : isDragging
+              ? 'opacity-60'
+              : ''
       }`}
     >
       <div className="flex items-center justify-between gap-2">
@@ -55,7 +72,9 @@ export function BoardColumn({
         </span>
       </div>
 
-      {isTarget ? (
+      {/* A drag is dropped on the column itself; a button appearing under
+          the pointer would only shift the cards. */}
+      {isTarget && !isDragging ? (
         <Button
           variant={isActiveTarget ? 'primary' : 'outline'}
           size="sm"
@@ -74,11 +93,11 @@ export function BoardColumn({
           {t('task.board.columnEmpty', { status: name })}
         </EmptyState>
       ) : (
-        /* Off-screen cards skip layout and paint, so a long column stays
-           cheap to scroll; the size hint keeps the scrollbar honest. */
-        <ul className="flex flex-col gap-2 *:[contain-intrinsic-size:auto_8rem] *:[content-visibility:auto]">
-          {children}
-        </ul>
+        <BoardCardList
+          tasks={tasks}
+          renderCard={renderCard}
+          revealTaskId={revealTaskId}
+        />
       )}
 
       {hasMore ? (

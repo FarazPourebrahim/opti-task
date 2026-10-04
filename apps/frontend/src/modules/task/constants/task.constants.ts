@@ -14,6 +14,23 @@ export const BOARD_COLUMN_FIELDS = {
 /** Cards fetched per board column at a time; the API caps a page at 100. */
 export const BOARD_PAGE_SIZE = 50;
 
+/**
+ * A column with more cards than this renders only the ones in view. Below it
+ * the whole list is cheap, and a short column should not scroll on its own.
+ */
+export const BOARD_WINDOW_THRESHOLD = 30;
+
+/** A card's height before it is measured, and the space between two, in px. */
+export const BOARD_CARD_ESTIMATED_HEIGHT = 128;
+export const BOARD_CARD_GAP = 8;
+
+/** How far a pressed mouse must travel before a card is being dragged, in px. */
+export const BOARD_DRAG_DISTANCE = 8;
+
+/** How long a touch must rest on a card before it is being dragged, in ms. */
+export const BOARD_DRAG_TOUCH_DELAY = 250;
+export const BOARD_DRAG_TOUCH_TOLERANCE = 5;
+
 /** How many sprints, epics and dependency candidates one request reads. */
 export const TASK_OPTIONS_PAGE_SIZE = 100;
 
