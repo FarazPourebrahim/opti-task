@@ -263,6 +263,59 @@ same Radix primitives.
   happy-dom follows the spec here.
 - **Impact**: a genuinely slow screen takes longer to fail a test.
 
+## Phase 7 — Project & Team
+
+- **What**: a people picker only offers people from the first page of the
+  membership it is fed.
+- **Why**: candidates come from lists the screen already loaded — organisation
+  members for a project, project members for a team — and those load 20 at a
+  time. There is no API to search a membership by name.
+- **Right fix**: a server-side search on scoped membership (e.g.
+  `Organization.members(search:)`), which the picker queries as the user types.
+- **Impact**: in an organisation or project with more than 20 members, someone
+  beyond the first page cannot be picked until "Load more" on the members tab
+  has brought their row in.
+
+- **What**: the viewer's roles on a project and on a team are inferred, and
+  inferring them needs the organisation's member list too.
+- **Why**: as with organisations, the API states no `viewerRole`. Organisation
+  owners and admins hold project powers without being project members, so the
+  project screen reads the organisation as well.
+- **Right fix**: `viewerPermissions` on `Project` and `Team`.
+- **Impact**: one extra query per project screen, and the same pagination
+  blind spot as Phase 6. A project member outside the organisation is refused
+  that read and simply gets no organisation-level hints, which is correct.
+
+- **What**: there is no list of "my projects" — a project is reached through
+  its organisation.
+- **Why**: the API has `Organization.projects` and `project(id)`, but no query
+  for the projects a user belongs to.
+- **Right fix**: a `myProjects` query, and with it a sidebar project switcher.
+- **Impact**: a user on projects in several organisations has to go through
+  each organisation to find them.
+
+- **What**: the project's tabs are Overview, Members, Teams and Settings only.
+- **Why**: Board, Backlog, Sprints, Epics, Analytics and AI belong to Phases
+  8–13. A tab is added with the screen behind it.
+- **Right fix**: each phase adds its tab to `Project.page.tsx`.
+- **Impact**: none; nothing links to a screen that does not exist.
+
+- **What**: the workload field is a bare number from 0 to 1000 with no unit.
+- **Why**: the API defines `workload: Int` and nothing documents what one unit
+  means.
+- **Right fix**: decide and document the unit on the backend (open tasks?
+  story points? hours?), then label the field with it.
+- **Impact**: two leads can enter numbers on different scales, and the AI
+  assignment suggestions compare them as if they were the same.
+
+- **What**: the project-member picker offers only organisation members, though
+  the API would accept any user id.
+- **Why**: offering anyone else would need the global `users` directory, which
+  lists every account in the system.
+- **Right fix**: none on the client. Arguably the backend should require
+  organisation membership before adding someone to a project.
+- **Impact**: none through the UI.
+
 ## Amendment A1 — Avero migration
 
 - **What**: Avero's filled primary button is white text on the amber brand

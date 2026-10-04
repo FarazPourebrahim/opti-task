@@ -297,7 +297,7 @@ line is not done, regardless of whether the feature "works".
 | A1 | Avero Migration (amendment) | 40% | ✅ |
 | 5 | App Shell, Routing & Guards | 47% | ✅ |
 | 6 | Organization & Members | 54% | ✅ |
-| 7 | Project & Team | 61% | ⬜ |
+| 7 | Project & Team | 61% | ✅ |
 | 8 | Task — Board, List & Detail | 72% | ⬜ |
 | 9 | Sprint & Epic | 79% | ⬜ |
 | 10 | Collaboration — Comments & Attachments | 85% | ⬜ |
@@ -306,7 +306,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 54%** (Phases 0–6 and Amendment A1 complete).
+**Current overall progress: 61%** (Phases 0–7 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -710,30 +710,42 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F7.1 | `Projects.page.tsx` — list + create; status filter | ⬜ |
-| F7.2 | `ProjectDetail` shell — tabbed: Board · Backlog · Sprints · Epics · Teams · Analytics · AI · Settings | ⬜ |
-| F7.3 | Project status control — a state-machine-aware UI offering only legal transitions (`PLANNING → ACTIVE/ARCHIVED`, `ACTIVE → COMPLETED/ARCHIVED`, `COMPLETED → ACTIVE/ARCHIVED`, `ARCHIVED` terminal) | ⬜ |
-| F7.4 | Project members — add, update role (`ADMIN`/`MEMBER`/`VIEWER`), remove | ⬜ |
-| F7.5 | `configureWorkflow` — raw JSON editor, clearly labelled as unvalidated scaffolding | ⬜ |
-| F7.6 | Teams — create, update, delete, list per project | ⬜ |
-| F7.7 | Team members — add/update/remove with `role`, `responsibilities`, `availability`, `workload` | ⬜ |
-| F7.8 | Reusable `MemberPicker` sourced from project/team membership — **never** the global `users` query | ⬜ |
+| F7.1 | Project list + create; status filter. The list is the organisation's Projects tab (`OrganizationProjects.page.tsx`, built in F6.7), which gained the create dialog and links into each project — the API has no "my projects" query to build a separate page on | ✅ |
+| F7.2 | `Project.page.tsx` — the frame (header + tabs) around routed tabs: Overview · Members · Teams · Settings today. Board, Backlog, Sprints, Epics, Analytics and AI are added **with** their phases, never as dead tabs | ✅ |
+| F7.3 | Project status control — a state-machine-aware UI offering only legal transitions (`PLANNING → ACTIVE/ARCHIVED`, `ACTIVE → COMPLETED/ARCHIVED`, `COMPLETED → ACTIVE/ARCHIVED`, `ARCHIVED` terminal) | ✅ |
+| F7.4 | Project members — add, update role (`ADMIN`/`MEMBER`/`VIEWER`), remove | ✅ |
+| F7.5 | `configureWorkflow` — raw JSON editor, clearly labelled as unvalidated scaffolding | ✅ |
+| F7.6 | Teams — create, update, delete, list per project | ✅ |
+| F7.7 | Team members — add/update/remove with `role`, `responsibilities`, `availability`, `workload` | ✅ |
+| F7.8 | Reusable `MemberPicker` (Avero `Combobox`, searchable by name or email) fed from a scoped membership — organisation members for a project, project members for a team — **never** the global `users` query | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] The status control **never offers an illegal transition**; a table test
-      covers all four states against all four targets.
-- [ ] `ARCHIVED` presents no transition affordance at all.
-- [ ] A rejected transition (server disagrees) surfaces a `BAD_USER_INPUT` toast
-      without corrupting the cached status.
-- [ ] `grep -rn "usersQuery\|useUsers" apps/frontend/src/modules` shows the global
-      user directory is not used by any picker.
-- [ ] Empty states for: no projects, no teams, no project members, no team members.
-- [ ] Availability and workload are visible on team member rows (they are the AI
-      inputs and must be inspectable).
-- [ ] The workflow JSON editor validates that the input is parseable JSON before
-      submit, and states plainly that the shape is not validated server-side.
-- [ ] Tests: all four categories per module.
+- [x] The status control **never offers an illegal transition**: a table test
+      covers all four states against all four targets, and the rendered buttons
+      are asserted for each non-terminal state.
+- [x] `ARCHIVED` presents no transition affordance at all — it says the project
+      cannot be reopened.
+- [x] A rejected transition surfaces a toast and leaves the cached status alone.
+      Status changes are deliberately **not** optimistic, so there is nothing to
+      roll back. The toast is specific ("not allowed from the current status")
+      rather than the generic validation text, which points at a form.
+- [x] The global user directory is not used by any picker — a standing test
+      reads every `*.operations.ts` and fails if one selects `users(`, which is
+      stricter than the grep first planned.
+- [x] Empty states for: no projects, no teams, no project members, no team
+      members; plus "no one left to add" on both pickers.
+- [x] Availability and workload are columns on every team member row, visible to
+      anyone who can read the team.
+- [x] The workflow editor refuses anything that is not a JSON **object** (invalid
+      JSON, arrays, strings, numbers, `null`) before submit, and says in a
+      notice that the server stores it without checking its shape.
+- [x] Tests cover success, `BAD_USER_INPUT`, `FORBIDDEN`, `CONFLICT` and a network
+      failure in both modules. 105 new tests; the suite is 349 tests in 17 files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing has run against the real backend — every response in the tests is a
+> mock shaped from the SDL.
 
 ---
 
@@ -1063,8 +1075,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `organization` | 6 | ✅ |
 | `myOrganizations` | 6 | ✅ |
 | `organizationInvitations` | 6 | ✅ |
-| `project` | 7 | ⬜ |
-| `team` | 7 | ⬜ |
+| `project` | 7 | ✅ |
+| `team` | 7 | ✅ |
 | `task` | 8 | ⬜ |
 | `sprint` | 9 | ⬜ |
 | `epic` | 9 | ⬜ |
@@ -1083,8 +1095,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Auth | `register` `login` `refreshToken` `logout` `changePassword` `requestPasswordReset` `revokeSession` | 4 | ✅ — `requestPasswordReset` is wired but deliberately has no screen (backend stub, see known-debt) |
 | Profile | `updateProfile` `addSkill` `removeSkill` `addExpertise` `removeExpertise` | 6 | ✅ |
 | Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ✅ — `updateOrganization.settings` (free-form JSON) is not surfaced; nothing reads it yet |
-| Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ⬜ |
-| Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ⬜ |
+| Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ✅ |
+| Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ✅ |
 | Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ⬜ |
 | Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ⬜ |
 | Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ⬜ |
