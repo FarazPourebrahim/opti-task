@@ -31,6 +31,7 @@
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@graphql-typed-document-node/core": "^3.2.0",
+    "cmdk": "^1.1.1",
     "graphql": "^16.10.0",
     "graphql-ws": "^6.0.8",
     "i18next": "^26.4.2",
@@ -38,6 +39,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^17.0.13",
+    "react-router": "^7",
     "rxjs": "^7.8.2",
     "zod": "^3.24.1"
   },

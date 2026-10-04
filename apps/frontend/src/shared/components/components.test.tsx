@@ -1,5 +1,4 @@
 import { Input } from '@averoui/react';
-import { HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ErrorState, FormField } from '@/shared/components';
 import { auditA11y } from '@/shared/tests/a11y';
@@ -7,21 +6,13 @@ import {
   renderWithProviders,
   screen,
 } from '@/shared/tests/renderWithProviders';
-import { graphql } from '@/shared/tests/graphql';
 import { server } from '@/shared/tests/server';
-
-const SIGNED_OUT = {
-  errors: [{ message: 'no session', extensions: { code: 'UNAUTHENTICATED' } }],
-  data: null,
-};
+import { signedOut } from '@/shared/tests/session';
 
 // The provider tree bootstraps a session on mount; these components do not
 // care who is signed in, so it settles as signed-out.
 beforeEach(() => {
-  server.use(
-    graphql.query('CurrentUser', () => HttpResponse.json(SIGNED_OUT)),
-    graphql.mutation('Refresh', () => HttpResponse.json(SIGNED_OUT)),
-  );
+  server.use(...signedOut());
 });
 
 describe('FormField', () => {

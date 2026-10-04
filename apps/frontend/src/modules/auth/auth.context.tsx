@@ -18,6 +18,7 @@ import { ApiError } from '@/shared/lib/apiError';
 import { refreshSession } from '@/shared/services/auth.gateway';
 import {
   clearAccessToken,
+  onSessionExpired,
   setAccessToken,
 } from '@/shared/services/session.store';
 
@@ -36,6 +37,13 @@ export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 export type AuthContextValue = {
   status: AuthStatus;
   user: AuthenticatedUser | null;
+  /**
+   * True from a deliberate sign-out until the next sign-in. It tells the route
+   * guard not to remember the page: an expired session should return to where
+   * the user was, but the next person to sign in on this browser should not
+   * land on the previous user's page.
+   */
+  signedOutByUser: boolean;
   login: (input: { email: string; password: string }) => Promise<void>;
   register: (input: {
     email: string;
@@ -53,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const client = useApolloClient();
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
+  const [signedOutByUser, setSignedOutByUser] = useState(false);
 
   const loadCurrentUser = useCallback(async (): Promise<boolean> => {
     try {
@@ -107,6 +116,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [loadCurrentUser]);
 
+  /*
+   * A refresh that fails mid-session. The link has already dropped the token
+   * and the cache; settling on `unauthenticated` here is what lets the route
+   * guard send the user to sign in again instead of leaving them on a screen
+   * whose every request now fails.
+   */
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        setUser(null);
+        setStatus('unauthenticated');
+      }),
+    [],
+  );
+
   const login = useCallback(
     async (input: { email: string; password: string }) => {
       const result = await client.mutate({
@@ -121,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // side authenticates with the cookies this mutation just set.
       setAccessToken(payload.accessToken);
       setUser(payload.user);
+      setSignedOutByUser(false);
       setStatus('authenticated');
     },
     [client],
@@ -138,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setAccessToken(payload.accessToken);
       setUser(payload.user);
+      setSignedOutByUser(false);
       setStatus('authenticated');
     },
     [client],
@@ -156,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // the cache, so no subscription can write into a store being emptied.
     clearAccessToken();
     setUser(null);
+    setSignedOutByUser(true);
     setStatus('unauthenticated');
     await client.clearStore();
   }, [client]);
@@ -165,8 +192,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadCurrentUser]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, login, register, logout, refreshUser }),
-    [status, user, login, register, logout, refreshUser],
+    () => ({
+      status,
+      user,
+      signedOutByUser,
+      login,
+      register,
+      logout,
+      refreshUser,
+    }),
+    [status, user, signedOutByUser, login, register, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

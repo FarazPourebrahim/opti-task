@@ -7,22 +7,6 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 
 ## Phase 0 — Foundations
 
-- **What**: `App.tsx` renders a hard-coded placeholder with two untranslated
-  string literals, which the Global DoD otherwise forbids.
-- **Why**: i18n is wired in Phase 1 (F1.11) and the router + real shell land in
-  Phase 5 (F5.2). A scaffold needs *something* to mount and assert against.
-- **Right fix**: Phase 5 replaces the whole file with the route tree; the
-  placeholder copy disappears rather than being translated.
-- **Impact**: none — the strings are never user-visible outside a dev scaffold.
-  If Phase 5 lands and this text still exists, that is a bug.
-
-- **What**: `renderWithProviders` wraps children in an empty fragment.
-- **Why**: no providers exist yet. Theme + i18n arrive in Phase 1, toasts in
-  Phase 2, Apollo in Phase 3, auth in Phase 4, router in Phase 5.
-- **Right fix**: each phase adds its provider to `AllProviders` so every
-  existing test picks it up in one edit.
-- **Impact**: none. The seam exists precisely so this stays a one-line change.
-
 - **What**: accessibility assertions use `jest-axe` rather than `vitest-axe`.
 - **Why**: `vitest-axe` is still a pre-release; `jest-axe` is a stable wrapper
   around the same `axe-core` engine and works under Vitest via
@@ -139,15 +123,6 @@ same Radix primitives.
   as a confusing form-level error instead of a field hint. `auth.test.tsx`
   asserts the exact boundaries, so the drift is at least visible.
 
-- **What**: the auth pages take `onSignedIn` / `onGoToLogin` callbacks instead
-  of navigating.
-- **Why**: React Router lands in Phase 5. Wiring `window.location` here would
-  be replaced immediately and would make the pages untestable in isolation.
-- **Right fix**: Phase 5 passes real navigation into these props, or replaces
-  them with router hooks.
-- **Impact**: nothing routes yet — the pages are reachable only from tests and,
-  after Phase 5, from the router.
-
 - **What**: `requestPasswordReset` is wired in `auth.operations.ts` but no
   screen calls it, and `ForgotPassword.page.tsx` offers no email field.
 - **Why**: the backend mutation validates the address and returns success while
@@ -156,6 +131,84 @@ same Radix primitives.
 - **Right fix**: when the backend grows a reset-token table, turn that page into
   a real form; the operation is already defined.
 - **Impact**: users cannot self-serve a forgotten password. The screen says so.
+
+## Phase 5 — App Shell, Routing & Guards
+
+- **What**: the shell has no organisation/project switcher and no notification
+  bell, both of which F5.2 originally listed.
+- **Why**: each needs a query owned by a later phase (`myOrganizations` in
+  Phase 6, `Organization.projects` in Phase 7, the notification feed in Phase
+  11). A switcher with nothing to switch between would be a dead control.
+- **Right fix**: F6.1 / F7.1 add the switcher to the sidebar and F11.1 adds the
+  bell to the top bar; both slots are plain JSX in `AppLayout` and `Topbar`.
+- **Impact**: until Phase 6 the sidebar lists Home and the two account screens
+  only.
+
+- **What**: the shell is built from Avero's `SidebarNav`, `Drawer`,
+  `DropdownMenu` and `Avatar`, not from its `DashboardShell`.
+- **Why**: `DashboardShell` is the chrome of a content site's account area — a
+  one-third sidebar card beside a two-thirds content card, under large top
+  margins, with no top bar. An application frame needs a fixed sidebar, a
+  sticky top bar and a full-width content region.
+- **Right fix**: none needed, unless Avero grows an application shell; then
+  `AppLayout` should adopt it.
+- **Impact**: `AppLayout`'s layout classes are ours to maintain.
+
+- **What**: a query's `FORBIDDEN` or `NOT_FOUND` becomes the Forbidden or Not
+  Found screen only if the page calls `useEscalateRouteError(error)`.
+- **Why**: Apollo's query hooks return errors instead of throwing them, so the
+  route's error boundary never sees one unless the page hands it over.
+- **Right fix**: have each feature's query hooks escalate, so a page cannot
+  forget; or move page-level reads to suspense queries, which throw.
+- **Impact**: a page that forgets the call shows its inline error state for a
+  forbidden resource — safe and honest, but not the dedicated screen.
+
+- **What**: `shared/lib/capabilities.ts` is a hand-written copy of the
+  backend's role → permission matrix.
+- **Why**: the matrix is deliberately server-side only (`@contracts` shares the
+  vocabulary, not the authority), and an app may not import another app's
+  source.
+- **Right fix**: have the API return the caller's permissions on each resource
+  (e.g. `Project.viewerPermissions`), and delete the table.
+- **Impact**: the table can drift from the server. It only ever hides or shows
+  a control — the server still decides — so drift is a UX bug, not a security
+  one. `capabilities.test.ts` pins the boundary cells against `rbac.md`.
+
+- **What**: the current item in the sidebar is white text on the amber brand
+  color.
+- **Why**: Avero's `SidebarNavItem` hard-codes `text-white` on `bg-primary`,
+  the same cause as the primary button (see Amendment A1).
+- **Right fix**: the same upstream `--color-primary-foreground` token.
+- **Impact**: the current page's label fails contrast in the sidebar.
+
+- **What**: an unknown path shows Not Found only to a signed-in user; a
+  signed-out visitor is redirected to sign in first.
+- **Why**: the catch-all route sits behind the auth guard, so the response to
+  any path is the same until the visitor has a session.
+- **Right fix**: none — this is deliberate. A public catch-all would let anyone
+  probe which paths exist.
+- **Impact**: a mistyped public URL lands on the sign-in screen, not on a 404.
+
+- **What**: `Home.page.tsx` shows a greeting and an organisation count, taken
+  from the session, and nothing else.
+- **Why**: the real landing content is the organisation list, which is Phase 6.
+- **Right fix**: Phase 6 replaces the summary.
+- **Impact**: none; the page states only what it knows.
+
+- **What**: the command palette offers navigation and sign-out, not search
+  across projects or tasks.
+- **Why**: entity search needs each feature's queries.
+- **Right fix**: each feature phase registers its own results.
+- **Impact**: the "Search" button in the top bar is, for now, a jump menu.
+
+- **What**: the shell has not been seen in a browser, and its responsive
+  behaviour is unverified.
+- **Why**: the test DOM performs no layout; no browser was available to the
+  agent that built it.
+- **Right fix**: a manual pass at 360px and desktop width now, and the Phase 14
+  browser E2E suite later.
+- **Impact**: overflow, spacing and the `lg` switch between sidebar and drawer
+  are asserted structurally only.
 
 ## Amendment A1 — Avero migration
 
@@ -207,14 +260,6 @@ same Radix primitives.
   lint or test failure. The build check in Amendment A1 (grep the compiled CSS
   for an Avero class) is the only guard; make it a CI step in Phase 14.
 
-- **What**: nothing in the Avero setup has been looked at in a browser.
-- **Why**: the auth screens are not routed until Phase 5, so there is no screen
-  to open, and the test DOM performs no layout.
-- **Right fix**: the first visual pass happens with the app shell (F5.2), at
-  360px and at desktop width.
-- **Impact**: spacing, overflow and contrast-in-context bugs are not caught
-  today.
-
 - **What**: Avero's `DatePicker` output format is unverified.
 - **Why**: the in-house picker and its RFC-3339 tests were removed; no screen
   uses a date input yet.
@@ -227,8 +272,9 @@ same Radix primitives.
 - **Why**: outside its current scope.
 - **Right fix**: build each in `shared/components` when its phase needs it
   (breadcrumbs and the command palette in Phase 5), or add it to Avero.
-- **Impact**: none yet. `cmdk` was removed with the old components and returns
-  with F5.9.
+- **Impact**: breadcrumbs now live in `shared/components` and the command
+  palette is `cmdk` inside Avero's `Dialog` (both Phase 5). Tabs and a
+  keyboard-key component are still to come.
 
 ## Monorepo / tooling
 

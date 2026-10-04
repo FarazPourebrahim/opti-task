@@ -63,7 +63,7 @@ export function ChangePasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('auth.changePassword.title')}</CardTitle>
+        <CardTitle as="h2">{t('auth.changePassword.title')}</CardTitle>
       </CardHeader>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <FormError message={formError} />

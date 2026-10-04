@@ -6,22 +6,11 @@ import { AuthLayout } from '@/modules/auth/components/AuthLayout';
 import { FormError } from '@/modules/auth/components/FormError';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { loginSchema, toFieldErrors } from '@/modules/auth/schemas/auth.schema';
-import { LinkButton } from '@/modules/auth/components/LinkButton';
-import { FormField } from '@/shared/components';
+import { AppLink, FormField } from '@/shared/components';
 import { ApiError } from '@/shared/lib/apiError';
+import { ROUTES } from '@/shared/routes/route.constants';
 
-type LoginPageProps = {
-  /** Phase 5 supplies real navigation; until then the caller decides. */
-  onSignedIn?: () => void;
-  onGoToRegister?: () => void;
-  onGoToForgotPassword?: () => void;
-};
-
-export function LoginPage({
-  onSignedIn,
-  onGoToRegister,
-  onGoToForgotPassword,
-}: LoginPageProps) {
+export function LoginPage() {
   const { t } = useTranslation();
   const { login } = useAuth();
 
@@ -44,8 +33,9 @@ export function LoginPage({
     setIsPending(true);
 
     try {
+      // Nothing to navigate to here: the guest guard sees the session and
+      // sends the user on to wherever they were headed.
       await login(parsed.data);
-      onSignedIn?.();
     } catch (error) {
       setFormError(messageFor(error));
     } finally {
@@ -75,9 +65,7 @@ export function LoginPage({
       footer={
         <>
           <span>{t('auth.noAccount')}</span>
-          <LinkButton onClick={onGoToRegister}>
-            {t('auth.createAccount')}
-          </LinkButton>
+          <AppLink to={ROUTES.register}>{t('auth.createAccount')}</AppLink>
         </>
       }
     >
@@ -122,9 +110,9 @@ export function LoginPage({
           {isPending ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
 
-        <LinkButton onClick={onGoToForgotPassword}>
+        <AppLink to={ROUTES.forgotPassword} className="self-center text-sm">
           {t('auth.forgotPassword')}
-        </LinkButton>
+        </AppLink>
       </form>
     </AuthLayout>
   );

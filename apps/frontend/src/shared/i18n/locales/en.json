@@ -80,9 +80,10 @@
     "invite": {
       "title": "Join the organisation",
       "accepting": "Accepting your invitation…",
-      "accepted": "You’ve joined {{name}}.",
+      "accepted": "You’ve joined the organisation.",
       "invalid": "This invitation link is no longer valid.",
-      "signInFirst": "Sign in to accept this invitation."
+      "signInFirst": "Sign in to accept this invitation.",
+      "continue": "Continue to OptiTask"
     },
     "validation": {
       "emailInvalid": "Enter a valid email address.",
@@ -94,6 +95,45 @@
       "passwordNeedsLetter": "Include at least one letter.",
       "passwordNeedsNumber": "Include at least one number.",
       "passwordUnchanged": "Choose a password different from your current one."
+    },
+    "security": {
+      "subtitle": "Manage how you sign in."
     }
+  },
+  "nav": {
+    "primary": "Main",
+    "account": "Account",
+    "home": "Home",
+    "sessions": "Sessions",
+    "security": "Security",
+    "backHome": "Back to home",
+    "breadcrumbs": "Breadcrumb",
+    "skipToContent": "Skip to content"
+  },
+  "shell": {
+    "openNavigation": "Open navigation",
+    "userMenu": "Account menu",
+    "search": "Search",
+    "commandPalette": {
+      "title": "Command palette",
+      "placeholder": "Search for a page or action…",
+      "empty": "No matching pages or actions.",
+      "navigation": "Go to",
+      "actions": "Actions"
+    }
+  },
+  "status": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "That page doesn’t exist, or it has moved.",
+    "forbiddenTitle": "You don’t have access",
+    "forbiddenBody": "You don’t have permission to view this page. Ask an administrator if you think you should.",
+    "errorTitle": "Something went wrong"
+  },
+  "home": {
+    "greeting": "Welcome back, {{name}}",
+    "subtitle": "Here’s where your work stands.",
+    "organizations_one": "You belong to {{count}} organisation.",
+    "organizations_other": "You belong to {{count}} organisations.",
+    "noOrganizations": "You’re not part of an organisation yet."
   }
 }

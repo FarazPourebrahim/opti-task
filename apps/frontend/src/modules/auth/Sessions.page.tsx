@@ -2,8 +2,6 @@ import {
   Badge,
   Button,
   Card,
-  CardHeader,
-  CardTitle,
   ConfirmDialog,
   EmptyState,
   SkeletonText,
@@ -13,7 +11,8 @@ import { Laptop, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSessions } from '@/modules/auth/hooks/useSessions';
-import { ErrorState } from '@/shared/components';
+import { ErrorState, PageHeader } from '@/shared/components';
+import { useEscalateRouteError } from '@/shared/hooks/useEscalateRouteError';
 import { formatRelativeTime } from '@/shared/utils/date.utils';
 
 export function SessionsPage() {
@@ -21,6 +20,8 @@ export function SessionsPage() {
   const { toast } = useToast();
   const { sessions, isLoading, error, revokeSession, refetch } = useSessions();
   const [pendingRevoke, setPendingRevoke] = useState<string | null>(null);
+
+  useEscalateRouteError(error);
 
   /*
    * Never rejects: ConfirmDialog keeps itself open (and its confirm button
@@ -45,16 +46,12 @@ export function SessionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-1">
-            <CardTitle as="h2">{t('auth.sessions.title')}</CardTitle>
-            <p className="text-text-subtle text-sm">
-              {t('auth.sessions.subtitle')}
-            </p>
-          </div>
-        </CardHeader>
+      <PageHeader
+        title={t('auth.sessions.title')}
+        description={t('auth.sessions.subtitle')}
+      />
 
+      <Card>
         {isLoading ? (
           // Skeletons are hidden from assistive technology, so the region
           // announces the loading state once on their behalf.
