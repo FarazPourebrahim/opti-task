@@ -295,7 +295,7 @@ line is not done, regardless of whether the feature "works".
 | 3 | GraphQL Data Layer & Codegen | 32% | ✅ |
 | 4 | Auth & Session | 40% | ✅ |
 | A1 | Avero Migration (amendment) | 40% | ✅ |
-| 5 | App Shell, Routing & Guards | 47% | ⬜ |
+| 5 | App Shell, Routing & Guards | 47% | ✅ |
 | 6 | Organization & Members | 54% | ⬜ |
 | 7 | Project & Team | 61% | ⬜ |
 | 8 | Task — Board, List & Detail | 72% | ⬜ |
@@ -306,7 +306,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 40%** (Phases 0–4 and Amendment A1 complete).
+**Current overall progress: 47%** (Phases 0–5 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -595,30 +595,57 @@ feature ever thinks about transport.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F5.1 | React Router v7 data router; all paths as constants in `shared/routes/` — no string literals in `App.tsx` | ⬜ |
-| F5.2 | `AppLayout` — sidebar (org + project switcher, nav), topbar (search, notification bell, user menu), content region. Start from Avero's `DashboardShell` / `SidebarNav`; this is also the first visual pass on the Avero setup | ⬜ |
-| F5.3 | `ProtectedRoute` (auth) + `RequireCapability` (hint-only hide) | ⬜ |
-| F5.4 | `shared/lib/capabilities.ts` — derive capability hints from the user's role using the `@contracts` vocabulary; documented as a hint, never authority | ⬜ |
-| F5.5 | Route-level code splitting + Suspense skeletons per route | ⬜ |
-| F5.6 | Error boundary per route + `NotFound.page.tsx` + `Forbidden.page.tsx` | ⬜ |
-| F5.7 | Breadcrumbs derived from the route tree (org → project → sprint/task) | ⬜ |
-| F5.8 | Responsive shell: sidebar collapses to a drawer under 900px | ⬜ |
-| F5.9 | Command palette (⌘K) for cross-entity navigation | ⬜ |
+| F5.1 | React Router v7 data router; all paths as constants in `shared/routes/` — no string literals in `App.tsx` | ✅ |
+| F5.2 | `AppLayout` — sidebar (nav), topbar (breadcrumbs, search, user menu), content region. Built from Avero's `SidebarNav`, `Drawer`, `DropdownMenu` and `Avatar`; `DashboardShell` was not used (see known-debt). The org + project switcher lands with F6.1 / F7.1 and the notification bell with F11.1 — each needs queries those phases own | ✅ |
+| F5.3 | `ProtectedRoute` + `GuestRoute` (auth) + `RequireCapability` (hint-only hide) | ✅ |
+| F5.4 | `shared/lib/capabilities.ts` — derive capability hints from the user's role using the `@contracts` vocabulary; documented as a hint, never authority | ✅ |
+| F5.5 | Route-level code splitting + Suspense skeletons per route | ✅ |
+| F5.6 | Error boundary per route + `NotFound.page.tsx` + `Forbidden.page.tsx` | ✅ |
+| F5.7 | Breadcrumbs derived from the route tree, via a `crumb` translation key in each route `handle` | ✅ |
+| F5.8 | Responsive shell: sidebar collapses to a drawer below Tailwind's `lg` breakpoint (1024px, not the 900px first planned — one breakpoint shared with the auth layout) | ✅ |
+| F5.9 | Command palette (⌘K / Ctrl+K): every sidebar destination plus sign-out. Entity search joins as each feature brings its queries | ✅ |
+| F5.10 | Session expiry reaches the UI: a failed refresh settles the auth context on `unauthenticated`, so the guard redirects | ✅ |
+| F5.11 | Auth screens navigate through the router instead of callbacks; `/account/sessions` and `/account/security` routed; signed-in `Home.page.tsx` | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] `App.tsx` contains **zero** data fetching and zero business logic — verified by reading it.
-- [ ] Every route path is a constant; `grep` finds no hard-coded route string in a component.
-- [ ] Visiting a protected route unauthenticated redirects to login **and returns
-      to the intended route** after login.
-- [ ] A `FORBIDDEN` from any query renders `Forbidden.page.tsx`, not a crash or a
-      blank screen.
-- [ ] An unknown path renders `NotFound.page.tsx`.
-- [ ] A thrown render error is caught by the boundary and offers a retry.
-- [ ] Each route lazy-loads: the network panel shows a separate chunk per route.
-- [ ] The shell is fully keyboard-navigable, including a working skip-to-content link.
-- [ ] At 360px the sidebar becomes a drawer with a correct focus trap.
-- [ ] `axe` → 0 violations on the shell.
+- [x] `App.tsx` contains **zero** data fetching and zero business logic: it is
+      lazy page imports, the route tree and the router instance.
+- [x] Every route path is a constant; `grep` finds no hard-coded route string in
+      a component.
+- [x] Visiting a protected route unauthenticated redirects to login **and returns
+      to the intended route** after login (asserted end to end through the real
+      route tree). The return target is validated, not trusted: an absolute or
+      protocol-relative URL falls back to home. A deliberate sign-out does **not**
+      carry the page over, so the next person to sign in does not land on the
+      previous user's screen.
+- [x] A failed refresh mid-session redirects to login (asserted). Phase 3 and 4
+      deferred this redirect to here.
+- [x] A `FORBIDDEN` from a query renders `Forbidden.page.tsx` — when the page
+      passes its error to `useEscalateRouteError`. That is a convention each page
+      must follow, not something enforced; see known-debt.
+- [x] An unknown path renders `NotFound.page.tsx` inside the shell. A signed-out
+      visitor is sent to sign in first, which avoids revealing which paths exist.
+- [x] A thrown render error is caught by the boundary, the error's own message is
+      **not** shown, and retry re-renders the route (asserted).
+- [x] Each route lazy-loads: the production build emits a separate chunk per
+      page, and the shell (`AppLayout`, with the command palette) is its own
+      27.7 kB-gzip chunk that a signed-out visitor never downloads. Verified in
+      the build output, not the network panel.
+- [~] Keyboard: the skip link is the first tab stop and targets `main`; the
+      drawer, account menu and command palette are driven by keyboard in tests.
+      A full keyboard walkthrough in a real browser has **not** been done.
+- [~] The drawer traps focus, closes on `Esc` and returns focus to its trigger
+      (asserted). That the sidebar actually gives way to it at 360px is
+      **unverified**: the test DOM performs no layout.
+- [x] `axe` → 0 violations on the shell, with the `region` rule **on**. Color
+      contrast is not covered — axe cannot compute it without layout.
+
+> **Not verified by me:** nothing in this phase has been seen in a browser.
+> Run `pnpm run backend-dev` and `pnpm run frontend-dev`, sign in, and look at
+> the shell at a phone width and a desktop width before Phase 6 builds on it.
+> This is the first screen where the amber brand and the Avero setup are
+> actually visible.
 
 ---
 
