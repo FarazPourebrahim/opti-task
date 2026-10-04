@@ -1,7 +1,6 @@
+import { Alert, Button } from '@averoui/react';
 import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-import { Button } from '@/shared/components';
-import styles from './Auth.page.module.css';
 
 type ForgotPasswordPageProps = {
   onGoToLogin?: () => void;
@@ -27,12 +26,15 @@ export function ForgotPasswordPage({ onGoToLogin }: ForgotPasswordPageProps) {
       title={t('auth.forgot.title')}
       subtitle={t('auth.loginSubtitle')}
     >
-      <div className={styles.notice} role="status">
-        <p className={styles.noticeTitle}>{t('auth.forgot.unavailableTitle')}</p>
-        <p className={styles.noticeBody}>{t('auth.forgot.unavailableBody')}</p>
-      </div>
+      <Alert
+        tone="neutral"
+        role="status"
+        title={t('auth.forgot.unavailableTitle')}
+      >
+        {t('auth.forgot.unavailableBody')}
+      </Alert>
 
-      <Button variant="secondary" fullWidth onClick={onGoToLogin}>
+      <Button variant="outline" block onClick={onGoToLogin}>
         {t('auth.forgot.backToSignIn')}
       </Button>
     </AuthLayout>

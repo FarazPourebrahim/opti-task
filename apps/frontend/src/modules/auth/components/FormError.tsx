@@ -1,5 +1,4 @@
-import { AlertCircle } from 'lucide-react';
-import styles from './FormError.module.css';
+import { Alert } from '@averoui/react';
 
 type FormErrorProps = {
   /** Already translated: the caller decides which key applies. */
@@ -20,9 +19,8 @@ export function FormError({ message }: FormErrorProps) {
   if (!message) return null;
 
   return (
-    <p className={styles.formError} role="alert">
-      <AlertCircle className={styles.formErrorIcon} aria-hidden />
+    <Alert tone="danger" role="alert">
       {message}
-    </p>
+    </Alert>
   );
 }

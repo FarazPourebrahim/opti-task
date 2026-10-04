@@ -1,12 +1,11 @@
 import { useMutation } from '@apollo/client/react';
+import { Alert, Button, EmptyState, Spinner } from '@averoui/react';
 import { CheckCircle2, MailWarning } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AcceptInvitationMutation } from '@/modules/auth/graphql/auth.operations';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import { Button, EmptyState, Spinner } from '@/shared/components';
-import styles from './Auth.page.module.css';
 
 type AcceptInvitationPageProps = {
   token: string;
@@ -69,30 +68,30 @@ export function AcceptInvitationPage({
   }, [status, token, acceptInvitation, onAccepted]);
 
   return (
-    <AuthLayout
-      title={t('auth.invite.title')}
-      subtitle={t('app.tagline')}
-    >
+    <AuthLayout title={t('auth.invite.title')} subtitle={t('app.tagline')}>
       {state.kind === 'pending' ? (
-        <div className={styles.notice} role="status">
-          <Spinner label={t('auth.invite.accepting')} />
-          <p className={styles.noticeBody}>{t('auth.invite.accepting')}</p>
+        // The text carries the status, so the spinner stays decorative.
+        <div
+          role="status"
+          className="text-text-subtle flex items-center justify-center gap-2 text-sm"
+        >
+          <Spinner tone="primary" />
+          <p>{t('auth.invite.accepting')}</p>
         </div>
       ) : null}
 
       {state.kind === 'accepted' ? (
-        <EmptyState
-          icon={<CheckCircle2 />}
-          title={t('auth.invite.accepted', { name: state.organisation })}
-        />
+        <EmptyState variant="circle" icon={<CheckCircle2 />}>
+          {t('auth.invite.accepted', { name: state.organisation })}
+        </EmptyState>
       ) : null}
 
       {state.kind === 'needsSignIn' ? (
         <>
-          <div className={styles.notice} role="status">
-            <p className={styles.noticeBody}>{t('auth.invite.signInFirst')}</p>
-          </div>
-          <Button fullWidth onClick={onGoToLogin}>
+          <Alert tone="neutral" role="status">
+            {t('auth.invite.signInFirst')}
+          </Alert>
+          <Button block onClick={onGoToLogin}>
             {t('auth.signIn')}
           </Button>
         </>
@@ -100,12 +99,10 @@ export function AcceptInvitationPage({
 
       {state.kind === 'invalid' ? (
         <>
-          <EmptyState
-            icon={<MailWarning />}
-            title={t('auth.invite.invalid')}
-            size="sm"
-          />
-          <Button variant="secondary" fullWidth onClick={onGoToLogin}>
+          <EmptyState variant="circle" icon={<MailWarning />}>
+            {t('auth.invite.invalid')}
+          </EmptyState>
+          <Button variant="outline" block onClick={onGoToLogin}>
             {t('auth.forgot.backToSignIn')}
           </Button>
         </>

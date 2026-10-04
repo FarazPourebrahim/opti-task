@@ -38,13 +38,72 @@ amendment to this file, not an in-flight improvisation.
 | # | Decision | Choice | Why |
 |---|---|---|---|
 | D1 | Framework | **React 19 + TypeScript (strict) on Vite** | SPA fork (Fork A) of the working agreement. No Next.js, no Server Components. |
-| D2 | Styling | **CSS Modules + design tokens** | Per the Module.CSS section: nesting mirrors JSX 1:1, camelCase classes, tokens only. No Tailwind, no CSS-in-JS. |
+| D2 | Styling | **Tailwind CSS v4 + Avero design tokens** *(amended — A1)* | Avero ships no precompiled stylesheet, so Tailwind must scan its compiled output. Feature layout is written in Tailwind utilities against the same theme tokens. No CSS Modules, no CSS-in-JS. |
 | D3 | Data layer | **Apollo Client** | Backend is Apollo Server v4, GraphQL-only. Normalized cache plus a built-in `graphql-ws` link for the 5 subscriptions. |
 | D4 | Auth transport | **HTTP-only cookies for HTTP; in-memory access token for the WebSocket only** | Cookies satisfy the rule that tokens never touch JS-readable storage; `graphql-ws` needs `connectionParams`, so the token lives in a module-scoped variable — never `localStorage`/`sessionStorage`. |
-| D5 | Component layer | **Radix Primitives, styled entirely by our own `.module.css`** | Focus traps, keyboard nav and ARIA correct by construction; Radix imposes zero visual opinion, so the premium look is 100% ours. |
+| D5 | Component layer | **Avero (`@averoui/react`)** *(amended — A1)* | Radix-based, so focus traps, keyboard nav and ARIA stay correct by construction. Primitives are imported straight from the package; `shared/components` holds only what Avero lacks. |
 | D6 | Scope | **Full parity** — every query, mutation and subscription reachable from the UI | The backend is 100% complete; nothing should be stranded. Coverage is proven by the matrix in Appendix A. |
 | D7 | Typing | **GraphQL Code Generator (`client-preset`)** against `apps/backend/docs/api/schema.graphql` | One canonical type per contract; no hand-written response types, no casts on server data. |
 | D8 | i18n | **`react-i18next`, `en` locale, from Phase 1** | The working agreement demands full localization or none. `ApiError` carries i18n keys, not messages — load-bearing, not polish. |
+| D9 | Theme | **Light only** *(added — A1)* | Avero ships a light theme and has no dark variants in its components. Dark mode returns only if Avero gains it upstream. |
+| D10 | Brand color | **Amber** *(added — A1)* — `apps/frontend/colors.md` | Set once as `--color-primary` / `--color-primary-hover` in `global.css`; Avero derives its tints from them. |
+
+---
+
+## Amendment A1 — Avero replaces the in-house component layer (2026-10-04)
+
+After a revision the team chose **Avero** (`@averoui/react`,
+<https://avero-docs.vercel.app>) as the component library, as a **full
+replacement**: the Radix-plus-CSS-Modules primitives from Phase 2 and the token
+layer from Phase 1 are gone, not wrapped. This amends D2 and D5 and adds D9 and
+D10. Phases 1 and 2 below are kept as a record of what was built and are marked
+superseded.
+
+### Tracker
+
+| ID | Task | Status |
+|---|---|:--:|
+| A1.1 | Swap dependencies: add `@averoui/react`, `@averoui/tokens`, `tailwindcss` v4, `@tailwindcss/vite`; remove every `@radix-ui/*` package, `cmdk` and `react-day-picker` | ✅ |
+| A1.2 | `global.css` — Tailwind + Avero `theme.css` / `base.css` / `utilities.css`, `@source` pointing at Avero's `dist`, fonts kept on Inter / JetBrains Mono | ✅ |
+| A1.3 | Brand tokens: amber primary from `colors.md`; warning moved to orange so it cannot be mistaken for the brand | ✅ |
+| A1.4 | `AveroProvider locale="en-US"` and Avero's `ToastProvider` in `AppProviders` | ✅ |
+| A1.5 | Remove the 20 in-house primitives, the six token stylesheets, the theme context, the pre-paint theme script and both dev galleries | ✅ |
+| A1.6 | Rebuild the auth screens (login, register, forgot password, accept invitation, sessions, change password) on Avero + Tailwind | ✅ |
+| A1.7 | `shared/components`: `FormField` (the one field composition every form uses) and `ErrorState` (Avero has none); `ErrorBoundary` kept | ✅ |
+| A1.8 | Tests for the new shared components; obsolete primitive, token and theme suites removed | ✅ |
+| A1.9 | This plan and `known-debt.md` reconciled | ✅ |
+
+### Verified
+
+- `typecheck`, `lint`, the query-depth check and `test` are green (97 tests,
+  10 files). The count dropped because the suites for the deleted primitives,
+  tokens and theme went with them; Avero's primitives are covered by its own
+  suite.
+- `build` succeeds and the compiled stylesheet contains Avero's classes
+  (`bg-primary-hover`, `rounded-3xl`) and the amber `--color-primary` — so
+  `@source` is doing its job. Without it the components render unstyled.
+- **Bundle, new Phase 14 baseline**: JS ≈ 187 kB gzip, CSS ≈ 21.8 kB gzip
+  (was ≈ 118 kB / 6.9 kB). Fonts unchanged.
+
+### Not verified
+
+- Nothing has been looked at in a browser. The auth screens are not routed
+  until Phase 5, so there is no screen to open yet; the first visual pass
+  belongs to F5.2.
+- Avero's `DatePicker` has not been checked against the API's requirement for
+  full RFC-3339 values. Do this before the first date input (Phase 8).
+
+### Open items — need a change in Avero itself
+
+1. **White text on the amber primary button.** Avero hard-codes `text-white`
+   on `bg-primary`. Against this amber that is about 2:1 (about 3:1 on hover),
+   far below the 4.5:1 the Global DoD requires. The agreed fix is upstream: a
+   `--color-primary-foreground` token that the filled variants read.
+2. **Warning tones are hard-coded amber.** `--color-warning` only drives the
+   `warning` Button variant. `Alert`, `Toast` and `Badge` use Tailwind's
+   `amber-*` palette directly, so a warning alert still reads as the brand
+   color. They should read the warning tokens.
+3. **No dark theme** (D9).
 
 ---
 
@@ -118,18 +177,18 @@ apps/frontend/
     │   ├── ai/                  # AiRecommendations.page.tsx, approval flow
     │   └── analytics/           # ProjectAnalytics.page.tsx, UserAnalytics
     └── shared/
-        ├── components/          # Radix-backed primitives (Phase 2)
-        ├── hooks/               # useDebounce, useMediaQuery, useTheme…
+        ├── components/          # only what Avero lacks (FormField, ErrorState, ErrorBoundary…)
+        ├── hooks/               # useDebounce, useMediaQuery…
         ├── services/            # apollo.client.ts, realtime.client.ts, session.store.ts
         ├── lib/                 # apiError.ts, capabilities.ts
         ├── graphql/generated/   # codegen output (committed)
         ├── types/               # app-internal shared types
         ├── utils/               # formatDate.ts, cursor helpers…
         ├── constants/           # api.constants.ts, ui.constants.ts
-        ├── context/             # auth.context.tsx, theme.context.tsx, toast.context.tsx
+        ├── context/             # AppProviders.tsx, apollo.context.tsx
         ├── i18n/                # config + en.json
         ├── routes/              # route path constants + helpers
-        ├── styles/              # global.css + token files
+        ├── styles/              # global.css — Tailwind + Avero tokens + brand overrides
         └── tests/               # cross-feature tests, MSW server, render helper
 ```
 
@@ -138,7 +197,7 @@ apps/frontend/
 ```
 modules/<feature>/
 ├── <Feature>.page.tsx
-├── components/          # PascalCase.tsx + PascalCase.module.css
+├── components/          # PascalCase.tsx, styled with Tailwind utilities
 ├── hooks/               # use<Thing>.ts
 ├── graphql/             # <domain>.operations.ts
 ├── schemas/             # <feature>.schema.ts (zod, form input only)
@@ -178,10 +237,10 @@ line is not done, regardless of whether the feature "works".
 - [ ] Nothing feature-specific in `shared/`. Nothing app-specific in `packages/contracts`.
 
 ### UI quality
-- [ ] Every `.module.css` file's nesting mirrors its component's JSX tree 1:1 and
-      in the same order.
-- [ ] Zero raw colors, font sizes, radii, shadows or durations in component CSS —
-      `var(--token)` only.
+- [ ] Primitives come from `@averoui/react`. Nothing in `shared/components`
+      duplicates a component Avero already provides.
+- [ ] Styling is Tailwind utilities against theme tokens. No arbitrary color
+      values (`text-[#…]`, `bg-[rgb(…)]`) and no inline `style` colors.
 - [ ] **Every** list/query that can return zero items renders a dedicated
       `EmptyState` (icon or illustration + message + next action where one exists).
       "No results for this filter" and "nothing here yet" are distinct states.
@@ -198,7 +257,7 @@ line is not done, regardless of whether the feature "works".
 - [ ] `axe` reports **0 violations** on the touched screens.
 - [ ] Correct semantic landmarks and labels; icon-only buttons have accessible names.
 - [ ] Respects `prefers-reduced-motion`.
-- [ ] Renders correctly in **both** light and dark themes.
+- [ ] Renders correctly in the light theme — the only one (D9).
 
 ### Responsiveness
 - [ ] Usable from 360px to 1920px. No horizontal body scroll at any width.
@@ -235,6 +294,7 @@ line is not done, regardless of whether the feature "works".
 | 2 | Shared Component Library | 24% | ✅ |
 | 3 | GraphQL Data Layer & Codegen | 32% | ✅ |
 | 4 | Auth & Session | 40% | ✅ |
+| A1 | Avero Migration (amendment) | 40% | ✅ |
 | 5 | App Shell, Routing & Guards | 47% | ⬜ |
 | 6 | Organization & Members | 54% | ⬜ |
 | 7 | Project & Team | 61% | ⬜ |
@@ -246,7 +306,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 40%** (Phases 0–4 complete).
+**Current overall progress: 40%** (Phases 0–4 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -301,6 +361,10 @@ workspace that renders a blank shell and resolves `@contracts` at runtime.
 ---
 
 # Phase 1 — Design System & Theming — 6 → 14%
+
+> **Superseded by Amendment A1.** The token stylesheets, both themes, the theme
+> context and the token gallery described here were removed; tokens now come
+> from `@averoui/tokens`. i18n (F1.11) and `AppProviders` (F1.13) remain.
 
 **Goal:** The complete token layer and both themes, before a single feature
 component exists. This is where "clean and premium" is decided.
@@ -364,6 +428,10 @@ variable UI typeface plus a mono face for IDs, cursors and code.
 ---
 
 # Phase 2 — Shared Component Library — 14 → 24%
+
+> **Superseded by Amendment A1.** These primitives were removed in favour of
+> `@averoui/react`. The happy-dom test environment (F2.0) and `ErrorBoundary`
+> (F2.7) remain.
 
 **Goal:** Every primitive a feature will need, accessible by construction and
 styled only with Phase 1 tokens. Features must never invent a primitive.
@@ -528,7 +596,7 @@ feature ever thinks about transport.
 | ID | Task | Status |
 |---|---|:--:|
 | F5.1 | React Router v7 data router; all paths as constants in `shared/routes/` — no string literals in `App.tsx` | ⬜ |
-| F5.2 | `AppLayout` — sidebar (org + project switcher, nav), topbar (search, notification bell, theme toggle, user menu), content region | ⬜ |
+| F5.2 | `AppLayout` — sidebar (org + project switcher, nav), topbar (search, notification bell, user menu), content region. Start from Avero's `DashboardShell` / `SidebarNav`; this is also the first visual pass on the Avero setup | ⬜ |
 | F5.3 | `ProtectedRoute` (auth) + `RequireCapability` (hint-only hide) | ⬜ |
 | F5.4 | `shared/lib/capabilities.ts` — derive capability hints from the user's role using the `@contracts` vocabulary; documented as a hint, never authority | ⬜ |
 | F5.5 | Route-level code splitting + Suspense skeletons per route | ⬜ |
@@ -550,7 +618,7 @@ feature ever thinks about transport.
 - [ ] Each route lazy-loads: the network panel shows a separate chunk per route.
 - [ ] The shell is fully keyboard-navigable, including a working skip-to-content link.
 - [ ] At 360px the sidebar becomes a drawer with a correct focus trap.
-- [ ] `axe` → 0 violations on the shell in both themes.
+- [ ] `axe` → 0 violations on the shell.
 
 ---
 
@@ -702,7 +770,7 @@ AI assignment engine consumes.
       dates" empty state — not an empty chart frame and not a spinner.
 - [ ] Charts are keyboard/screen-reader accessible: every series is also available
       as a data table.
-- [ ] Charts render correctly in both themes (no hard-coded series colors).
+- [ ] Chart series colors come from theme tokens (no hard-coded series colors).
 - [ ] Epic progress bar matches the computed `progress` value; `refreshEpicProgress`
       updates the persisted value and the UI explains the difference between the
       live and stored figure.
@@ -859,7 +927,7 @@ must make the "AI suggests, a human decides" contract visible at every step.
 - [ ] A brand-new project renders **zeroed/empty shapes**, never `NaN`, `—` with no
       explanation, or a broken chart.
 - [ ] Every chart has an accessible data-table equivalent and a text summary.
-- [ ] Chart series colors come from the semantic token families; both themes verified.
+- [ ] Chart series colors come from the semantic token families.
 - [ ] `completionRate` and `teamVelocity` render with defined precision and units.
 - [ ] `avgCompletionSeconds` renders as a human duration; a `null` renders as an
       explained absence, not a blank cell.
@@ -881,7 +949,7 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F14.1 | Full `axe` sweep across every route in both themes | ⬜ |
+| F14.1 | Full `axe` sweep across every route | ⬜ |
 | F14.2 | Keyboard-only walkthrough of every primary flow | ⬜ |
 | F14.3 | Screen-reader pass on auth, board, task detail and the AI approval flow | ⬜ |
 | F14.4 | Bundle analysis; route chunks; font and icon loading strategy | ⬜ |
@@ -895,7 +963,7 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 ### Exit criteria (DoD)
 
-- [ ] `axe` → **0 violations** on every route, both themes.
+- [ ] `axe` → **0 violations** on every route.
 - [ ] Every primary flow completable with keyboard only, start to finish.
 - [ ] Lighthouse on the production build: **Performance ≥ 90, Accessibility 100,
       Best Practices ≥ 95**.
@@ -926,7 +994,9 @@ must make the "AI suggests, a human decides" contract visible at every step.
 | R7 | `@contracts` is not a valid Node specifier | Imports type-check but fail at runtime | Both mappings added in F0.2/F0.3 and verified in all four contexts (F0 exit criteria) |
 | R8 | Apollo Server v4 is EOL (2026-01-26) | Security exposure on the server | Backend concern; the client's Apollo version is independent. Track the v5 upgrade |
 | R9 | Board performance with large projects | Jank on the primary screen | Virtualize from the start (F8.2); profile at 200+ tasks (F8 exit criterion) |
-| R10 | Design-system drift once features start | The premium look decays feature by feature | Phases 1–2 complete **before** any feature; the "no raw values" grep is a standing CI check |
+| R10 | Design-system drift once features start | The look decays feature by feature | Primitives only from Avero; feature styling only through theme tokens (Global DoD). The old "no raw values" CSS test went with the CSS Modules — a lint rule against arbitrary color values is the replacement to add |
+| R11 | Avero's filled primary button is white-on-amber (≈ 2:1) | Every primary action fails WCAG contrast | Upstream fix in Avero (`--color-primary-foreground`); tracked in Amendment A1. Blocks the Phase 14 accessibility sign-off |
+| R12 | Avero is a young, single-maintainer library | A gap or bug blocks a feature | It is maintained in-house, so gaps are fixed upstream rather than worked around locally; record each one in known-debt |
 
 ---
 
@@ -940,8 +1010,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Operation | Phase | Status |
 |---|---|:--:|
 | `health` | 14 | ⬜ |
-| `me` | 4 | ⬜ |
-| `sessions` | 4 | ⬜ |
+| `me` | 4 | ✅ |
+| `sessions` | 4 | ✅ |
 | `user` | 6 | ⬜ |
 | `users` | ➖ | ➖ unscoped (known-debt) — deliberately unused; pickers use scoped membership |
 | `organization` | 6 | ⬜ |
@@ -964,7 +1034,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 
 | Group | Operations | Phase | Status |
 |---|---|---|:--:|
-| Auth | `register` `login` `refreshToken` `logout` `changePassword` `requestPasswordReset` `revokeSession` | 4 | ⬜ |
+| Auth | `register` `login` `refreshToken` `logout` `changePassword` `requestPasswordReset` `revokeSession` | 4 | ✅ — `requestPasswordReset` is wired but deliberately has no screen (backend stub, see known-debt) |
 | Profile | `updateProfile` `addSkill` `removeSkill` `addExpertise` `removeExpertise` | 6 | ⬜ |
 | Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ⬜ |
 | Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ⬜ |

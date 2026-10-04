@@ -3,38 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0c0f1a" />
+    <meta name="theme-color" content="#f4f4f4" />
     <title>OptiTask</title>
   </head>
   <body>
-    <!--
-      Applies the theme before first paint. This MUST be inline and blocking:
-      waiting for the module bundle would paint the default theme first and
-      then swap, which is the flash it exists to prevent.
-
-      It deliberately mirrors a few lines of src/shared/lib/theme.ts. That
-      duplication is the price of running before any module loads — keep the
-      storage key and the class names in sync with that file.
-    -->
-    <script>
-      (function () {
-        try {
-          var stored = window.localStorage.getItem('optitask-theme');
-          var preference =
-            stored === 'light' || stored === 'dark' || stored === 'system'
-              ? stored
-              : 'system';
-          var system = window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light';
-          document.body.classList.add(
-            preference === 'system' ? system : preference,
-          );
-        } catch (error) {
-          document.body.classList.add('light');
-        }
-      })();
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

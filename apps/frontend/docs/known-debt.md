@@ -34,47 +34,24 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 
 ## Phase 1 — Design System & Theming
 
-- **What**: `resets.css` reverses the working agreement's ordering of
-  `min-block-size: 100dvh` / `100vh` on `body`.
-- **Why**: the agreement lists `dvh` first. Later declarations win, so that
-  ordering makes `100vh` the effective value everywhere and leaves `dvh` as dead
-  code — reintroducing the exact mobile viewport bug `dvh` exists to fix.
-- **Right fix**: correct the snippet in `.claude/CLAUDE.md` so future projects
-  do not inherit it.
-- **Impact**: none here — this app is correct. The shared agreement is not.
+Superseded by Amendment A1 in `CLIENT_PLAN.md`: the token stylesheets, both
+themes and the token gallery were removed, and their debt entries with them.
 
-- **What**: the theme is applied twice — once by an inline script in
-  `index.html` and once by `ThemeProvider` — and the storage key plus class
-  names are duplicated between them.
-- **Why**: the class must be on `<body>` before first paint. Anything importable
-  runs after the module bundle loads, which is one repaint too late; that flash
-  is precisely what the script prevents.
-- **Right fix**: none available while the theme is a `body` class and the app is
-  a client-rendered SPA. Server rendering would let the class be emitted in the
-  HTML directly.
-- **Impact**: changing `THEME_STORAGE_KEY` or the class names means editing two
-  files. `theme.test.tsx` asserts they agree, so drift fails the suite.
-
-- **What**: `css: false` in the Vitest config — component stylesheets are not
-  processed during tests.
-- **Why**: jsdom's CSS parser predates native nesting and dumped every nested
-  stylesheet to stderr as a parse error, burying real failures. jsdom performs
-  no layout, so no assertion depended on the CSS.
-- **Right fix**: none needed. `vite build` compiles and validates every
-  stylesheet (nesting is flattened to descendant selectors there), and
-  `tokens.test.ts` reads the CSS as text for its invariants.
-- **Impact**: a malformed `.module.css` surfaces at build time rather than test
-  time. CSS Modules still resolve to proxied class names in tests.
-
-- **What**: routing in `App.tsx` is a `window.location.hash` comparison.
-- **Why**: React Router lands in Phase 5 (F5.1); the token gallery needed to be
-  reachable in Phase 1 without pulling that dependency forward.
-- **Right fix**: Phase 5 replaces the whole file with the data router.
-- **Impact**: the hash is read once at render and is not reactive — navigating
-  to `#/dev/tokens` needs a reload. Dev-only; the branch is statically removed
-  from production builds.
+- **What**: `css: false` in the Vitest config — the stylesheet is not processed
+  during tests.
+- **Why**: the test DOM performs no layout and computes no styles, so running
+  the Tailwind pipeline there would slow every run and assert nothing.
+- **Right fix**: none needed. `vite build` compiles and validates the
+  stylesheet.
+- **Impact**: a class name that Tailwind does not generate (a typo, or an Avero
+  class missed by `@source`) is invisible to the suite. It shows up only in
+  the browser.
 
 ## Phase 2 — Shared Component Library
+
+Superseded by Amendment A1: the in-house primitives were replaced by
+`@averoui/react`. The entries below still apply, because Avero is built on the
+same Radix primitives.
 
 - **What**: the test environment is **happy-dom**, not jsdom.
 - **Why**: jsdom implements no `PointerEvent`, `ResizeObserver` or
@@ -109,38 +86,6 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
   where landmarks exist and the finding would be real.
 - **Impact**: a component that genuinely hides focusable content behind
   `aria-hidden` would not be flagged at the component level.
-
-- **What**: `Components.page.tsx` uses literal strings; `Tokens.page.tsx` uses
-  i18n keys, and a few `dev.*` keys therefore ship inside `en.json`.
-- **Why**: dev-only pages are never localized, so putting their copy through
-  i18n adds catalogue entries nobody will translate. The tokens gallery predates
-  that decision.
-- **Right fix**: drop the `dev.*` keys from `en.json` and inline the strings in
-  `Tokens.page.tsx`, so dev pages are consistently exempt.
-- **Impact**: a few hundred bytes of dev-only copy in the production
-  translation catalogue. No dev *code* ships — verified by grepping the built
-  bundle for gallery identifiers.
-
-- **What**: `--color-border-400` is asserted at 3:1 against a control's own
-  fill (`--color-surface-500`), not against the page behind it.
-- **Why**: requiring both forced a mid-grey hairline on every field, which is
-  what made inputs read as unstyled browser controls. WCAG 1.4.11 asks that a
-  component be *identifiable*; its boundary against its own fill is what does
-  that, and elevation (`--shadow-100`) now carries the separation from the page.
-- **Right fix**: none if the reading holds. If a stricter interpretation is
-  wanted, give controls a fill that clears 3:1 against the page instead of
-  darkening the border again.
-- **Impact**: against the page a light-theme control border sits at 2.75:1.
-  Re-check during the Phase 14 accessibility sweep.
-
-- **What**: no visual verification of any component.
-- **Why**: the suite asserts structure, behaviour, keyboard paths and axe
-  cleanliness, but happy-dom performs no layout — nothing here proves a
-  component *looks* right, or that it holds up at 360px.
-- **Right fix**: open `#/dev/components` and `#/dev/tokens` in a browser at
-  narrow and wide widths; Phase 14 adds the Lighthouse and responsive passes.
-- **Impact**: spacing, overflow and contrast-in-context bugs would not be
-  caught by CI today. This is the single largest gap in Phase 2's coverage.
 
 ## Phase 3 — GraphQL Data Layer
 
@@ -211,6 +156,79 @@ unfixed. Mirrors `apps/backend/docs/known-debt.md`.
 - **Right fix**: when the backend grows a reset-token table, turn that page into
   a real form; the operation is already defined.
 - **Impact**: users cannot self-serve a forgotten password. The screen says so.
+
+## Amendment A1 — Avero migration
+
+- **What**: Avero's filled primary button is white text on the amber brand
+  color — about 2:1, and about 3:1 on hover.
+- **Why**: Avero hard-codes `text-white` on `bg-primary`; it was designed
+  around a dark blue. The contrast depends on the brand color, and amber is
+  light.
+- **Right fix**: upstream, in Avero — a `--color-primary-foreground` token that
+  the filled variants read, set to a dark value here. Not worked around locally
+  by decision.
+- **Impact**: every primary action fails WCAG 1.4.3 (4.5:1). This blocks the
+  Phase 14 accessibility sign-off. `AuthLayout`'s brand panel is ours and
+  already uses dark text.
+
+- **What**: warning `Alert`, `Toast` and `Badge` tones are still amber, the
+  same hue as the brand.
+- **Why**: `global.css` moves `--color-warning` to orange, but Avero only
+  reads that token in the `warning` Button variant. The other components use
+  Tailwind's `amber-*` palette directly.
+- **Right fix**: upstream — have those tones read the warning tokens.
+  Overriding Tailwind's whole `amber` palette here would work but silently
+  recolors anything else that uses it.
+- **Impact**: a warning alert can be read as a brand accent rather than a
+  caution. The icon and wording still carry the meaning.
+
+- **What**: light theme only; the theme provider, the persisted preference and
+  the pre-paint script were removed.
+- **Why**: Avero ships no dark variants (decision D9).
+- **Right fix**: dark support in Avero first, then a theme switch here.
+- **Impact**: users who prefer a dark interface get a light one.
+
+- **What**: two i18n systems run side by side — `react-i18next` for the app's
+  strings and Avero's own dictionary for strings inside its components.
+- **Why**: Avero carries built-in labels ("Close", "Cancel", the toast region
+  name) and resolves them from `AveroProvider locale`.
+- **Right fix**: when a second locale is added, drive `AveroProvider`'s
+  `locale` from the i18next language so the two cannot disagree.
+- **Impact**: none while the app ships `en` only. The locale is a constant in
+  `AppProviders.tsx`.
+
+- **What**: `global.css` points `@source` at
+  `node_modules/@averoui/react/dist` by relative path.
+- **Why**: Tailwind v4 scans only the app's own source, so Avero's class names
+  must be added to the scan explicitly.
+- **Right fix**: none available until Avero ships a precompiled stylesheet.
+- **Impact**: moving `global.css`, or a change in where pnpm links the package,
+  breaks the path and every Avero component renders unstyled — with no type,
+  lint or test failure. The build check in Amendment A1 (grep the compiled CSS
+  for an Avero class) is the only guard; make it a CI step in Phase 14.
+
+- **What**: nothing in the Avero setup has been looked at in a browser.
+- **Why**: the auth screens are not routed until Phase 5, so there is no screen
+  to open, and the test DOM performs no layout.
+- **Right fix**: the first visual pass happens with the app shell (F5.2), at
+  360px and at desktop width.
+- **Impact**: spacing, overflow and contrast-in-context bugs are not caught
+  today.
+
+- **What**: Avero's `DatePicker` output format is unverified.
+- **Why**: the in-house picker and its RFC-3339 tests were removed; no screen
+  uses a date input yet.
+- **Right fix**: before the first date input (Phase 8), assert the value sent
+  to the API is a full RFC-3339 string — the backend rejects date-only values.
+- **Impact**: none yet.
+
+- **What**: Avero has no breadcrumbs, keyboard-key, classic tabs or command
+  palette component.
+- **Why**: outside its current scope.
+- **Right fix**: build each in `shared/components` when its phase needs it
+  (breadcrumbs and the command palette in Phase 5), or add it to Avero.
+- **Impact**: none yet. `cmdk` was removed with the old components and returns
+  with F5.9.
 
 ## Monorepo / tooling
 
