@@ -1,4 +1,10 @@
-import { House, KeyRound, MonitorSmartphone } from 'lucide-react';
+import {
+  Building2,
+  House,
+  KeyRound,
+  MonitorSmartphone,
+  UserRound,
+} from 'lucide-react';
 import type { ParseKeys } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '@/shared/routes/route.constants';
@@ -18,9 +24,15 @@ export type NavItem = {
  */
 export const PRIMARY_NAV: readonly NavItem[] = [
   { to: ROUTES.home, labelKey: 'nav.home', icon: House, end: true },
+  {
+    to: ROUTES.organizations,
+    labelKey: 'nav.organizations',
+    icon: Building2,
+  },
 ];
 
 export const ACCOUNT_NAV: readonly NavItem[] = [
+  { to: ROUTES.accountProfile, labelKey: 'nav.profile', icon: UserRound },
   {
     to: ROUTES.accountSessions,
     labelKey: 'nav.sessions',

@@ -12,7 +12,10 @@
     "close": "Close",
     "retry": "Try again",
     "loading": "Loading…",
-    "search": "Search"
+    "search": "Search",
+    "optional": "Optional",
+    "loadMore": "Load more",
+    "showing": "Showing {{shown}} of {{total}}"
   },
   "error": {
     "network": "Can’t reach the server. Check your connection and try again.",
@@ -108,7 +111,15 @@
     "security": "Security",
     "backHome": "Back to home",
     "breadcrumbs": "Breadcrumb",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "organizations": "Organisations",
+    "organization": "Organisation",
+    "members": "Members",
+    "invitations": "Invitations",
+    "settings": "Settings",
+    "profile": "Profile",
+    "people": "People",
+    "person": "Person"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -135,5 +146,173 @@
     "organizations_one": "You belong to {{count}} organisation.",
     "organizations_other": "You belong to {{count}} organisations.",
     "noOrganizations": "You’re not part of an organisation yet."
+  },
+  "enums": {
+    "orgRole": {
+      "OWNER": "Owner",
+      "ADMIN": "Admin",
+      "MEMBER": "Member"
+    },
+    "invitationStatus": {
+      "PENDING": "Pending",
+      "ACCEPTED": "Accepted",
+      "REVOKED": "Revoked",
+      "EXPIRED": "Expired"
+    },
+    "projectState": {
+      "PLANNING": "Planning",
+      "ACTIVE": "Active",
+      "COMPLETED": "Completed",
+      "ARCHIVED": "Archived"
+    },
+    "seniority": {
+      "JUNIOR": "Junior",
+      "MID": "Mid-level",
+      "SENIOR": "Senior",
+      "LEAD": "Lead",
+      "PRINCIPAL": "Principal"
+    },
+    "teamRole": {
+      "LEAD": "Team lead",
+      "MEMBER": "Team member"
+    },
+    "availability": {
+      "AVAILABLE": "Available",
+      "BUSY": "Busy",
+      "AWAY": "Away",
+      "OFFLINE": "Offline"
+    }
+  },
+  "organization": {
+    "listTitle": "Organisations",
+    "listSubtitle": "The organisations you belong to.",
+    "new": "New organisation",
+    "empty": "You’re not part of an organisation yet. Create one to get started.",
+    "loadFailed": "Could not load this organisation data.",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "projects_one": "{{count}} project",
+    "projects_other": "{{count}} projects",
+    "name": "Name",
+    "description": "Description",
+    "logoUrl": "Logo URL",
+    "logoUrlHint": "Optional. A link to an image; files cannot be uploaded yet.",
+    "createTitle": "Create an organisation",
+    "createDescription": "You will be its owner and can invite others afterwards.",
+    "create": "Create organisation",
+    "created": "{{name}} has been created.",
+    "updated": "Organisation details saved.",
+    "sections": "Organisation sections",
+    "tabs": {
+      "projects": "Projects",
+      "members": "Members",
+      "invitations": "Invitations",
+      "settings": "Settings"
+    },
+    "projectsFilter": {
+      "label": "Status",
+      "all": "All statuses"
+    },
+    "projectsLoadFailed": "Could not load the projects.",
+    "projectsEmpty": "This organisation has no projects yet.",
+    "projectsEmptyFiltered": "No projects are {{status}}.",
+    "projectColumns": {
+      "name": "Project",
+      "status": "Status",
+      "members": "Members"
+    },
+    "membersEmpty": "This organisation has no members.",
+    "memberColumns": {
+      "member": "Member",
+      "role": "Role",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "memberRoleLabel": "Role for {{name}}",
+    "memberRoleUpdated": "{{name}} is now {{role}}.",
+    "memberRemove": "Remove",
+    "memberRemoved": "{{name}} has been removed.",
+    "memberRemoveConfirmTitle": "Remove {{name}}?",
+    "memberRemoveConfirmBody": "{{name}} will lose access to {{organization}} and everything in it.",
+    "inviteTitle": "Invite someone",
+    "inviteNoticeTitle": "Invitations are not delivered yet",
+    "inviteNoticeBody": "This build records the invitation but sends no email and has no link to share, so the person cannot accept it yet.",
+    "inviteEmail": "Email",
+    "inviteRole": "Role",
+    "inviteSubmit": "Send invitation",
+    "invited": "Invitation recorded for {{email}}.",
+    "inviteConflict": "That person is already a member, or already has a pending invitation.",
+    "invitationsLoadFailed": "Could not load the invitations.",
+    "invitationsEmpty": "No one has been invited yet.",
+    "invitationColumns": {
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "sent": "Sent",
+      "actions": "Actions"
+    },
+    "invitationRevoke": "Revoke",
+    "invitationRevoked": "The invitation for {{email}} has been revoked.",
+    "invitationRevokeConfirmTitle": "Revoke the invitation for {{email}}?",
+    "invitationRevokeConfirmBody": "They will no longer be able to join with it. You can invite them again later.",
+    "settingsTitle": "Details",
+    "settingsReadOnlyTitle": "You can’t change these settings",
+    "settingsReadOnlyBody": "Only an owner or admin of this organisation can edit its details.",
+    "deleteTitle": "Delete organisation",
+    "deleteBody": "Deleting an organisation removes its projects, teams and tasks for everyone. This cannot be undone.",
+    "delete": "Delete organisation",
+    "deleted": "{{name}} has been deleted.",
+    "deleteConfirmTitle": "Delete {{name}}?",
+    "deleteConfirmBody": "Every project, team and task in it will be deleted for all members. This cannot be undone.",
+    "validation": {
+      "nameRequired": "Enter a name.",
+      "nameTooLong": "Use 120 characters or fewer.",
+      "descriptionTooLong": "Use 2,000 characters or fewer.",
+      "urlInvalid": "Enter a full link, starting with https://.",
+      "urlTooLong": "That link is too long.",
+      "emailInvalid": "Enter a valid email address."
+    }
+  },
+  "user": {
+    "profileTitle": "Profile",
+    "profileSubtitle": "How you appear to the people you work with.",
+    "profileLoadFailed": "Could not load this profile.",
+    "profileUpdated": "Your profile has been saved.",
+    "detailsTitle": "Details",
+    "emailReadOnly": "Your email address can’t be changed here.",
+    "avatarUrl": "Avatar URL",
+    "avatarUrlHint": "Optional. A link to an image; files cannot be uploaded yet.",
+    "seniority": "Seniority",
+    "seniorityNotSet": "Not set",
+    "skillsTitle": "Skills",
+    "skillsEmpty": "You haven’t added any skills yet.",
+    "otherSkillsEmpty": "No skills listed.",
+    "skillAddLabel": "Add a skill",
+    "skillAdd": "Add skill",
+    "skillRemove": "Remove {{skill}}",
+    "expertiseTitle": "Expertise",
+    "expertiseSubtitle": "Areas you know well, and how confident you are in each. Task assignment suggestions use these.",
+    "expertiseEmpty": "You haven’t added any expertise yet.",
+    "otherExpertiseEmpty": "No expertise listed.",
+    "expertiseTag": "Area",
+    "expertiseConfidence": "Confidence (%)",
+    "expertiseConfidenceFor": "Confidence in {{tag}}",
+    "expertiseAdd": "Add expertise",
+    "expertiseRemove": "Remove {{tag}}",
+    "percent": "{{value}}%",
+    "teamsTitle": "Teams",
+    "teamsEmpty": "Not on any team yet.",
+    "validation": {
+      "nameRequired": "Enter your name.",
+      "nameTooLong": "Name must be 100 characters or fewer.",
+      "urlInvalid": "Enter a full link, starting with https://.",
+      "urlTooLong": "That link is too long.",
+      "skillRequired": "Enter a skill.",
+      "skillTooLong": "Use 50 characters or fewer.",
+      "skillDuplicate": "You’ve already added that skill.",
+      "tagRequired": "Enter an area of expertise.",
+      "tagTooLong": "Use 50 characters or fewer.",
+      "confidenceRange": "Enter a whole number from 0 to 100."
+    }
   }
 }

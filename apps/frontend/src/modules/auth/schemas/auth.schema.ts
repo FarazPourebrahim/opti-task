@@ -68,20 +68,4 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
-/**
- * Collapses a zod error into the per-field shape a form renders.
- *
- * Messages are i18n keys, never literals — the same rule `ApiError` follows.
- */
-export function toFieldErrors(error: z.ZodError): Record<string, string> {
-  const fields: Record<string, string> = {};
-
-  for (const issue of error.issues) {
-    const field = issue.path[0];
-    if (typeof field === 'string' && !fields[field]) {
-      fields[field] = issue.message;
-    }
-  }
-
-  return fields;
-}
+export { toFieldErrors } from '@/shared/utils/form.utils';

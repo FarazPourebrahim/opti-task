@@ -8,6 +8,11 @@ import type { ParseKeys } from 'i18next';
  */
 export type RouteHandle = {
   crumb?: ParseKeys;
+  /**
+   * Lets the page name this crumb from loaded data (an organisation's name)
+   * through `useBreadcrumbLabel`; `crumb` is what shows until it does.
+   */
+  crumbId?: string;
 };
 
 export function isRouteHandle(value: unknown): value is RouteHandle {

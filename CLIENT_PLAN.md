@@ -296,7 +296,7 @@ line is not done, regardless of whether the feature "works".
 | 4 | Auth & Session | 40% | ✅ |
 | A1 | Avero Migration (amendment) | 40% | ✅ |
 | 5 | App Shell, Routing & Guards | 47% | ✅ |
-| 6 | Organization & Members | 54% | ⬜ |
+| 6 | Organization & Members | 54% | ✅ |
 | 7 | Project & Team | 61% | ⬜ |
 | 8 | Task — Board, List & Detail | 72% | ⬜ |
 | 9 | Sprint & Epic | 79% | ⬜ |
@@ -306,7 +306,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 47%** (Phases 0–5 and Amendment A1 complete).
+**Current overall progress: 54%** (Phases 0–6 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -596,7 +596,7 @@ feature ever thinks about transport.
 | ID | Task | Status |
 |---|---|:--:|
 | F5.1 | React Router v7 data router; all paths as constants in `shared/routes/` — no string literals in `App.tsx` | ✅ |
-| F5.2 | `AppLayout` — sidebar (nav), topbar (breadcrumbs, search, user menu), content region. Built from Avero's `SidebarNav`, `Drawer`, `DropdownMenu` and `Avatar`; `DashboardShell` was not used (see known-debt). The org + project switcher lands with F6.1 / F7.1 and the notification bell with F11.1 — each needs queries those phases own | ✅ |
+| F5.2 | `AppLayout` — sidebar (nav), topbar (breadcrumbs, search, user menu), content region. Built from Avero's `SidebarNav`, `Drawer`, `DropdownMenu` and `Avatar`; `DashboardShell` was not used (see known-debt). Phase 6 added the Organisations destination to the sidebar; a project switcher lands with F7.2 and the notification bell with F11.1 — each needs queries those phases own | ✅ |
 | F5.3 | `ProtectedRoute` + `GuestRoute` (auth) + `RequireCapability` (hint-only hide) | ✅ |
 | F5.4 | `shared/lib/capabilities.ts` — derive capability hints from the user's role using the `@contracts` vocabulary; documented as a hint, never authority | ✅ |
 | F5.5 | Route-level code splitting + Suspense skeletons per route | ✅ |
@@ -657,28 +657,47 @@ feature ever thinks about transport.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F6.1 | `Organizations.page.tsx` — `myOrganizations` paginated, create-org flow | ⬜ |
-| F6.2 | `OrganizationDetail.page.tsx` — overview, settings, logo, update, delete (with `ConfirmDialog`) | ⬜ |
-| F6.3 | Members table — `updateMemberRole`, `removeMember`; owner shown as immutable | ⬜ |
-| F6.4 | Invitations — `organizationInvitations` list, `inviteToOrganization`, `revokeInvitation`, status chips (`PENDING`/`ACCEPTED`/`REVOKED`/`EXPIRED`) | ⬜ |
-| F6.5 | `Profile.page.tsx` — `updateProfile`, avatar, seniority | ⬜ |
-| F6.6 | Skills + expertise editors — `addSkill`, `removeSkill`, `addExpertise` (tag + confidence), `removeExpertise` | ⬜ |
-| F6.7 | Org projects list via `Organization.projects(status)` | ⬜ |
+| F6.1 | `Organizations.page.tsx` — `myOrganizations` paginated, create-org flow | ✅ |
+| F6.2 | `Organization.page.tsx` — the frame (header + tabs) around four routed tabs; settings tab with update and delete (with `ConfirmDialog`). The logo is a URL field: nothing can be uploaded | ✅ |
+| F6.3 | Members table — `updateMemberRole`, `removeMember`; owner shown as immutable | ✅ |
+| F6.4 | Invitations — `organizationInvitations` list, `inviteToOrganization`, `revokeInvitation`, status chips (`PENDING`/`ACCEPTED`/`REVOKED`/`EXPIRED`). The screen states that invitations are **not delivered**: the API sends no email and never returns the link (see known-debt) | ✅ |
+| F6.5 | `Profile.page.tsx` — `updateProfile`, avatar (URL), seniority | ✅ |
+| F6.6 | Skills + expertise editors — `addSkill`, `removeSkill`, `addExpertise` (tag + confidence), `removeExpertise` | ✅ |
+| F6.7 | Org projects list via `Organization.projects(status)` — read-only; rows become links in Phase 7 | ✅ |
+| F6.8 | `UserProfile.page.tsx` — the `user` query: another person's skills, expertise and teams, read-only, linked from the members table | ✅ |
+| F6.9 | Breadcrumbs named from data (`crumbId` + `useBreadcrumbLabel`), so the trail reads "Organisations › Acme Inc. › Members" | ✅ |
+| F6.10 | Shared pieces every later list and form will reuse: `LoadMore` + `useLoadMore`, `SelectField`, `useErrorToast`, `useEntityIdParam` | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Every one of the 11 org/user mutations in Appendix A is reachable from the UI.
-- [ ] An org with no members, no projects and no invitations renders three
-      **distinct** empty states.
-- [ ] Role changes reflect immediately via cache update, with no full refetch.
-- [ ] Destructive actions (delete org, remove member, revoke invitation) require
-      `ConfirmDialog` and name the target explicitly.
-- [ ] A non-admin does not see manage actions **and** a forced attempt still fails
-      gracefully with a toast (proves the hint is not the guard).
-- [ ] Expertise `confidenceScore` input is bounded and validated client-side.
-- [ ] Pagination works past one page; `first` never exceeds 100.
-- [ ] Tests: success, `BAD_USER_INPUT` (invalid invite email), `FORBIDDEN`
-      (member tries to invite), network failure.
+- [x] Every profile and organisation mutation in Appendix A is reachable from the
+      UI (12, plus `acceptInvitation` from Phase 4).
+- [x] No members, no projects and no invitations each render their own empty
+      state, and "no projects in this status" is a fourth, distinct from "no
+      projects yet". (The no-members state exists but cannot occur: the owner
+      is always a member.)
+- [x] A role change updates the table from the mutation result — asserted by
+      counting requests: the organisation is fetched exactly once.
+- [x] Delete organisation, remove member and revoke invitation each require a
+      `ConfirmDialog` that names the target; each test asserts nothing is sent
+      before the confirmation.
+- [x] A plain member sees no manage controls and no admin tabs. A refusal on a
+      control that *was* shown (the hint said yes, the server said no) produces
+      a toast and leaves the data as it was. Opening an admin tab by URL renders
+      the Forbidden screen.
+- [x] Expertise confidence is collected as a whole percentage (0–100), validated
+      before any request, and sent as the 0–1 fraction the API stores.
+- [x] Pagination past one page is asserted on the organisation list: the second
+      page appends, the cursor is sent back untouched, and no request asks for
+      more than 100. Members and projects page through the same `useLoadMore`
+      hook but are not separately asserted.
+- [x] Tests cover success, `BAD_USER_INPUT`, `FORBIDDEN`, `CONFLICT` and a
+      network failure, and assert that the server's own error text never reaches
+      the screen. 83 new tests; the suite is 244 tests in 15 files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing here has run against the real backend — every response in the tests
+> is a mock shaped from the SDL.
 
 ---
 
@@ -1039,11 +1058,11 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `health` | 14 | ⬜ |
 | `me` | 4 | ✅ |
 | `sessions` | 4 | ✅ |
-| `user` | 6 | ⬜ |
+| `user` | 6 | ✅ |
 | `users` | ➖ | ➖ unscoped (known-debt) — deliberately unused; pickers use scoped membership |
-| `organization` | 6 | ⬜ |
-| `myOrganizations` | 6 | ⬜ |
-| `organizationInvitations` | 6 | ⬜ |
+| `organization` | 6 | ✅ |
+| `myOrganizations` | 6 | ✅ |
+| `organizationInvitations` | 6 | ✅ |
 | `project` | 7 | ⬜ |
 | `team` | 7 | ⬜ |
 | `task` | 8 | ⬜ |
@@ -1062,8 +1081,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Group | Operations | Phase | Status |
 |---|---|---|:--:|
 | Auth | `register` `login` `refreshToken` `logout` `changePassword` `requestPasswordReset` `revokeSession` | 4 | ✅ — `requestPasswordReset` is wired but deliberately has no screen (backend stub, see known-debt) |
-| Profile | `updateProfile` `addSkill` `removeSkill` `addExpertise` `removeExpertise` | 6 | ⬜ |
-| Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ⬜ |
+| Profile | `updateProfile` `addSkill` `removeSkill` `addExpertise` `removeExpertise` | 6 | ✅ |
+| Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ✅ — `updateOrganization.settings` (free-form JSON) is not surfaced; nothing reads it yet |
 | Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ⬜ |
 | Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ⬜ |
 | Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ⬜ |

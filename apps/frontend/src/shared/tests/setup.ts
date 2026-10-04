@@ -1,10 +1,39 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { toHaveNoViolations } from 'jest-axe';
 import { afterAll, afterEach, beforeAll, expect } from 'vitest';
 import { server } from './server';
 
 expect.extend(toHaveNoViolations);
+
+/*
+ * Every page is a lazy chunk, so the first render of a route waits on a real
+ * dynamic import. Under a parallel run that can outlast the 1s default, and
+ * the test then fails on a timeout rather than on anything it asserts.
+ */
+configure({ asyncUtilTimeout: 5000 });
+
+/*
+ * The Web Animations spec marks an animation's `finished` promise as handled
+ * when the animation is cancelled, so cancelling one never surfaces as an
+ * unhandled rejection. happy-dom rejects the promise without that marking, and
+ * Avero's toast cancels its progress animation on unmount — which made every
+ * test that showed a toast report an unhandled `AbortError`.
+ */
+const nativeAnimate = Element.prototype.animate as
+  | typeof Element.prototype.animate
+  | undefined;
+
+if (nativeAnimate) {
+  Element.prototype.animate = function animate(
+    this: Element,
+    ...args: Parameters<typeof nativeAnimate>
+  ) {
+    const animation = nativeAnimate.apply(this, args);
+    animation.finished.catch(() => {});
+    return animation;
+  };
+}
 
 /*
  * jsdom gaps that Radix's positioning engine depends on. Without these, any

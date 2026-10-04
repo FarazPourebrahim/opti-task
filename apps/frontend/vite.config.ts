@@ -37,6 +37,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/shared/tests/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Route-level tests load lazy chunks and drive several steps; the 5s
+    // default leaves no room for that under a parallel run.
+    testTimeout: 20_000,
     /*
      * The test DOM performs no layout and computes no styles, so running the
      * Tailwind pipeline here would buy nothing — `vite build` is what compiles
