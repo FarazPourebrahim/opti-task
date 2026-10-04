@@ -240,8 +240,16 @@ describe('project frame', () => {
   });
 
   it.each<[string, 'ADMIN' | 'MEMBER', string[]]>([
-    ['a project admin', 'ADMIN', ['Overview', 'Members', 'Teams', 'Settings']],
-    ['a project member', 'MEMBER', ['Overview', 'Members', 'Teams']],
+    [
+      'a project admin',
+      'ADMIN',
+      ['Overview', 'Board', 'Tasks', 'Members', 'Teams', 'Settings'],
+    ],
+    [
+      'a project member',
+      'MEMBER',
+      ['Overview', 'Board', 'Tasks', 'Members', 'Teams'],
+    ],
   ])('shows the right tabs to %s', async (_label, role, expected) => {
     // Arrange
     server.use(...projectScenario({ project: role }));

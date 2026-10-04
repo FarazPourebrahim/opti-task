@@ -45,6 +45,31 @@ type Documents = {
   '\n  mutation AddProjectMember(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    addProjectMember(projectId: $projectId, userId: $userId, role: $role) {\n      id\n      role\n    }\n  }\n': typeof types.AddProjectMemberDocument;
   '\n  mutation UpdateProjectMemberRole(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    updateProjectMemberRole(\n      projectId: $projectId\n      userId: $userId\n      role: $role\n    ) {\n      id\n      role\n    }\n  }\n': typeof types.UpdateProjectMemberRoleDocument;
   '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n': typeof types.RemoveProjectMemberDocument;
+  '\n  fragment TaskPerson on User {\n    id\n    name\n    avatarUrl\n  }\n': typeof types.TaskPersonFragmentDoc;
+  '\n  fragment TaskCard on Task {\n    id\n    title\n    priority\n    status\n    storyPoints\n    projectId\n    assigneeId\n    reporterId\n    sprintId\n    epicId\n    dueDate\n    createdAt\n    assignee {\n      ...TaskPerson\n    }\n    labels {\n      id\n      name\n    }\n  }\n': typeof types.TaskCardFragmentDoc;
+  '\n  fragment TaskPage on TaskConnection {\n    edges {\n      cursor\n      node {\n        ...TaskCard\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    totalCount\n  }\n': typeof types.TaskPageFragmentDoc;
+  '\n  fragment TaskDetail on Task {\n    ...TaskCard\n    description\n    loggedSeconds\n    updatedAt\n    reporter {\n      ...TaskPerson\n    }\n    watchers {\n      ...TaskPerson\n    }\n    dependencies {\n      id\n      title\n      status\n    }\n  }\n': typeof types.TaskDetailFragmentDoc;
+  '\n  fragment TaskActivity on ActivityLog {\n    id\n    type\n    metadata\n    createdAt\n    actor {\n      id\n      name\n    }\n  }\n': typeof types.TaskActivityFragmentDoc;
+  '\n  query ProjectBoard($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      backlog: tasks(first: $first, filter: { status: BACKLOG }) {\n        ...TaskPage\n      }\n      todo: tasks(first: $first, filter: { status: TODO }) {\n        ...TaskPage\n      }\n      inProgress: tasks(first: $first, filter: { status: IN_PROGRESS }) {\n        ...TaskPage\n      }\n      inReview: tasks(first: $first, filter: { status: IN_REVIEW }) {\n        ...TaskPage\n      }\n      testing: tasks(first: $first, filter: { status: TESTING }) {\n        ...TaskPage\n      }\n      done: tasks(first: $first, filter: { status: DONE }) {\n        ...TaskPage\n      }\n      blocked: tasks(first: $first, filter: { status: BLOCKED }) {\n        ...TaskPage\n      }\n    }\n  }\n': typeof types.ProjectBoardDocument;
+  '\n  query ProjectBoardColumn(\n    $projectId: UUID!\n    $status: TaskStatus!\n    $first: Int\n    $after: String\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, after: $after, filter: { status: $status }) {\n        ...TaskPage\n      }\n    }\n  }\n': typeof types.ProjectBoardColumnDocument;
+  '\n  query ProjectTasks(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $filter: TaskFilter\n    $sortField: TaskSortField\n    $sortDirection: SortDirection\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(\n        first: $first\n        after: $after\n        filter: $filter\n        sortField: $sortField\n        sortDirection: $sortDirection\n      ) {\n        ...TaskPage\n      }\n    }\n  }\n': typeof types.ProjectTasksDocument;
+  '\n  query ProjectTaskOptions($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.ProjectTaskOptionsDocument;
+  '\n  query ProjectPlanning($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n            state\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      epics(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.ProjectPlanningDocument;
+  '\n  query Task($id: UUID!, $activitiesFirst: Int, $activitiesAfter: String) {\n    task(id: $id) {\n      ...TaskDetail\n      activities(first: $activitiesFirst, after: $activitiesAfter) {\n        edges {\n          cursor\n          node {\n            ...TaskActivity\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.TaskDocument;
+  '\n  mutation CreateTask($projectId: UUID!, $input: CreateTaskInput!) {\n    createTask(projectId: $projectId, input: $input) {\n      ...TaskCard\n    }\n  }\n': typeof types.CreateTaskDocument;
+  '\n  mutation UpdateTask($id: UUID!, $input: UpdateTaskInput!) {\n    updateTask(id: $id, input: $input) {\n      id\n      title\n      description\n      priority\n      dueDate\n      updatedAt\n    }\n  }\n': typeof types.UpdateTaskDocument;
+  '\n  mutation ChangeTaskStatus($id: UUID!, $status: TaskStatus!) {\n    changeTaskStatus(id: $id, status: $status) {\n      __typename\n      id\n      status\n    }\n  }\n': typeof types.ChangeTaskStatusDocument;
+  '\n  mutation AssignTask($id: UUID!, $assigneeId: UUID) {\n    assignTask(id: $id, assigneeId: $assigneeId) {\n      __typename\n      id\n      assigneeId\n      assignee {\n        __typename\n        ...TaskPerson\n      }\n    }\n  }\n': typeof types.AssignTaskDocument;
+  '\n  mutation SetTaskStoryPoints($id: UUID!, $storyPoints: Int) {\n    setTaskStoryPoints(id: $id, storyPoints: $storyPoints) {\n      __typename\n      id\n      storyPoints\n    }\n  }\n': typeof types.SetTaskStoryPointsDocument;
+  '\n  mutation MoveTaskToSprint($id: UUID!, $sprintId: UUID) {\n    moveTaskToSprint(id: $id, sprintId: $sprintId) {\n      id\n      sprintId\n    }\n  }\n': typeof types.MoveTaskToSprintDocument;
+  '\n  mutation DeleteTask($id: UUID!) {\n    deleteTask(id: $id)\n  }\n': typeof types.DeleteTaskDocument;
+  '\n  mutation LogTaskTime($id: UUID!, $seconds: Int!) {\n    logTaskTime(id: $id, seconds: $seconds) {\n      id\n      loggedSeconds\n    }\n  }\n': typeof types.LogTaskTimeDocument;
+  '\n  mutation AddTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    addTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n': typeof types.AddTaskDependencyDocument;
+  '\n  mutation RemoveTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    removeTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n': typeof types.RemoveTaskDependencyDocument;
+  '\n  mutation WatchTask($taskId: UUID!) {\n    watchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n': typeof types.WatchTaskDocument;
+  '\n  mutation UnwatchTask($taskId: UUID!) {\n    unwatchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n': typeof types.UnwatchTaskDocument;
+  '\n  mutation AddTaskLabel($taskId: UUID!, $name: String!) {\n    addTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n': typeof types.AddTaskLabelDocument;
+  '\n  mutation RemoveTaskLabel($taskId: UUID!, $name: String!) {\n    removeTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n': typeof types.RemoveTaskLabelDocument;
   '\n  query Team($id: UUID!) {\n    team(id: $id) {\n      id\n      name\n      description\n      projectId\n      memberCount\n      members {\n        id\n        role\n        responsibilities\n        availability\n        workload\n        createdAt\n        user {\n          id\n          name\n          email\n          avatarUrl\n        }\n      }\n    }\n  }\n': typeof types.TeamDocument;
   '\n  mutation CreateTeam($projectId: UUID!, $input: CreateTeamInput!) {\n    createTeam(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      memberCount\n    }\n  }\n': typeof types.CreateTeamDocument;
   '\n  mutation UpdateTeam($id: UUID!, $input: UpdateTeamInput!) {\n    updateTeam(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n': typeof types.UpdateTeamDocument;
@@ -123,6 +148,56 @@ const documents: Documents = {
     types.UpdateProjectMemberRoleDocument,
   '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n':
     types.RemoveProjectMemberDocument,
+  '\n  fragment TaskPerson on User {\n    id\n    name\n    avatarUrl\n  }\n':
+    types.TaskPersonFragmentDoc,
+  '\n  fragment TaskCard on Task {\n    id\n    title\n    priority\n    status\n    storyPoints\n    projectId\n    assigneeId\n    reporterId\n    sprintId\n    epicId\n    dueDate\n    createdAt\n    assignee {\n      ...TaskPerson\n    }\n    labels {\n      id\n      name\n    }\n  }\n':
+    types.TaskCardFragmentDoc,
+  '\n  fragment TaskPage on TaskConnection {\n    edges {\n      cursor\n      node {\n        ...TaskCard\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    totalCount\n  }\n':
+    types.TaskPageFragmentDoc,
+  '\n  fragment TaskDetail on Task {\n    ...TaskCard\n    description\n    loggedSeconds\n    updatedAt\n    reporter {\n      ...TaskPerson\n    }\n    watchers {\n      ...TaskPerson\n    }\n    dependencies {\n      id\n      title\n      status\n    }\n  }\n':
+    types.TaskDetailFragmentDoc,
+  '\n  fragment TaskActivity on ActivityLog {\n    id\n    type\n    metadata\n    createdAt\n    actor {\n      id\n      name\n    }\n  }\n':
+    types.TaskActivityFragmentDoc,
+  '\n  query ProjectBoard($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      backlog: tasks(first: $first, filter: { status: BACKLOG }) {\n        ...TaskPage\n      }\n      todo: tasks(first: $first, filter: { status: TODO }) {\n        ...TaskPage\n      }\n      inProgress: tasks(first: $first, filter: { status: IN_PROGRESS }) {\n        ...TaskPage\n      }\n      inReview: tasks(first: $first, filter: { status: IN_REVIEW }) {\n        ...TaskPage\n      }\n      testing: tasks(first: $first, filter: { status: TESTING }) {\n        ...TaskPage\n      }\n      done: tasks(first: $first, filter: { status: DONE }) {\n        ...TaskPage\n      }\n      blocked: tasks(first: $first, filter: { status: BLOCKED }) {\n        ...TaskPage\n      }\n    }\n  }\n':
+    types.ProjectBoardDocument,
+  '\n  query ProjectBoardColumn(\n    $projectId: UUID!\n    $status: TaskStatus!\n    $first: Int\n    $after: String\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, after: $after, filter: { status: $status }) {\n        ...TaskPage\n      }\n    }\n  }\n':
+    types.ProjectBoardColumnDocument,
+  '\n  query ProjectTasks(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $filter: TaskFilter\n    $sortField: TaskSortField\n    $sortDirection: SortDirection\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(\n        first: $first\n        after: $after\n        filter: $filter\n        sortField: $sortField\n        sortDirection: $sortDirection\n      ) {\n        ...TaskPage\n      }\n    }\n  }\n':
+    types.ProjectTasksDocument,
+  '\n  query ProjectTaskOptions($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.ProjectTaskOptionsDocument,
+  '\n  query ProjectPlanning($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n            state\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      epics(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.ProjectPlanningDocument,
+  '\n  query Task($id: UUID!, $activitiesFirst: Int, $activitiesAfter: String) {\n    task(id: $id) {\n      ...TaskDetail\n      activities(first: $activitiesFirst, after: $activitiesAfter) {\n        edges {\n          cursor\n          node {\n            ...TaskActivity\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.TaskDocument,
+  '\n  mutation CreateTask($projectId: UUID!, $input: CreateTaskInput!) {\n    createTask(projectId: $projectId, input: $input) {\n      ...TaskCard\n    }\n  }\n':
+    types.CreateTaskDocument,
+  '\n  mutation UpdateTask($id: UUID!, $input: UpdateTaskInput!) {\n    updateTask(id: $id, input: $input) {\n      id\n      title\n      description\n      priority\n      dueDate\n      updatedAt\n    }\n  }\n':
+    types.UpdateTaskDocument,
+  '\n  mutation ChangeTaskStatus($id: UUID!, $status: TaskStatus!) {\n    changeTaskStatus(id: $id, status: $status) {\n      __typename\n      id\n      status\n    }\n  }\n':
+    types.ChangeTaskStatusDocument,
+  '\n  mutation AssignTask($id: UUID!, $assigneeId: UUID) {\n    assignTask(id: $id, assigneeId: $assigneeId) {\n      __typename\n      id\n      assigneeId\n      assignee {\n        __typename\n        ...TaskPerson\n      }\n    }\n  }\n':
+    types.AssignTaskDocument,
+  '\n  mutation SetTaskStoryPoints($id: UUID!, $storyPoints: Int) {\n    setTaskStoryPoints(id: $id, storyPoints: $storyPoints) {\n      __typename\n      id\n      storyPoints\n    }\n  }\n':
+    types.SetTaskStoryPointsDocument,
+  '\n  mutation MoveTaskToSprint($id: UUID!, $sprintId: UUID) {\n    moveTaskToSprint(id: $id, sprintId: $sprintId) {\n      id\n      sprintId\n    }\n  }\n':
+    types.MoveTaskToSprintDocument,
+  '\n  mutation DeleteTask($id: UUID!) {\n    deleteTask(id: $id)\n  }\n':
+    types.DeleteTaskDocument,
+  '\n  mutation LogTaskTime($id: UUID!, $seconds: Int!) {\n    logTaskTime(id: $id, seconds: $seconds) {\n      id\n      loggedSeconds\n    }\n  }\n':
+    types.LogTaskTimeDocument,
+  '\n  mutation AddTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    addTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n':
+    types.AddTaskDependencyDocument,
+  '\n  mutation RemoveTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    removeTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n':
+    types.RemoveTaskDependencyDocument,
+  '\n  mutation WatchTask($taskId: UUID!) {\n    watchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n':
+    types.WatchTaskDocument,
+  '\n  mutation UnwatchTask($taskId: UUID!) {\n    unwatchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n':
+    types.UnwatchTaskDocument,
+  '\n  mutation AddTaskLabel($taskId: UUID!, $name: String!) {\n    addTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n':
+    types.AddTaskLabelDocument,
+  '\n  mutation RemoveTaskLabel($taskId: UUID!, $name: String!) {\n    removeTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n':
+    types.RemoveTaskLabelDocument,
   '\n  query Team($id: UUID!) {\n    team(id: $id) {\n      id\n      name\n      description\n      projectId\n      memberCount\n      members {\n        id\n        role\n        responsibilities\n        availability\n        workload\n        createdAt\n        user {\n          id\n          name\n          email\n          avatarUrl\n        }\n      }\n    }\n  }\n':
     types.TeamDocument,
   '\n  mutation CreateTeam($projectId: UUID!, $input: CreateTeamInput!) {\n    createTeam(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      memberCount\n    }\n  }\n':
@@ -355,6 +430,156 @@ export function graphql(
 export function graphql(
   source: '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n',
 ): (typeof documents)['\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment TaskPerson on User {\n    id\n    name\n    avatarUrl\n  }\n',
+): (typeof documents)['\n  fragment TaskPerson on User {\n    id\n    name\n    avatarUrl\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment TaskCard on Task {\n    id\n    title\n    priority\n    status\n    storyPoints\n    projectId\n    assigneeId\n    reporterId\n    sprintId\n    epicId\n    dueDate\n    createdAt\n    assignee {\n      ...TaskPerson\n    }\n    labels {\n      id\n      name\n    }\n  }\n',
+): (typeof documents)['\n  fragment TaskCard on Task {\n    id\n    title\n    priority\n    status\n    storyPoints\n    projectId\n    assigneeId\n    reporterId\n    sprintId\n    epicId\n    dueDate\n    createdAt\n    assignee {\n      ...TaskPerson\n    }\n    labels {\n      id\n      name\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment TaskPage on TaskConnection {\n    edges {\n      cursor\n      node {\n        ...TaskCard\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    totalCount\n  }\n',
+): (typeof documents)['\n  fragment TaskPage on TaskConnection {\n    edges {\n      cursor\n      node {\n        ...TaskCard\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    totalCount\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment TaskDetail on Task {\n    ...TaskCard\n    description\n    loggedSeconds\n    updatedAt\n    reporter {\n      ...TaskPerson\n    }\n    watchers {\n      ...TaskPerson\n    }\n    dependencies {\n      id\n      title\n      status\n    }\n  }\n',
+): (typeof documents)['\n  fragment TaskDetail on Task {\n    ...TaskCard\n    description\n    loggedSeconds\n    updatedAt\n    reporter {\n      ...TaskPerson\n    }\n    watchers {\n      ...TaskPerson\n    }\n    dependencies {\n      id\n      title\n      status\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment TaskActivity on ActivityLog {\n    id\n    type\n    metadata\n    createdAt\n    actor {\n      id\n      name\n    }\n  }\n',
+): (typeof documents)['\n  fragment TaskActivity on ActivityLog {\n    id\n    type\n    metadata\n    createdAt\n    actor {\n      id\n      name\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectBoard($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      backlog: tasks(first: $first, filter: { status: BACKLOG }) {\n        ...TaskPage\n      }\n      todo: tasks(first: $first, filter: { status: TODO }) {\n        ...TaskPage\n      }\n      inProgress: tasks(first: $first, filter: { status: IN_PROGRESS }) {\n        ...TaskPage\n      }\n      inReview: tasks(first: $first, filter: { status: IN_REVIEW }) {\n        ...TaskPage\n      }\n      testing: tasks(first: $first, filter: { status: TESTING }) {\n        ...TaskPage\n      }\n      done: tasks(first: $first, filter: { status: DONE }) {\n        ...TaskPage\n      }\n      blocked: tasks(first: $first, filter: { status: BLOCKED }) {\n        ...TaskPage\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectBoard($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      backlog: tasks(first: $first, filter: { status: BACKLOG }) {\n        ...TaskPage\n      }\n      todo: tasks(first: $first, filter: { status: TODO }) {\n        ...TaskPage\n      }\n      inProgress: tasks(first: $first, filter: { status: IN_PROGRESS }) {\n        ...TaskPage\n      }\n      inReview: tasks(first: $first, filter: { status: IN_REVIEW }) {\n        ...TaskPage\n      }\n      testing: tasks(first: $first, filter: { status: TESTING }) {\n        ...TaskPage\n      }\n      done: tasks(first: $first, filter: { status: DONE }) {\n        ...TaskPage\n      }\n      blocked: tasks(first: $first, filter: { status: BLOCKED }) {\n        ...TaskPage\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectBoardColumn(\n    $projectId: UUID!\n    $status: TaskStatus!\n    $first: Int\n    $after: String\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, after: $after, filter: { status: $status }) {\n        ...TaskPage\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectBoardColumn(\n    $projectId: UUID!\n    $status: TaskStatus!\n    $first: Int\n    $after: String\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, after: $after, filter: { status: $status }) {\n        ...TaskPage\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectTasks(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $filter: TaskFilter\n    $sortField: TaskSortField\n    $sortDirection: SortDirection\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(\n        first: $first\n        after: $after\n        filter: $filter\n        sortField: $sortField\n        sortDirection: $sortDirection\n      ) {\n        ...TaskPage\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectTasks(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $filter: TaskFilter\n    $sortField: TaskSortField\n    $sortDirection: SortDirection\n  ) {\n    project(id: $projectId) {\n      id\n      tasks(\n        first: $first\n        after: $after\n        filter: $filter\n        sortField: $sortField\n        sortDirection: $sortDirection\n      ) {\n        ...TaskPage\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectTaskOptions($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectTaskOptions($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectPlanning($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n            state\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      epics(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectPlanning($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n            state\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      epics(first: $first) {\n        edges {\n          cursor\n          node {\n            id\n            name\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Task($id: UUID!, $activitiesFirst: Int, $activitiesAfter: String) {\n    task(id: $id) {\n      ...TaskDetail\n      activities(first: $activitiesFirst, after: $activitiesAfter) {\n        edges {\n          cursor\n          node {\n            ...TaskActivity\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query Task($id: UUID!, $activitiesFirst: Int, $activitiesAfter: String) {\n    task(id: $id) {\n      ...TaskDetail\n      activities(first: $activitiesFirst, after: $activitiesAfter) {\n        edges {\n          cursor\n          node {\n            ...TaskActivity\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateTask($projectId: UUID!, $input: CreateTaskInput!) {\n    createTask(projectId: $projectId, input: $input) {\n      ...TaskCard\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateTask($projectId: UUID!, $input: CreateTaskInput!) {\n    createTask(projectId: $projectId, input: $input) {\n      ...TaskCard\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateTask($id: UUID!, $input: UpdateTaskInput!) {\n    updateTask(id: $id, input: $input) {\n      id\n      title\n      description\n      priority\n      dueDate\n      updatedAt\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateTask($id: UUID!, $input: UpdateTaskInput!) {\n    updateTask(id: $id, input: $input) {\n      id\n      title\n      description\n      priority\n      dueDate\n      updatedAt\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ChangeTaskStatus($id: UUID!, $status: TaskStatus!) {\n    changeTaskStatus(id: $id, status: $status) {\n      __typename\n      id\n      status\n    }\n  }\n',
+): (typeof documents)['\n  mutation ChangeTaskStatus($id: UUID!, $status: TaskStatus!) {\n    changeTaskStatus(id: $id, status: $status) {\n      __typename\n      id\n      status\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AssignTask($id: UUID!, $assigneeId: UUID) {\n    assignTask(id: $id, assigneeId: $assigneeId) {\n      __typename\n      id\n      assigneeId\n      assignee {\n        __typename\n        ...TaskPerson\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation AssignTask($id: UUID!, $assigneeId: UUID) {\n    assignTask(id: $id, assigneeId: $assigneeId) {\n      __typename\n      id\n      assigneeId\n      assignee {\n        __typename\n        ...TaskPerson\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation SetTaskStoryPoints($id: UUID!, $storyPoints: Int) {\n    setTaskStoryPoints(id: $id, storyPoints: $storyPoints) {\n      __typename\n      id\n      storyPoints\n    }\n  }\n',
+): (typeof documents)['\n  mutation SetTaskStoryPoints($id: UUID!, $storyPoints: Int) {\n    setTaskStoryPoints(id: $id, storyPoints: $storyPoints) {\n      __typename\n      id\n      storyPoints\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation MoveTaskToSprint($id: UUID!, $sprintId: UUID) {\n    moveTaskToSprint(id: $id, sprintId: $sprintId) {\n      id\n      sprintId\n    }\n  }\n',
+): (typeof documents)['\n  mutation MoveTaskToSprint($id: UUID!, $sprintId: UUID) {\n    moveTaskToSprint(id: $id, sprintId: $sprintId) {\n      id\n      sprintId\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteTask($id: UUID!) {\n    deleteTask(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteTask($id: UUID!) {\n    deleteTask(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation LogTaskTime($id: UUID!, $seconds: Int!) {\n    logTaskTime(id: $id, seconds: $seconds) {\n      id\n      loggedSeconds\n    }\n  }\n',
+): (typeof documents)['\n  mutation LogTaskTime($id: UUID!, $seconds: Int!) {\n    logTaskTime(id: $id, seconds: $seconds) {\n      id\n      loggedSeconds\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    addTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    addTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RemoveTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    removeTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation RemoveTaskDependency($taskId: UUID!, $dependsOnTaskId: UUID!) {\n    removeTaskDependency(taskId: $taskId, dependsOnTaskId: $dependsOnTaskId) {\n      id\n      dependencies {\n        id\n        title\n        status\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation WatchTask($taskId: UUID!) {\n    watchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation WatchTask($taskId: UUID!) {\n    watchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UnwatchTask($taskId: UUID!) {\n    unwatchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation UnwatchTask($taskId: UUID!) {\n    unwatchTask(taskId: $taskId) {\n      id\n      watchers {\n        ...TaskPerson\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddTaskLabel($taskId: UUID!, $name: String!) {\n    addTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddTaskLabel($taskId: UUID!, $name: String!) {\n    addTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RemoveTaskLabel($taskId: UUID!, $name: String!) {\n    removeTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation RemoveTaskLabel($taskId: UUID!, $name: String!) {\n    removeTaskLabel(taskId: $taskId, name: $name) {\n      id\n      labels {\n        id\n        name\n      }\n    }\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

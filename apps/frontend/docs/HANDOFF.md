@@ -9,8 +9,9 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 
 ## Where things stand
 
-**Progress: 61%** — Phases 0–7 and Amendment A1 are complete. **Next: Phase 8,
-Task — Board, List & Detail.**
+**Progress: 61%** — Phases 0–7 and Amendment A1 are complete. **Phase 8 (Task —
+Board, List & Detail) is built except for pointer dragging and list windowing**,
+which need two packages that could not be installed; see "Phase 8" below.
 
 | Phase | What exists |
 |---|---|
@@ -20,15 +21,16 @@ Task — Board, List & Detail.**
 | 5 | Router, guards, app shell, breadcrumbs, command palette, error screens |
 | 6 | Organisations (list, members, invitations, settings), own profile, other users' profiles |
 | 7 | Projects (overview, status, members, workflow, settings), teams and team members |
+| 8 | Tasks: board with keyboard and tap moves, filtered list, detail page with every task mutation |
 
 Verified at handoff: `pnpm --filter optitask-frontend run verify` exits 0
-(typecheck, lint, query-depth check, **349 tests in 17 files**) and
+(typecheck, lint, query-depth check, **423 tests in 18 files**) and
 `run build` succeeds.
 
 **Never verified:** nothing has been seen in a browser, and nothing has run
 against the real backend. Every response in the tests is a mock shaped from the
-SDL. Seven phases of UI are unseen — a visual pass at 360px and desktop width is
-overdue and was recommended to the owner before Phase 8.
+SDL. Eight phases of UI are unseen — a visual pass at 360px and desktop width is
+overdue and has been recommended to the owner more than once.
 
 ---
 
@@ -36,11 +38,11 @@ overdue and was recommended to the owner before Phase 8.
 
 | Branch | State |
 |---|---|
-| `frontend/F7` | Phase 7. Pushed. **Not merged** into `frontend/main` — the owner had not yet said to. |
-| `frontend/main` | Phases 0–6 + A1. Pushed, in sync with origin. |
+| `frontend/F8` | Phase 8 so far. Pushed. **Not merged** — the phase is not complete. |
+| `frontend/main` | Phases 0–7 + A1. Pushed, in sync with origin. |
 | `main` | **Local is 2 commits ahead of `origin/main`** (the merge of the partner's amber `colors.md`). `git push origin main` is **rejected by a repository rule** — do not work around it; the owner must push or open a PR. |
 | `ai/main` | The AI team's branch. Leave it alone. |
-| `frontend/F5`, `F6`, `averoui-migration` | Merged; kept locally. |
+| `frontend/F5`, `F6`, `F7`, `averoui-migration` | Merged; kept locally. |
 
 Workflow the owner has confirmed, phase by phase:
 
@@ -78,7 +80,7 @@ These came from the owner and are binding. All are recorded in `CLIENT_PLAN.md`
 
 Still undecided, and worth raising:
 
-- Whether to look at the app in a browser before Phase 8.
+- Whether to look at the app in a browser before more is built on it.
 - Deployment topology (same registrable domain or not) — decides whether the
   `SameSite=Lax` cookies work in production (risk R2).
 
@@ -177,7 +179,11 @@ src/
   Persian, right-to-left.
 - Missing from Avero: classic tabs, keyboard-key, a "load more", an error
   state, an app shell. `DashboardShell` was evaluated and not used.
-- Phase 8 will need drag-and-drop and virtualization; Avero has neither.
+- Avero has neither drag-and-drop nor virtualization; see Phase 8 below.
+- `DatePicker` reports `YYYY-MM-DD` and parses typed `yyyy/mm/dd`. Convert
+  with `dateInputToApi` / `apiToDateInput`.
+- A `Select` cannot hold an empty value: "nothing chosen" needs a named
+  sentinel option (see `TaskFilters`).
 - Phase 9/13 charts: `@averoui/charts` (Recharts wrappers) exists but is not
   installed.
 
@@ -223,37 +229,30 @@ src/
 
 ---
 
-## Phase 8 — what to build next
+## Phase 8 — what is left
 
-Tracker and exit criteria are in `CLIENT_PLAN.md` (F8.1–F8.16). Notes that are
-not in the plan:
+Tracker and exit criteria are in `CLIENT_PLAN.md`. Everything is ✅ except F8.2
+(windowing) and F8.3 (pointer dragging).
 
-- **Where it goes**: new tabs in `Project.page.tsx` (Board, Backlog/List) and
-  nested routes under `ROUTES.project`; task detail at
-  `/projects/:projectId/tasks/:taskId`. The project frame already supplies the
-  project, its members (assignee picker candidates) and the viewer's roles.
-- **Start with fragments** (F8.1): `task.operations.ts`, depth ≤ 12, then
-  codegen.
-- **Status state machine**: mirror `TASK_STATUS_TRANSITIONS` from
-  `apps/backend/src/modules/task/task.model.ts` the way
-  `project.utils.ts` mirrors the project one, with a full table test.
-- **Optimistic updates** are required here (status, assignment, story points)
-  with tested rollback — unlike project status, which is deliberately not
-  optimistic.
-- **Filters**: `Project.tasks` already has `keyArgs: ['filter', 'sortField',
-  'sortDirection']` in the cache policy; keep previous rows visible while a
-  filter loads (see `useOrganizationProjects`, which uses `previousData`).
-- **`sprintId` / `epicId` are raw ids** on `Task`; names must be resolved from
-  the project's sprint and epic lists. Those lists are Phase 9 — Phase 8 needs
-  at least the read queries for them.
-- **Dependencies to choose**: a drag-and-drop library with a real keyboard
-  path (the exit criteria require grab/move/drop by keyboard) and a
-  virtualizer for 200+ cards. Neither is installed. Say which you picked and
-  why.
-- **Dates**: every date sent must be full RFC-3339 —
-  `toApiDateTime` in `shared/utils/date.utils.ts`. Avero's `DatePicker` output
-  format has **not** been checked against that; do it before the first date
-  input.
-- **Permissions**: `task:update` for a plain member applies only to tasks they
-  are assignee or reporter of — use `canUpdateOwnTask`.
-- The phase is large; the plan suggests sub-branches.
+- **Blocked on the network, not on design.** On 2026-10-04 the npm registry
+  refused the TLS handshake from this machine (`curl` to registry.npmjs.org
+  failed; GitHub worked), so `@dnd-kit/core` and `@tanstack/react-virtual`
+  could not be installed. Try again first:
+  `pnpm --filter optitask-frontend add @dnd-kit/core @tanstack/react-virtual`.
+- **Pointer dragging** goes on top of `modules/task/hooks/useBoardMove.ts`,
+  which already owns the move (pick up → target → drop, legal columns only,
+  announcements, focus). A drag start is `pickUp`, entering a column sets the
+  target, a release is `dropOn`. Keep the keyboard path as it is: it does not
+  depend on geometry, which is why it can be tested in a DOM with no layout.
+- **Windowing**: each `BoardColumn` renders its cards as `<li>` children. The
+  test DOM has no layout, so a virtualizer renders nothing there — window only
+  above a threshold, or stub the measured rect in tests.
+- **How the board stays consistent**: `buildBoardColumns`
+  (`modules/task/utils/task.utils.ts`) places a card by the task's *current*
+  status, not by the list it was fetched in. That is what makes the optimistic
+  status change and its rollback work without editing any cached list. Do not
+  replace it with per-list cache surgery.
+- **Then Phase 9.** `useProjectPlanning` and `ProjectPlanningQuery` already
+  read `Project.sprints` / `Project.epics` for names; Phase 9's screens use the
+  same cached fields and should take those documents over into their own
+  modules.

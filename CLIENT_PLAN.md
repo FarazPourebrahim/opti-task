@@ -90,8 +90,10 @@ superseded.
 - Nothing has been looked at in a browser. The auth screens are not routed
   until Phase 5, so there is no screen to open yet; the first visual pass
   belongs to F5.2.
-- Avero's `DatePicker` has not been checked against the API's requirement for
-  full RFC-3339 values. Do this before the first date input (Phase 8).
+- ~~Avero's `DatePicker` has not been checked against the API's requirement
+  for full RFC-3339 values.~~ Checked in Phase 8: it reports `YYYY-MM-DD`, which
+  `dateInputToApi` turns into a full instant. Asserted end to end in the create
+  task test.
 
 ### Open items — need a change in Avero itself
 
@@ -298,7 +300,7 @@ line is not done, regardless of whether the feature "works".
 | 5 | App Shell, Routing & Guards | 47% | ✅ |
 | 6 | Organization & Members | 54% | ✅ |
 | 7 | Project & Team | 61% | ✅ |
-| 8 | Task — Board, List & Detail | 72% | ⬜ |
+| 8 | Task — Board, List & Detail | 72% | ✅ |
 | 9 | Sprint & Epic | 79% | ⬜ |
 | 10 | Collaboration — Comments & Attachments | 85% | ⬜ |
 | 11 | Notifications & Realtime | 90% | ⬜ |
@@ -306,7 +308,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 61%** (Phases 0–7 and Amendment A1 complete).
+**Current overall progress: 72%** (Phases 0–8 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -757,49 +759,69 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F8.1 | `task.operations.ts` — fragments first; every task field/relation as reusable fragments, depth kept under 12 | ⬜ |
-| F8.2 | `Board.page.tsx` — 7 status columns, virtualized, horizontal scroll container | ⬜ |
-| F8.3 | Drag-and-drop between columns → `changeTaskStatus`, with **keyboard-accessible** move as a first-class path | ⬜ |
-| F8.4 | Status state machine in the client: offer only legal transitions (`BACKLOG ↔ TODO ↔ IN_PROGRESS ↔ IN_REVIEW ↔ TESTING → DONE`, `BLOCKED` from active states, `DONE → IN_PROGRESS` reopen) | ⬜ |
-| F8.5 | `TaskList.page.tsx` — table view with `TaskFilter` (status, priority, assignee, sprint, epic, label), `sortField`, `sortDirection`, cursor pagination | ⬜ |
-| F8.6 | `TaskCard` — priority indicator, story points, assignee avatar, labels, due date, blocked flag | ⬜ |
-| F8.7 | `TaskDetail.page.tsx` — full record; inline edit for title/description/priority/dueDate | ⬜ |
-| F8.8 | Assignment — `assignTask` including unassign (null), sourced from project members | ⬜ |
-| F8.9 | Story points — `setTaskStoryPoints`, including clearing to null | ⬜ |
-| F8.10 | Sprint move — `moveTaskToSprint` (and unassign from sprint) | ⬜ |
-| F8.11 | Dependencies — `addTaskDependency` / `removeTaskDependency`; surface the server's cycle rejection clearly | ⬜ |
-| F8.12 | Time tracking — `logTaskTime` (additive seconds), displayed as human duration | ⬜ |
-| F8.13 | Watchers — `watchTask` / `unwatchTask` with a watch toggle | ⬜ |
-| F8.14 | Labels — `addTaskLabel` / `removeTaskLabel` | ⬜ |
-| F8.15 | Activity timeline — `Task.activities` paginated, one presentation per `ActivityType` | ⬜ |
-| F8.16 | `createTask` modal + `deleteTask` with confirmation | ⬜ |
+| F8.1 | `task.operations.ts` — fragments first; every task field/relation as reusable fragments, depth kept under 12 (deepest path is 6) | ✅ |
+| F8.2 | `Board.page.tsx` — 7 status columns, each with its own count and its own next page, in a horizontal scroll container. A column of more than 30 cards is windowed with `@tanstack/react-virtual` and scrolls on its own; a shorter one renders whole | ✅ |
+| F8.3 | Moving a card → `changeTaskStatus`. Three ways, one state machine (`useBoardMove`): drag with a mouse or a touch (`@dnd-kit/core`), the keyboard (pick up, arrow keys choose a column, drop, Escape cancels), or a tap on the column. Every step is announced through one live region | ✅ |
+| F8.4 | Status state machine in the client, mirroring the backend table: only legal transitions are offered, on the board and on the detail page | ✅ |
+| F8.5 | `TaskList.page.tsx` — table view with `TaskFilter` (status, priority, assignee, sprint, epic, label), `sortField`, `sortDirection`, cursor pagination | ✅ |
+| F8.6 | `TaskCard` — priority, story points, assignee avatar, labels, due date (overdue marked), blocked flag | ✅ |
+| F8.7 | `TaskDetail.page.tsx` — full record; title/description/priority/dueDate edited in place | ✅ |
+| F8.8 | Assignment — `assignTask` including unassign (null), sourced from project members | ✅ |
+| F8.9 | Story points — `setTaskStoryPoints`, including clearing to null | ✅ |
+| F8.10 | Sprint move — `moveTaskToSprint` (and out of a sprint) | ✅ |
+| F8.11 | Dependencies — `addTaskDependency` / `removeTaskDependency`; the server's cycle rejection gets its own message | ✅ |
+| F8.12 | Time tracking — `logTaskTime` (additive seconds), entered as hours and minutes, displayed as a duration | ✅ |
+| F8.13 | Watchers — `watchTask` / `unwatchTask` with a watch toggle | ✅ |
+| F8.14 | Labels — `addTaskLabel` / `removeTaskLabel` | ✅ |
+| F8.15 | Activity timeline — `Task.activities` paginated, one sentence per `ActivityType`, ids resolved to names | ✅ |
+| F8.16 | `createTask` dialog (board and list) + `deleteTask` with confirmation | ✅ |
+| F8.17 | Read queries for the project's sprints and epics, so a task's `sprintId` / `epicId` can be named and picked. Phase 9 builds its screens on the same fields | ✅ |
+| F8.18 | `dateInputToApi` / `apiToDateInput` / `formatCalendarDate` — the Avero `DatePicker` reports `YYYY-MM-DD`; every date sent is a full RFC-3339 instant | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] All 16 task mutations from Appendix A are reachable.
-- [ ] Drag-and-drop has a **fully equivalent keyboard path** (grab, move, drop),
-      tested — not a mouse-only feature.
-- [ ] An illegal transition is never offered by the UI; a server rejection rolls
-      the optimistic update back cleanly.
-- [ ] Optimistic updates are used for status, assignment and story points; every
-      one has a tested rollback path.
-- [ ] Filtering by each of the 6 `TaskFilter` fields works, and combinations do
-      not corrupt the cache (distinct `keyArgs`).
-- [ ] Changing a filter shows previous results while loading — the list never
-      blanks (`keepPreviousData` equivalent).
-- [ ] Three distinct empty states: no tasks in the project, no tasks matching the
-      current filter, no tasks in this column.
-- [ ] A cycle-creating dependency shows a specific, comprehensible error — not a
-      generic failure toast.
-- [ ] `sprintId`/`epicId` render as **names**, resolved from cached project sprint
-      and epic lists (the API returns IDs only).
-- [ ] `loggedSeconds` renders as a duration (`3h 20m`), never a raw number.
-- [ ] The board is usable at 360px (one column visible, horizontally scrollable)
-      and does not scroll the page body sideways.
-- [ ] A board of 200+ tasks scrolls at 60fps — measured in a profile, not assumed.
-- [ ] `axe` → 0 violations on board, list and detail.
-- [ ] Tests: lifecycle, cycle rejection, illegal transition, unassign, filter
-      combinations, `FORBIDDEN` on a viewer, network failure.
+- [x] All 14 task mutations from Appendix A are reachable, and the `task` query.
+      (The plan said 16; the SDL has 14.)
+- [x] Moving a card has a **complete keyboard path** (grab, move, drop), tested:
+      focus follows the card into its new column and every step is announced.
+      A card can also be dragged with a mouse or a touch, tested by laying the
+      columns out for the drag library to measure; nothing is mouse-only.
+- [x] An illegal transition is never offered: only the legal columns become
+      targets (asserted column by column), and a table test covers all 7 × 7
+      pairs. A server rejection rolls the card back and says why (asserted for
+      `BAD_USER_INPUT` and `FORBIDDEN`).
+- [x] Optimistic updates for status, assignment and story points; each has a
+      tested rollback.
+- [x] Filtering by each of the 6 `TaskFilter` fields works; combinations are sent
+      together and each is its own cached list (`keyArgs`).
+- [x] Changing a filter keeps the previous rows on screen while the new ones
+      load (asserted with a held request).
+- [x] Three distinct empty states: no tasks in the project, none matching the
+      filter, none in this column.
+- [x] A cycle-creating dependency shows a specific message, not the generic
+      validation text.
+- [x] `sprintId`/`epicId` render as **names**, resolved from the project's sprint
+      and epic lists; an id that is not listed is described, never printed.
+- [x] `loggedSeconds` renders as a duration (`3h 20m`), never a raw number.
+- [~] The board scrolls sideways inside its own container. That it is usable at
+      360px is **unverified**: the test DOM performs no layout.
+- [~] A board of 200+ tasks at 60fps — **not measured**: it needs a browser.
+      A long column is windowed (asserted: 40 cards loaded, fewer rendered), so
+      the DOM no longer grows with each "load more".
+- [x] `axe` → 0 violations on board, list and detail (the component-level audit;
+      contrast is not covered).
+- [x] Tests: lifecycle, cycle rejection, illegal transition, unassign, filter
+      combinations, `FORBIDDEN` on a viewer, network failure. 79 new tests; the
+      suite is 428 tests in 18 files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing has run against the real backend — every response in the tests is a
+> mock shaped from the SDL.
+
+> Dragging in particular is unseen. The tests drive it with synthetic mouse
+> events over stubbed column rectangles; how it feels — the 8px start
+> threshold, the 250ms touch hold, auto-scroll at the board's edges — can only
+> be judged in a browser.
 
 ---
 
@@ -1077,7 +1099,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `organizationInvitations` | 6 | ✅ |
 | `project` | 7 | ✅ |
 | `team` | 7 | ✅ |
-| `task` | 8 | ⬜ |
+| `task` | 8 | ✅ |
 | `sprint` | 9 | ⬜ |
 | `epic` | 9 | ⬜ |
 | `comment` | 10 | ⬜ |
@@ -1097,7 +1119,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ✅ — `updateOrganization.settings` (free-form JSON) is not surfaced; nothing reads it yet |
 | Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ✅ |
 | Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ✅ |
-| Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ⬜ |
+| Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ✅ |
 | Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ⬜ |
 | Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ⬜ |
 | Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ⬜ |

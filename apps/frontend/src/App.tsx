@@ -86,6 +86,15 @@ const TeamsPage = lazy(async () => ({
 const TeamPage = lazy(async () => ({
   default: (await import('@/modules/team/Team.page')).TeamPage,
 }));
+const BoardPage = lazy(async () => ({
+  default: (await import('@/modules/task/Board.page')).BoardPage,
+}));
+const TaskListPage = lazy(async () => ({
+  default: (await import('@/modules/task/TaskList.page')).TaskListPage,
+}));
+const TaskDetailPage = lazy(async () => ({
+  default: (await import('@/modules/task/TaskDetail.page')).TaskDetailPage,
+}));
 const AppLayout = lazy(async () => ({
   default: (await import('@/modules/shell/components/AppLayout')).AppLayout,
 }));
@@ -204,6 +213,26 @@ export const routes: RouteObject[] = [
                     } satisfies RouteHandle,
                     children: [
                       { index: true, element: <ProjectOverviewPage /> },
+                      {
+                        path: ROUTES.projectBoard,
+                        element: <BoardPage />,
+                        handle: { crumb: 'nav.board' } satisfies RouteHandle,
+                      },
+                      {
+                        path: ROUTES.projectTasks,
+                        handle: { crumb: 'nav.tasks' } satisfies RouteHandle,
+                        children: [
+                          { index: true, element: <TaskListPage /> },
+                          {
+                            path: ROUTES.task,
+                            element: <TaskDetailPage />,
+                            handle: {
+                              crumb: 'nav.task',
+                              crumbId: CRUMB_IDS.task,
+                            } satisfies RouteHandle,
+                          },
+                        ],
+                      },
                       {
                         path: ROUTES.projectMembers,
                         element: <ProjectMembersPage />,

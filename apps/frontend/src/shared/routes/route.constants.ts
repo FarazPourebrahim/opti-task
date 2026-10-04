@@ -25,6 +25,9 @@ export const ROUTES = {
   projectTeams: '/projects/:projectId/teams',
   team: '/projects/:projectId/teams/:teamId',
   projectSettings: '/projects/:projectId/settings',
+  projectBoard: '/projects/:projectId/board',
+  projectTasks: '/projects/:projectId/tasks',
+  task: '/projects/:projectId/tasks/:taskId',
 } as const;
 
 export const ROUTE_PARAMS = {
@@ -33,6 +36,7 @@ export const ROUTE_PARAMS = {
   userId: 'userId',
   projectId: 'projectId',
   teamId: 'teamId',
+  taskId: 'taskId',
 } as const;
 
 /** Ids a route hands to `useBreadcrumbLabel` so its crumb shows a real name. */
@@ -41,6 +45,7 @@ export const CRUMB_IDS = {
   user: 'user',
   project: 'project',
   team: 'team',
+  task: 'task',
 } as const;
 
 export function acceptInvitationPath(token: string): string {
@@ -81,6 +86,18 @@ export function teamPath(projectId: string, teamId: string): string {
 
 export function projectSettingsPath(projectId: string): string {
   return `${projectPath(projectId)}/settings`;
+}
+
+export function projectBoardPath(projectId: string): string {
+  return `${projectPath(projectId)}/board`;
+}
+
+export function projectTasksPath(projectId: string): string {
+  return `${projectPath(projectId)}/tasks`;
+}
+
+export function taskPath(projectId: string, taskId: string): string {
+  return `${projectTasksPath(projectId)}/${encodeURIComponent(taskId)}`;
 }
 
 export function userPath(userId: string): string {
