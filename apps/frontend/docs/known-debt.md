@@ -139,10 +139,10 @@ same Radix primitives.
 - **Why**: each needs a query owned by a later phase (`myOrganizations` in
   Phase 6, `Organization.projects` in Phase 7, the notification feed in Phase
   11). A switcher with nothing to switch between would be a dead control.
-- **Right fix**: F6.1 / F7.1 add the switcher to the sidebar and F11.1 adds the
+- **Right fix**: F7.2 adds a project switcher to the sidebar and F11.1 adds the
   bell to the top bar; both slots are plain JSX in `AppLayout` and `Topbar`.
-- **Impact**: until Phase 6 the sidebar lists Home and the two account screens
-  only.
+- **Impact**: organisations are reached through the sidebar's Organisations
+  destination (added in Phase 6), not a switcher.
 
 - **What**: the shell is built from Avero's `SidebarNav`, `Drawer`,
   `DropdownMenu` and `Avatar`, not from its `DashboardShell`.
@@ -209,6 +209,59 @@ same Radix primitives.
   browser E2E suite later.
 - **Impact**: overflow, spacing and the `lg` switch between sidebar and drawer
   are asserted structurally only.
+
+## Phase 6 — Organization & Members
+
+- **What**: an invitation cannot actually be accepted by the person invited.
+- **Why**: a backend gap, not a client one. `inviteToOrganization` stores a
+  token but sends no email (the email adapter is a no-op), and
+  `OrganizationInvitation` does not expose the token — so neither the invitee
+  nor the inviter ever sees the link.
+- **Right fix**: in the backend, either deliver the link by email or return an
+  accept URL to the inviter so it can be copied. The client's accept screen
+  (`/invitations/:token`) already works.
+- **Impact**: the invitations tab records, lists and revokes invitations, and
+  says in a warning that they are not delivered. Until the backend changes, the
+  only way to add someone to an organisation is outside the UI.
+
+- **What**: the viewer's role on an organisation is inferred from the member
+  list rather than given by the API.
+- **Why**: `Organization` exposes the owner and the members, but nothing like
+  `viewerRole`. The list is paginated, so an admin whose own row is beyond the
+  first page is treated as a plain member until it loads.
+- **Right fix**: an `Organization.viewerRole` (or `viewerPermissions`) field.
+- **Impact**: in an organisation with more than one page of members, an admin
+  can be shown fewer controls than they are entitled to. Never more — the
+  fallback is the least-privileged reading.
+
+- **What**: avatars and logos are set by pasting a URL.
+- **Why**: the API has no upload; `avatarUrl` and `logoUrl` are plain strings.
+- **Right fix**: real file storage on the backend, then an upload control.
+- **Impact**: an image must already be hosted somewhere. The forms say so.
+
+- **What**: the profile shows the email address read-only.
+- **Why**: no operation changes it.
+- **Right fix**: a verified change-email flow on the backend.
+- **Impact**: a user cannot correct their own address.
+
+- **What**: `codegen:check` reports the generated files as stale on a Windows
+  checkout, even immediately after regenerating.
+- **Why**: the repository is checked out with `core.autocrlf=true`, so the
+  files on disk are CRLF while codegen writes LF; the check compares bytes.
+- **Right fix**: a `.gitattributes` that pins generated files (or the whole
+  repo) to `eol=lf`.
+- **Impact**: the drift check is only trustworthy on a Linux runner. Locally,
+  regenerate and read `git diff` instead.
+
+- **What**: the test setup patches `Element.prototype.animate`, raises the
+  async-query timeout to 5s and the test timeout to 20s.
+- **Why**: happy-dom rejects a cancelled animation's `finished` promise without
+  marking it handled, so every test that showed a toast reported an unhandled
+  `AbortError`; and route-level tests wait on real dynamic imports, which
+  outlast the 1s default under a parallel run.
+- **Right fix**: none needed for the timeouts. The animation patch can go if
+  happy-dom follows the spec here.
+- **Impact**: a genuinely slow screen takes longer to fail a test.
 
 ## Amendment A1 — Avero migration
 
