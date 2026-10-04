@@ -14,6 +14,7 @@ export { ErrorState } from './ErrorState';
 export { FormError } from './FormError';
 export { FormField } from './FormField';
 export { LoadMore } from './LoadMore';
+export { MemberPicker } from './MemberPicker';
 export { PageHeader } from './PageHeader';
 export { PageLoader, PageSkeleton } from './PageLoader';
 export { RequireCapability } from './RequireCapability';

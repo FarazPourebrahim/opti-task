@@ -1,6 +1,5 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
-import type { Reference } from '@apollo/client';
 import { DEFAULT_PAGE_SIZE } from '@contracts';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import {
@@ -18,6 +17,7 @@ import { resolveOrganizationRoles } from '@/modules/organization/utils/organizat
 import type { OrganizationQuery as OrganizationQueryResult } from '@/shared/graphql/generated/graphql';
 import { useLoadMore } from '@/shared/hooks/useLoadMore';
 import { ApiError } from '@/shared/lib/apiError';
+import { removeFromConnection } from '@/shared/utils/cache.utils';
 
 export type OrganizationDetail = OrganizationQueryResult['organization'];
 export type OrganizationMemberRow =
@@ -29,11 +29,15 @@ export type OrganizationMemberRow =
  * Members ride along with the organisation because the viewer's role — which
  * decides what every tab may offer — can only be read from that list.
  */
-export function useOrganization(organizationId: string) {
+export function useOrganization(organizationId: string | null) {
   const { user } = useAuth();
   const { data, loading, error, refetch, fetchMore } = useQuery(
     OrganizationQuery,
-    { variables: { id: organizationId, first: DEFAULT_PAGE_SIZE } },
+    {
+      variables: { id: organizationId ?? '', first: DEFAULT_PAGE_SIZE },
+      // A caller that learns the id from another query passes null until then.
+      skip: organizationId === null,
+    },
   );
 
   const organization = data?.organization ?? null;
@@ -117,12 +121,6 @@ export function useDeleteOrganization(organizationId: string) {
   return { deleteOrganization, forgetOrganization, isDeleting: loading };
 }
 
-/** The member connection as the cache stores it: edges pointing at rows. */
-type CachedMemberConnection = {
-  edges: ReadonlyArray<{ cursor: string; node: Reference }>;
-  totalCount: number;
-};
-
 export function useOrganizationMemberActions(organizationId: string) {
   // Returns the member row by id: the cache updates the table in place.
   const [updateRole, { loading: isUpdatingRole }] = useMutation(
@@ -142,42 +140,14 @@ export function useOrganizationMemberActions(organizationId: string) {
     async (member: OrganizationMemberRow) => {
       await remove({
         variables: { organizationId, userId: member.user.id },
-        update: (cache) => {
-          /*
-           * The mutation returns only a boolean, so the row is taken out of the
-           * cached connection by hand. Evicting the member object instead would
-           * leave a dangling edge and force a refetch of the whole page.
-           */
-          const cacheId = cache.identify({
-            __typename: 'Organization',
-            id: organizationId,
-          });
-          if (!cacheId) return;
-
-          cache.modify<{
-            memberCount: number;
-            members: CachedMemberConnection;
-          }>({
-            id: cacheId,
-            fields: {
-              memberCount: (count) => Math.max(0, count - 1),
-              members: (existing, { readField, isReference }) => {
-                // Not loaded, or held as a reference: nothing here to edit.
-                if (isReference(existing) || !('edges' in existing)) {
-                  return existing;
-                }
-
-                return {
-                  ...existing,
-                  totalCount: Math.max(0, existing.totalCount - 1),
-                  edges: existing.edges.filter(
-                    (edge) => readField('id', edge.node) !== member.id,
-                  ),
-                };
-              },
-            },
-          });
-        },
+        // The mutation returns only a boolean, so the row is removed by hand.
+        update: (cache) =>
+          removeFromConnection(cache, {
+            owner: { __typename: 'Organization', id: organizationId },
+            connectionField: 'members',
+            countField: 'memberCount',
+            nodeId: member.id,
+          }),
       });
     },
     [remove, organizationId],
