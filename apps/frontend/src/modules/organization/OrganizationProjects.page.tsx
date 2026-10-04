@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Card,
   EmptyState,
   Table,
@@ -9,20 +10,24 @@ import {
   TableHeader,
   TableRow,
 } from '@averoui/react';
-import { FolderKanban, SearchX } from 'lucide-react';
+import { FolderKanban, Plus, SearchX } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PROJECT_STATES } from '@contracts';
 import type { ProjectState } from '@contracts';
 import { useOrganizationContext } from '@/modules/organization/hooks/useOrganizationContext';
 import { useOrganizationProjects } from '@/modules/organization/hooks/useOrganizationProjects';
+import { CreateProjectDialog } from '@/modules/project/components/CreateProjectDialog';
 import {
+  AppLink,
   ErrorState,
   LoadMore,
   PageSkeleton,
   SelectField,
 } from '@/shared/components';
 import type { SelectOption } from '@/shared/components';
+import { can } from '@/shared/lib/capabilities';
+import { projectPath } from '@/shared/routes/route.constants';
 
 const ALL_STATUSES = 'ALL';
 type StatusFilter = ProjectState | typeof ALL_STATUSES;
@@ -35,13 +40,14 @@ const STATUS_TONES: Record<ProjectState, 'neutral' | 'success' | 'blue'> = {
 };
 
 /**
- * The organisation's projects. Read-only for now: creating a project and its
- * own screens arrive with Phase 7, so rows are not links yet.
+ * The organisation's projects: the way into each one, and where a new one is
+ * created.
  */
 export function OrganizationProjectsPage() {
   const { t } = useTranslation();
-  const { organization } = useOrganizationContext();
+  const { organization, roles } = useOrganizationContext();
   const [filter, setFilter] = useState<StatusFilter>(ALL_STATUSES);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const status = filter === ALL_STATUSES ? null : filter;
   const {
@@ -66,13 +72,22 @@ export function OrganizationProjectsPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <SelectField
-        label={t('organization.projectsFilter.label')}
-        value={filter}
-        onValueChange={setFilter}
-        options={options}
-        className="max-w-xs"
-      />
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <SelectField
+          label={t('organization.projectsFilter.label')}
+          value={filter}
+          onValueChange={setFilter}
+          options={options}
+          className="w-full max-w-xs"
+        />
+        {/* A hint only: the server refuses project creation to anyone else. */}
+        {can(roles, 'project:create') ? (
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus aria-hidden className="size-4" />
+            {t('organization.projectNew')}
+          </Button>
+        ) : null}
+      </div>
 
       {isLoading ? (
         <PageSkeleton />
@@ -115,9 +130,13 @@ export function OrganizationProjectsPage() {
               {projects.map((project) => (
                 <TableRow key={project.id}>
                   <TableCell>
-                    <span className="text-text-strong block font-medium">
+                    <AppLink
+                      to={projectPath(project.id)}
+                      variant="subtle"
+                      className="block font-medium"
+                    >
                       {project.name}
-                    </span>
+                    </AppLink>
                     {project.description ? (
                       <span className="text-text-subtle line-clamp-1 block text-xs">
                         {project.description}
@@ -144,6 +163,11 @@ export function OrganizationProjectsPage() {
           />
         </>
       )}
+      <CreateProjectDialog
+        organizationId={organization.id}
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
     </section>
   );
 }

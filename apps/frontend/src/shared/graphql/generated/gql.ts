@@ -36,6 +36,22 @@ type Documents = {
   '\n  mutation RemoveMember($organizationId: UUID!, $userId: UUID!) {\n    removeMember(organizationId: $organizationId, userId: $userId)\n  }\n': typeof types.RemoveMemberDocument;
   '\n  mutation InviteToOrganization(\n    $organizationId: UUID!\n    $input: InviteMemberInput!\n  ) {\n    inviteToOrganization(organizationId: $organizationId, input: $input) {\n      id\n      email\n      role\n      status\n      expiresAt\n      createdAt\n    }\n  }\n': typeof types.InviteToOrganizationDocument;
   '\n  mutation RevokeInvitation($invitationId: UUID!) {\n    revokeInvitation(invitationId: $invitationId)\n  }\n': typeof types.RevokeInvitationDocument;
+  '\n  query Project($id: UUID!, $first: Int, $after: String) {\n    project(id: $id) {\n      id\n      name\n      description\n      status\n      organizationId\n      memberCount\n      teamCount\n      settings {\n        workflow\n      }\n      members(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            id\n            role\n            createdAt\n            user {\n              id\n              name\n              email\n              avatarUrl\n            }\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      teams {\n        id\n        name\n        description\n        memberCount\n        members {\n          id\n          role\n          user {\n            id\n          }\n        }\n      }\n    }\n  }\n': typeof types.ProjectDocument;
+  '\n  mutation CreateProject($organizationId: UUID!, $input: CreateProjectInput!) {\n    createProject(organizationId: $organizationId, input: $input) {\n      id\n      name\n      description\n      status\n      memberCount\n    }\n  }\n': typeof types.CreateProjectDocument;
+  '\n  mutation UpdateProject($id: UUID!, $input: UpdateProjectInput!) {\n    updateProject(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n': typeof types.UpdateProjectDocument;
+  '\n  mutation ChangeProjectStatus($id: UUID!, $status: ProjectState!) {\n    changeProjectStatus(id: $id, status: $status) {\n      id\n      status\n    }\n  }\n': typeof types.ChangeProjectStatusDocument;
+  '\n  mutation DeleteProject($id: UUID!) {\n    deleteProject(id: $id)\n  }\n': typeof types.DeleteProjectDocument;
+  '\n  mutation ConfigureWorkflow($id: UUID!, $workflow: JSON!) {\n    configureWorkflow(id: $id, workflow: $workflow) {\n      id\n      settings {\n        workflow\n      }\n    }\n  }\n': typeof types.ConfigureWorkflowDocument;
+  '\n  mutation AddProjectMember(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    addProjectMember(projectId: $projectId, userId: $userId, role: $role) {\n      id\n      role\n    }\n  }\n': typeof types.AddProjectMemberDocument;
+  '\n  mutation UpdateProjectMemberRole(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    updateProjectMemberRole(\n      projectId: $projectId\n      userId: $userId\n      role: $role\n    ) {\n      id\n      role\n    }\n  }\n': typeof types.UpdateProjectMemberRoleDocument;
+  '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n': typeof types.RemoveProjectMemberDocument;
+  '\n  query Team($id: UUID!) {\n    team(id: $id) {\n      id\n      name\n      description\n      projectId\n      memberCount\n      members {\n        id\n        role\n        responsibilities\n        availability\n        workload\n        createdAt\n        user {\n          id\n          name\n          email\n          avatarUrl\n        }\n      }\n    }\n  }\n': typeof types.TeamDocument;
+  '\n  mutation CreateTeam($projectId: UUID!, $input: CreateTeamInput!) {\n    createTeam(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      memberCount\n    }\n  }\n': typeof types.CreateTeamDocument;
+  '\n  mutation UpdateTeam($id: UUID!, $input: UpdateTeamInput!) {\n    updateTeam(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n': typeof types.UpdateTeamDocument;
+  '\n  mutation DeleteTeam($id: UUID!) {\n    deleteTeam(id: $id)\n  }\n': typeof types.DeleteTeamDocument;
+  '\n  mutation AddTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: AddTeamMemberInput!\n  ) {\n    addTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n': typeof types.AddTeamMemberDocument;
+  '\n  mutation UpdateTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: UpdateTeamMemberInput!\n  ) {\n    updateTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n': typeof types.UpdateTeamMemberDocument;
+  '\n  mutation RemoveTeamMember($teamId: UUID!, $userId: UUID!) {\n    removeTeamMember(teamId: $teamId, userId: $userId)\n  }\n': typeof types.RemoveTeamMemberDocument;
   '\n  query MyProfile {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      skills\n      expertise {\n        id\n        tag\n        confidenceScore\n      }\n    }\n  }\n': typeof types.MyProfileDocument;
   '\n  query UserProfile($id: UUID!) {\n    user(id: $id) {\n      id\n      name\n      avatarUrl\n      seniority\n      skills\n      expertise {\n        id\n        tag\n        confidenceScore\n      }\n      teamMemberships {\n        teamId\n        teamName\n        role\n        availability\n        workload\n      }\n    }\n  }\n': typeof types.UserProfileDocument;
   '\n  mutation UpdateProfile($input: UpdateProfileInput!) {\n    updateProfile(input: $input) {\n      id\n      name\n      avatarUrl\n      seniority\n    }\n  }\n': typeof types.UpdateProfileDocument;
@@ -89,6 +105,38 @@ const documents: Documents = {
     types.InviteToOrganizationDocument,
   '\n  mutation RevokeInvitation($invitationId: UUID!) {\n    revokeInvitation(invitationId: $invitationId)\n  }\n':
     types.RevokeInvitationDocument,
+  '\n  query Project($id: UUID!, $first: Int, $after: String) {\n    project(id: $id) {\n      id\n      name\n      description\n      status\n      organizationId\n      memberCount\n      teamCount\n      settings {\n        workflow\n      }\n      members(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            id\n            role\n            createdAt\n            user {\n              id\n              name\n              email\n              avatarUrl\n            }\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      teams {\n        id\n        name\n        description\n        memberCount\n        members {\n          id\n          role\n          user {\n            id\n          }\n        }\n      }\n    }\n  }\n':
+    types.ProjectDocument,
+  '\n  mutation CreateProject($organizationId: UUID!, $input: CreateProjectInput!) {\n    createProject(organizationId: $organizationId, input: $input) {\n      id\n      name\n      description\n      status\n      memberCount\n    }\n  }\n':
+    types.CreateProjectDocument,
+  '\n  mutation UpdateProject($id: UUID!, $input: UpdateProjectInput!) {\n    updateProject(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n':
+    types.UpdateProjectDocument,
+  '\n  mutation ChangeProjectStatus($id: UUID!, $status: ProjectState!) {\n    changeProjectStatus(id: $id, status: $status) {\n      id\n      status\n    }\n  }\n':
+    types.ChangeProjectStatusDocument,
+  '\n  mutation DeleteProject($id: UUID!) {\n    deleteProject(id: $id)\n  }\n':
+    types.DeleteProjectDocument,
+  '\n  mutation ConfigureWorkflow($id: UUID!, $workflow: JSON!) {\n    configureWorkflow(id: $id, workflow: $workflow) {\n      id\n      settings {\n        workflow\n      }\n    }\n  }\n':
+    types.ConfigureWorkflowDocument,
+  '\n  mutation AddProjectMember(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    addProjectMember(projectId: $projectId, userId: $userId, role: $role) {\n      id\n      role\n    }\n  }\n':
+    types.AddProjectMemberDocument,
+  '\n  mutation UpdateProjectMemberRole(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    updateProjectMemberRole(\n      projectId: $projectId\n      userId: $userId\n      role: $role\n    ) {\n      id\n      role\n    }\n  }\n':
+    types.UpdateProjectMemberRoleDocument,
+  '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n':
+    types.RemoveProjectMemberDocument,
+  '\n  query Team($id: UUID!) {\n    team(id: $id) {\n      id\n      name\n      description\n      projectId\n      memberCount\n      members {\n        id\n        role\n        responsibilities\n        availability\n        workload\n        createdAt\n        user {\n          id\n          name\n          email\n          avatarUrl\n        }\n      }\n    }\n  }\n':
+    types.TeamDocument,
+  '\n  mutation CreateTeam($projectId: UUID!, $input: CreateTeamInput!) {\n    createTeam(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      memberCount\n    }\n  }\n':
+    types.CreateTeamDocument,
+  '\n  mutation UpdateTeam($id: UUID!, $input: UpdateTeamInput!) {\n    updateTeam(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n':
+    types.UpdateTeamDocument,
+  '\n  mutation DeleteTeam($id: UUID!) {\n    deleteTeam(id: $id)\n  }\n':
+    types.DeleteTeamDocument,
+  '\n  mutation AddTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: AddTeamMemberInput!\n  ) {\n    addTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n':
+    types.AddTeamMemberDocument,
+  '\n  mutation UpdateTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: UpdateTeamMemberInput!\n  ) {\n    updateTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n':
+    types.UpdateTeamMemberDocument,
+  '\n  mutation RemoveTeamMember($teamId: UUID!, $userId: UUID!) {\n    removeTeamMember(teamId: $teamId, userId: $userId)\n  }\n':
+    types.RemoveTeamMemberDocument,
   '\n  query MyProfile {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      skills\n      expertise {\n        id\n        tag\n        confidenceScore\n      }\n    }\n  }\n':
     types.MyProfileDocument,
   '\n  query UserProfile($id: UUID!) {\n    user(id: $id) {\n      id\n      name\n      avatarUrl\n      seniority\n      skills\n      expertise {\n        id\n        tag\n        confidenceScore\n      }\n      teamMemberships {\n        teamId\n        teamName\n        role\n        availability\n        workload\n      }\n    }\n  }\n':
@@ -253,6 +301,102 @@ export function graphql(
 export function graphql(
   source: '\n  mutation RevokeInvitation($invitationId: UUID!) {\n    revokeInvitation(invitationId: $invitationId)\n  }\n',
 ): (typeof documents)['\n  mutation RevokeInvitation($invitationId: UUID!) {\n    revokeInvitation(invitationId: $invitationId)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Project($id: UUID!, $first: Int, $after: String) {\n    project(id: $id) {\n      id\n      name\n      description\n      status\n      organizationId\n      memberCount\n      teamCount\n      settings {\n        workflow\n      }\n      members(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            id\n            role\n            createdAt\n            user {\n              id\n              name\n              email\n              avatarUrl\n            }\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      teams {\n        id\n        name\n        description\n        memberCount\n        members {\n          id\n          role\n          user {\n            id\n          }\n        }\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query Project($id: UUID!, $first: Int, $after: String) {\n    project(id: $id) {\n      id\n      name\n      description\n      status\n      organizationId\n      memberCount\n      teamCount\n      settings {\n        workflow\n      }\n      members(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            id\n            role\n            createdAt\n            user {\n              id\n              name\n              email\n              avatarUrl\n            }\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n      teams {\n        id\n        name\n        description\n        memberCount\n        members {\n          id\n          role\n          user {\n            id\n          }\n        }\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateProject($organizationId: UUID!, $input: CreateProjectInput!) {\n    createProject(organizationId: $organizationId, input: $input) {\n      id\n      name\n      description\n      status\n      memberCount\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateProject($organizationId: UUID!, $input: CreateProjectInput!) {\n    createProject(organizationId: $organizationId, input: $input) {\n      id\n      name\n      description\n      status\n      memberCount\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateProject($id: UUID!, $input: UpdateProjectInput!) {\n    updateProject(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateProject($id: UUID!, $input: UpdateProjectInput!) {\n    updateProject(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ChangeProjectStatus($id: UUID!, $status: ProjectState!) {\n    changeProjectStatus(id: $id, status: $status) {\n      id\n      status\n    }\n  }\n',
+): (typeof documents)['\n  mutation ChangeProjectStatus($id: UUID!, $status: ProjectState!) {\n    changeProjectStatus(id: $id, status: $status) {\n      id\n      status\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteProject($id: UUID!) {\n    deleteProject(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteProject($id: UUID!) {\n    deleteProject(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ConfigureWorkflow($id: UUID!, $workflow: JSON!) {\n    configureWorkflow(id: $id, workflow: $workflow) {\n      id\n      settings {\n        workflow\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation ConfigureWorkflow($id: UUID!, $workflow: JSON!) {\n    configureWorkflow(id: $id, workflow: $workflow) {\n      id\n      settings {\n        workflow\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddProjectMember(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    addProjectMember(projectId: $projectId, userId: $userId, role: $role) {\n      id\n      role\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddProjectMember(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    addProjectMember(projectId: $projectId, userId: $userId, role: $role) {\n      id\n      role\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateProjectMemberRole(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    updateProjectMemberRole(\n      projectId: $projectId\n      userId: $userId\n      role: $role\n    ) {\n      id\n      role\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateProjectMemberRole(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    updateProjectMemberRole(\n      projectId: $projectId\n      userId: $userId\n      role: $role\n    ) {\n      id\n      role\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n',
+): (typeof documents)['\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Team($id: UUID!) {\n    team(id: $id) {\n      id\n      name\n      description\n      projectId\n      memberCount\n      members {\n        id\n        role\n        responsibilities\n        availability\n        workload\n        createdAt\n        user {\n          id\n          name\n          email\n          avatarUrl\n        }\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query Team($id: UUID!) {\n    team(id: $id) {\n      id\n      name\n      description\n      projectId\n      memberCount\n      members {\n        id\n        role\n        responsibilities\n        availability\n        workload\n        createdAt\n        user {\n          id\n          name\n          email\n          avatarUrl\n        }\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateTeam($projectId: UUID!, $input: CreateTeamInput!) {\n    createTeam(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      memberCount\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateTeam($projectId: UUID!, $input: CreateTeamInput!) {\n    createTeam(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      memberCount\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateTeam($id: UUID!, $input: UpdateTeamInput!) {\n    updateTeam(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateTeam($id: UUID!, $input: UpdateTeamInput!) {\n    updateTeam(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteTeam($id: UUID!) {\n    deleteTeam(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteTeam($id: UUID!) {\n    deleteTeam(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: AddTeamMemberInput!\n  ) {\n    addTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: AddTeamMemberInput!\n  ) {\n    addTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: UpdateTeamMemberInput!\n  ) {\n    updateTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateTeamMember(\n    $teamId: UUID!\n    $userId: UUID!\n    $input: UpdateTeamMemberInput!\n  ) {\n    updateTeamMember(teamId: $teamId, userId: $userId, input: $input) {\n      id\n      role\n      responsibilities\n      availability\n      workload\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RemoveTeamMember($teamId: UUID!, $userId: UUID!) {\n    removeTeamMember(teamId: $teamId, userId: $userId)\n  }\n',
+): (typeof documents)['\n  mutation RemoveTeamMember($teamId: UUID!, $userId: UUID!) {\n    removeTeamMember(teamId: $teamId, userId: $userId)\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
