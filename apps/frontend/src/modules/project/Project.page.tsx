@@ -19,9 +19,11 @@ import {
   CRUMB_IDS,
   ROUTE_PARAMS,
   organizationPath,
+  projectBoardPath,
   projectMembersPath,
   projectPath,
   projectSettingsPath,
+  projectTasksPath,
   projectTeamsPath,
 } from '@/shared/routes/route.constants';
 
@@ -45,8 +47,8 @@ function Tab({ to, labelKey, end = false }: TabProps) {
 
 /**
  * The frame around one project: its header and tabs, with the current tab's
- * page rendered inside. Board, backlog, sprints, epics, analytics and AI tabs
- * join as their phases land — a tab is added with the screen behind it, never
+ * page rendered inside. Sprints, epics, analytics and AI tabs join as their
+ * phases land — a tab is added with the screen behind it, never
  * before.
  */
 export function ProjectPage() {
@@ -133,6 +135,8 @@ export function ProjectPage() {
           labelKey="project.tabs.overview"
           end
         />
+        <Tab to={projectBoardPath(project.id)} labelKey="project.tabs.board" />
+        <Tab to={projectTasksPath(project.id)} labelKey="project.tabs.tasks" />
         <Tab
           to={projectMembersPath(project.id)}
           labelKey="project.tabs.members"
