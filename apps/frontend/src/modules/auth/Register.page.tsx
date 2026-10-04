@@ -9,16 +9,11 @@ import {
   registerSchema,
   toFieldErrors,
 } from '@/modules/auth/schemas/auth.schema';
-import { LinkButton } from '@/modules/auth/components/LinkButton';
-import { FormField } from '@/shared/components';
+import { AppLink, FormField } from '@/shared/components';
 import { ApiError } from '@/shared/lib/apiError';
+import { ROUTES } from '@/shared/routes/route.constants';
 
-type RegisterPageProps = {
-  onSignedIn?: () => void;
-  onGoToLogin?: () => void;
-};
-
-export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
+export function RegisterPage() {
   const { t } = useTranslation();
   const { register } = useAuth();
 
@@ -42,8 +37,8 @@ export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
     setIsPending(true);
 
     try {
+      // The guest guard moves the new user into the app once the session exists.
       await register(parsed.data);
-      onSignedIn?.();
     } catch (error) {
       setFormError(messageFor(error));
     } finally {
@@ -70,7 +65,7 @@ export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
       footer={
         <>
           <span>{t('auth.haveAccount')}</span>
-          <LinkButton onClick={onGoToLogin}>{t('auth.signIn')}</LinkButton>
+          <AppLink to={ROUTES.login}>{t('auth.signIn')}</AppLink>
         </>
       }
     >

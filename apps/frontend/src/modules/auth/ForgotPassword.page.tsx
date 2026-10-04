@@ -1,10 +1,8 @@
 import { Alert, Button } from '@averoui/react';
 import { useTranslation } from 'react-i18next';
+import { Link as RouterLink } from 'react-router';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-
-type ForgotPasswordPageProps = {
-  onGoToLogin?: () => void;
-};
+import { ROUTES } from '@/shared/routes/route.constants';
 
 /**
  * Password reset is **not implemented on the server**.
@@ -18,7 +16,7 @@ type ForgotPasswordPageProps = {
  * When the backend grows a real reset-token table, this becomes a normal form
  * and the mutation is already wired in `auth.operations.ts`.
  */
-export function ForgotPasswordPage({ onGoToLogin }: ForgotPasswordPageProps) {
+export function ForgotPasswordPage() {
   const { t } = useTranslation();
 
   return (
@@ -34,8 +32,10 @@ export function ForgotPasswordPage({ onGoToLogin }: ForgotPasswordPageProps) {
         {t('auth.forgot.unavailableBody')}
       </Alert>
 
-      <Button variant="outline" block onClick={onGoToLogin}>
-        {t('auth.forgot.backToSignIn')}
+      <Button asChild variant="outline" block>
+        <RouterLink to={ROUTES.login}>
+          {t('auth.forgot.backToSignIn')}
+        </RouterLink>
       </Button>
     </AuthLayout>
   );
