@@ -1,5 +1,5 @@
 import { HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TASK_STATUSES } from '@contracts';
 import type { ErrorCode, TaskStatus } from '@contracts';
 import { routes } from '@/App';
@@ -50,6 +50,7 @@ import {
   mockQueryError,
 } from '@/shared/tests/graphql';
 import {
+  fireEvent,
   renderRoutes,
   screen,
   waitFor,
@@ -89,6 +90,48 @@ function allSelectsNamed() {
 function column(name: string): HTMLElement {
   return screen.getByRole('region', { name });
 }
+
+const COLUMN_WIDTH = 300;
+const COLUMN_HEIGHT = 1000;
+
+/*
+ * The test DOM performs no layout, so every element measures as an empty box
+ * at the origin and a drag could never be over anything. This lays the board's
+ * columns out side by side, in board order, for the drag library to measure.
+ */
+function layOutColumns() {
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+    function measure(this: Element) {
+      const heading = this.getAttribute('aria-labelledby') ?? '';
+      const index = TASK_STATUSES.findIndex(
+        (status) => heading === `board-column-${status}`,
+      );
+
+      return index === -1
+        ? new DOMRect(0, 0, 0, 0)
+        : new DOMRect(index * COLUMN_WIDTH, 0, COLUMN_WIDTH, COLUMN_HEIGHT);
+    },
+  );
+}
+
+/** A point inside the column a status has in `layOutColumns`. */
+function pointIn(status: TaskStatus) {
+  return {
+    clientX: TASK_STATUSES.indexOf(status) * COLUMN_WIDTH + COLUMN_WIDTH / 2,
+    clientY: 50,
+  };
+}
+
+/** Presses the mouse on a card and carries it over a column, still held. */
+function dragOver(card: HTMLElement, from: TaskStatus, to: TaskStatus) {
+  fireEvent.mouseDown(card, { button: 0, ...pointIn(from) });
+  fireEvent.mouseMove(document, pointIn(to));
+  fireEvent.mouseMove(document, pointIn(to));
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 beforeEach(() => {
   resetRefreshState();
@@ -541,6 +584,150 @@ describe('board', () => {
       expect(screen.queryByText(SERVER_DETAIL)).toBeNull();
     },
   );
+
+  it('moves a card by dragging it onto a column the workflow allows', async () => {
+    // Arrange
+    let sent: unknown;
+    server.use(
+      ...boardScenario({ project: 'ADMIN' }),
+      graphql.mutation('ChangeTaskStatus', ({ variables }) => {
+        sent = variables;
+        return HttpResponse.json({
+          data: {
+            changeTaskStatus: {
+              __typename: 'Task',
+              id: TASK_ID,
+              status: 'IN_PROGRESS',
+            },
+          },
+        });
+      }),
+    );
+    renderRoutes(routes, { route: BOARD_ROUTE });
+    const card = await screen.findByRole('link', { name: 'Build login' });
+    layOutColumns();
+
+    // Act — carry it over "in progress".
+    dragOver(card, 'TODO', 'IN_PROGRESS');
+
+    // Assert — the column says it is the target, and nothing is sent yet.
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'In progress, column 2 of 3 it can move to.',
+      ),
+    );
+    expect(screen.queryByRole('button', { name: 'Move here' })).toBeNull();
+    expect(sent).toBeUndefined();
+
+    // Act
+    fireEvent.mouseUp(document, pointIn('IN_PROGRESS'));
+
+    // Assert
+    await waitFor(() =>
+      expect(sent).toEqual({ id: TASK_ID, status: 'IN_PROGRESS' }),
+    );
+    expect(
+      within(column('In progress')).getByRole('link', { name: 'Build login' }),
+    ).toBeVisible();
+    expect(within(column('To do')).queryByRole('link')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '“Build login” moved to In progress.',
+    );
+  });
+
+  it('lets a dragged card go over a column it may not enter, sending nothing', async () => {
+    // Arrange — no mutation handler: a request would fail the test.
+    server.use(...boardScenario({ project: 'ADMIN' }));
+    renderRoutes(routes, { route: BOARD_ROUTE });
+    const card = await screen.findByRole('link', { name: 'Build login' });
+    layOutColumns();
+
+    // Act — "to do" cannot go straight to "done".
+    dragOver(card, 'TODO', 'DONE');
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Picked up “Build login”.',
+      ),
+    );
+    fireEvent.mouseUp(document, pointIn('DONE'));
+
+    // Assert
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Move cancelled. “Build login” is still To do.',
+      ),
+    );
+    expect(
+      within(column('To do')).getByRole('link', { name: 'Build login' }),
+    ).toBeVisible();
+    expect(within(column('Done')).queryByRole('link')).toBeNull();
+  });
+
+  it('does not let a viewer drag a card', async () => {
+    // Arrange
+    server.use(...boardScenario({ project: 'VIEWER' }));
+    renderRoutes(routes, { route: BOARD_ROUTE });
+    const card = await screen.findByRole('link', { name: 'Build login' });
+    layOutColumns();
+
+    // Act
+    dragOver(card, 'TODO', 'IN_PROGRESS');
+    fireEvent.mouseUp(document, pointIn('IN_PROGRESS'));
+
+    // Assert — nothing was picked up, so nothing was announced or moved.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    expect(
+      within(column('To do')).getByRole('link', { name: 'Build login' }),
+    ).toBeVisible();
+  });
+
+  it('renders only the cards in view once a column is long', async () => {
+    // Arrange — 40 cards in one column, in a list 600px tall.
+    const many = Array.from({ length: 40 }, (_, index) =>
+      taskNode({
+        id: `task-${index}`,
+        title: `Task ${index}`,
+        status: 'BACKLOG',
+      }),
+    );
+    server.use(...boardScenario({ project: 'ADMIN' }, many));
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(600);
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(280);
+
+    // Act
+    renderRoutes(routes, { route: BOARD_ROUTE });
+
+    // Assert — the first cards exist, the last do not, the count is whole.
+    const backlog = await screen.findByRole('region', { name: 'Backlog' });
+    expect(
+      await within(backlog).findByRole('link', { name: 'Task 0' }),
+    ).toBeVisible();
+    const shown = within(backlog).getAllByRole('listitem');
+    expect(shown.length).toBeLessThan(40);
+    expect(shown[0]).toHaveAttribute('aria-setsize', '40');
+    expect(shown[0]).toHaveAttribute('aria-posinset', '1');
+    expect(within(backlog).queryByRole('link', { name: 'Task 39' })).toBeNull();
+    expect(within(backlog).getByText('40 of 40')).toBeVisible();
+  });
+
+  it('renders every card of a short column, with no window', async () => {
+    // Arrange — at the threshold, not past it.
+    const some = Array.from({ length: 30 }, (_, index) =>
+      taskNode({
+        id: `task-${index}`,
+        title: `Task ${index}`,
+        status: 'BACKLOG',
+      }),
+    );
+    server.use(...boardScenario({ project: 'ADMIN' }, some));
+
+    // Act
+    renderRoutes(routes, { route: BOARD_ROUTE });
+
+    // Assert
+    const backlog = await screen.findByRole('region', { name: 'Backlog' });
+    expect(within(backlog).getAllByRole('listitem')).toHaveLength(30);
+  });
 
   it('loads the next page of one column, sending the cursor back untouched', async () => {
     // Arrange
