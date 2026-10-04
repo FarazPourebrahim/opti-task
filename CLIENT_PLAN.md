@@ -300,7 +300,7 @@ line is not done, regardless of whether the feature "works".
 | 5 | App Shell, Routing & Guards | 47% | ✅ |
 | 6 | Organization & Members | 54% | ✅ |
 | 7 | Project & Team | 61% | ✅ |
-| 8 | Task — Board, List & Detail | 72% | 🚧 |
+| 8 | Task — Board, List & Detail | 72% | ✅ |
 | 9 | Sprint & Epic | 79% | ⬜ |
 | 10 | Collaboration — Comments & Attachments | 85% | ⬜ |
 | 11 | Notifications & Realtime | 90% | ⬜ |
@@ -308,9 +308,7 @@ line is not done, regardless of whether the feature "works".
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 61%** (Phases 0–7 and Amendment A1 complete).
-Phase 8 is built and tested except for pointer dragging and list windowing,
-which wait on two packages the registry would not serve — see the phase.
+**Current overall progress: 72%** (Phases 0–8 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -762,8 +760,8 @@ AI assignment engine consumes.
 | ID | Task | Status |
 |---|---|:--:|
 | F8.1 | `task.operations.ts` — fragments first; every task field/relation as reusable fragments, depth kept under 12 (deepest path is 6) | ✅ |
-| F8.2 | `Board.page.tsx` — 7 status columns, each with its own count and its own next page, in a horizontal scroll container. **Windowing is not built**: `@tanstack/react-virtual` could not be installed; off-screen cards skip layout and paint through `content-visibility` instead (see known-debt) | 🚧 |
-| F8.3 | Moving a card → `changeTaskStatus`. The keyboard path is first-class: pick up, arrow keys choose a column, drop, Escape cancels, announced through a live region. A tap path uses the same steps. **Pointer dragging is not built**: `@dnd-kit/core` could not be installed (see known-debt) | 🚧 |
+| F8.2 | `Board.page.tsx` — 7 status columns, each with its own count and its own next page, in a horizontal scroll container. A column of more than 30 cards is windowed with `@tanstack/react-virtual` and scrolls on its own; a shorter one renders whole | ✅ |
+| F8.3 | Moving a card → `changeTaskStatus`. Three ways, one state machine (`useBoardMove`): drag with a mouse or a touch (`@dnd-kit/core`), the keyboard (pick up, arrow keys choose a column, drop, Escape cancels), or a tap on the column. Every step is announced through one live region | ✅ |
 | F8.4 | Status state machine in the client, mirroring the backend table: only legal transitions are offered, on the board and on the detail page | ✅ |
 | F8.5 | `TaskList.page.tsx` — table view with `TaskFilter` (status, priority, assignee, sprint, epic, label), `sortField`, `sortDirection`, cursor pagination | ✅ |
 | F8.6 | `TaskCard` — priority, story points, assignee avatar, labels, due date (overdue marked), blocked flag | ✅ |
@@ -784,10 +782,10 @@ AI assignment engine consumes.
 
 - [x] All 14 task mutations from Appendix A are reachable, and the `task` query.
       (The plan said 16; the SDL has 14.)
-- [~] Moving a card has a **complete keyboard path** (grab, move, drop), tested:
+- [x] Moving a card has a **complete keyboard path** (grab, move, drop), tested:
       focus follows the card into its new column and every step is announced.
-      There is no pointer *drag* yet — a pointer picks the card up and taps the
-      column. So nothing is mouse-only, but direct manipulation is missing.
+      A card can also be dragged with a mouse or a touch, tested by laying the
+      columns out for the drag library to measure; nothing is mouse-only.
 - [x] An illegal transition is never offered: only the legal columns become
       targets (asserted column by column), and a table test covers all 7 × 7
       pairs. A server rejection rolls the card back and says why (asserted for
@@ -807,26 +805,23 @@ AI assignment engine consumes.
 - [x] `loggedSeconds` renders as a duration (`3h 20m`), never a raw number.
 - [~] The board scrolls sideways inside its own container. That it is usable at
       360px is **unverified**: the test DOM performs no layout.
-- [ ] A board of 200+ tasks at 60fps — **not measured**, and not expected to
-      hold without real windowing. Each column loads 50 cards at a time.
+- [~] A board of 200+ tasks at 60fps — **not measured**: it needs a browser.
+      A long column is windowed (asserted: 40 cards loaded, fewer rendered), so
+      the DOM no longer grows with each "load more".
 - [x] `axe` → 0 violations on board, list and detail (the component-level audit;
       contrast is not covered).
 - [x] Tests: lifecycle, cycle rejection, illegal transition, unassign, filter
-      combinations, `FORBIDDEN` on a viewer, network failure. 74 new tests; the
-      suite is 423 tests in 18 files.
+      combinations, `FORBIDDEN` on a viewer, network failure. 79 new tests; the
+      suite is 428 tests in 18 files.
 
 > **Not verified by me:** none of these screens has been seen in a browser, and
 > nothing has run against the real backend — every response in the tests is a
 > mock shaped from the SDL.
 
-### To finish the phase
-
-1. `pnpm --filter optitask-frontend add @dnd-kit/core @tanstack/react-virtual`
-   (the npm registry refused the TLS handshake from this machine on
-   2026-10-04).
-2. Add pointer dragging on top of `useBoardMove`: a drag is a pick-up, hovering a
-   column sets the target, releasing is a drop. Illegal columns stay disabled.
-3. Window each column's cards and profile a 200-card board.
+> Dragging in particular is unseen. The tests drive it with synthetic mouse
+> events over stubbed column rectangles; how it feels — the 8px start
+> threshold, the 250ms touch hold, auto-scroll at the board's edges — can only
+> be judged in a browser.
 
 ---
 

@@ -318,25 +318,30 @@ same Radix primitives.
 
 ## Phase 8 — Task: Board, List & Detail
 
-- **What**: a card cannot be dragged with a pointer. It is moved by picking it
-  up (its move button) and choosing a column — arrow keys and Enter, or a tap
-  on the column's "Move here".
-- **Why**: `@dnd-kit/core` could not be installed: the npm registry refused the
-  TLS handshake from the build machine on 2026-10-04 (GitHub was reachable).
-- **Right fix**: install it and add a pointer sensor on top of `useBoardMove`,
-  which already holds the whole move: a drag is a pick-up, hovering a column
-  sets the target, releasing is a drop.
-- **Impact**: the board works with a keyboard, a mouse and a touch screen, but
-  not by direct manipulation, which is what people expect of a board.
+- **What**: dragging a card is tested with synthetic mouse events over column
+  rectangles the test supplies, and has never been tried in a browser.
+- **Why**: the test DOM performs no layout, so the drag library would measure
+  every column as an empty box; no browser was available to the agent.
+- **Right fix**: a manual pass with a mouse and on a touch screen now, and a
+  drag in the Phase 14 browser E2E suite.
+- **Impact**: the logic is covered — a legal column takes the card, an illegal
+  one or empty space lets it go, a viewer cannot drag. The feel is not: the
+  8px mouse threshold, the 250ms touch hold (which on some phones competes with
+  the link's long-press menu) and auto-scroll near the board's edge.
 
-- **What**: board columns are not windowed. Every loaded card is in the DOM;
-  off-screen ones skip layout and paint through `content-visibility: auto`.
-- **Why**: `@tanstack/react-virtual` could not be installed, for the same
-  reason.
-- **Right fix**: window each column's list, then profile a 200-card board.
-- **Impact**: a column loads 50 cards at a time, so the DOM grows with each
-  "load more". The 60fps exit criterion is unmeasured. `content-visibility` is
-  not supported by older Safari, where every card is laid out.
+- **What**: the 60fps criterion for a 200-card board is unmeasured.
+- **Why**: it needs a browser's performance panel.
+- **Right fix**: profile a seeded 200-card board; tune `BOARD_WINDOW_THRESHOLD`
+  and the card height estimate in `task.constants.ts` from what it shows.
+- **Impact**: a column past 30 cards is windowed, so the number of cards in
+  the DOM is bounded; whether scrolling is smooth is not known.
+
+- **What**: a windowed column scrolls inside itself (at most 70% of the
+  viewport height), while a short column grows with the page.
+- **Why**: a window needs a scroll container of its own to measure against.
+- **Right fix**: none needed, unless the two behaviours side by side read as
+  inconsistent in the browser — then give every column the same height cap.
+- **Impact**: a board can show columns that scroll and columns that do not.
 
 - **What**: a status change does not move a task between cached lists. The
   board places a card by the task's current status instead, and corrects each
