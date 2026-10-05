@@ -23,6 +23,20 @@ type Documents = {
   '\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n': typeof types.ChangePasswordDocument;
   '\n  mutation RequestPasswordReset($email: String!) {\n    requestPasswordReset(email: $email)\n  }\n': typeof types.RequestPasswordResetDocument;
   '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n': typeof types.AcceptInvitationDocument;
+  '\n  fragment CommentPerson on User {\n    id\n    name\n    avatarUrl\n  }\n': typeof types.CommentPersonFragmentDoc;
+  '\n  fragment AttachmentItem on Attachment {\n    id\n    filename\n    contentType\n    sizeBytes\n    createdAt\n    uploadedBy {\n      id\n      name\n    }\n  }\n': typeof types.AttachmentItemFragmentDoc;
+  '\n  fragment CommentBody on Comment {\n    __typename\n    id\n    body\n    resolved\n    edited\n    editedAt\n    taskId\n    parentCommentId\n    createdAt\n    author {\n      __typename\n      ...CommentPerson\n    }\n    mentions {\n      __typename\n      id\n      name\n    }\n    attachments {\n      ...AttachmentItem\n    }\n  }\n': typeof types.CommentBodyFragmentDoc;
+  '\n  fragment CommentThread on Comment {\n    ...CommentBody\n    replies {\n      ...CommentBody\n    }\n  }\n': typeof types.CommentThreadFragmentDoc;
+  '\n  query TaskComments($taskId: UUID!, $first: Int, $after: String) {\n    task(id: $taskId) {\n      id\n      comments(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...CommentThread\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.TaskCommentsDocument;
+  '\n  query LinkedComment($id: UUID!) {\n    comment(id: $id) {\n      ...CommentThread\n    }\n  }\n': typeof types.LinkedCommentDocument;
+  '\n  query TaskAttachments($taskId: UUID!) {\n    task(id: $taskId) {\n      id\n      attachments {\n        ...AttachmentItem\n      }\n    }\n  }\n': typeof types.TaskAttachmentsDocument;
+  '\n  mutation CreateComment($taskId: UUID!, $input: CreateCommentInput!) {\n    createComment(taskId: $taskId, input: $input) {\n      ...CommentThread\n    }\n  }\n': typeof types.CreateCommentDocument;
+  '\n  mutation EditComment($id: UUID!, $input: UpdateCommentInput!) {\n    editComment(id: $id, input: $input) {\n      id\n      body\n      edited\n      editedAt\n    }\n  }\n': typeof types.EditCommentDocument;
+  '\n  mutation ResolveComment($id: UUID!, $resolved: Boolean!) {\n    resolveComment(id: $id, resolved: $resolved) {\n      __typename\n      id\n      resolved\n    }\n  }\n': typeof types.ResolveCommentDocument;
+  '\n  mutation DeleteComment($id: UUID!) {\n    deleteComment(id: $id)\n  }\n': typeof types.DeleteCommentDocument;
+  '\n  mutation AddTaskAttachment($taskId: UUID!, $input: AddAttachmentInput!) {\n    addTaskAttachment(taskId: $taskId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n': typeof types.AddTaskAttachmentDocument;
+  '\n  mutation AddCommentAttachment(\n    $commentId: UUID!\n    $input: AddAttachmentInput!\n  ) {\n    addCommentAttachment(commentId: $commentId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n': typeof types.AddCommentAttachmentDocument;
+  '\n  mutation RemoveAttachment($id: UUID!) {\n    removeAttachment(id: $id)\n  }\n': typeof types.RemoveAttachmentDocument;
   '\n  fragment EpicSummary on Epic {\n    id\n    name\n    description\n    projectId\n    progress\n    completedTasks\n    totalTasks\n  }\n': typeof types.EpicSummaryFragmentDoc;
   '\n  query ProjectEpics($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      epics(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...EpicSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.ProjectEpicsDocument;
   '\n  query Epic($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    epic(id: $id) {\n      ...EpicSummary\n      milestones {\n        id\n        name\n        description\n        dueDate\n        epicId\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            storyPoints\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.EpicDocument;
@@ -124,6 +138,34 @@ const documents: Documents = {
     types.RequestPasswordResetDocument,
   '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n':
     types.AcceptInvitationDocument,
+  '\n  fragment CommentPerson on User {\n    id\n    name\n    avatarUrl\n  }\n':
+    types.CommentPersonFragmentDoc,
+  '\n  fragment AttachmentItem on Attachment {\n    id\n    filename\n    contentType\n    sizeBytes\n    createdAt\n    uploadedBy {\n      id\n      name\n    }\n  }\n':
+    types.AttachmentItemFragmentDoc,
+  '\n  fragment CommentBody on Comment {\n    __typename\n    id\n    body\n    resolved\n    edited\n    editedAt\n    taskId\n    parentCommentId\n    createdAt\n    author {\n      __typename\n      ...CommentPerson\n    }\n    mentions {\n      __typename\n      id\n      name\n    }\n    attachments {\n      ...AttachmentItem\n    }\n  }\n':
+    types.CommentBodyFragmentDoc,
+  '\n  fragment CommentThread on Comment {\n    ...CommentBody\n    replies {\n      ...CommentBody\n    }\n  }\n':
+    types.CommentThreadFragmentDoc,
+  '\n  query TaskComments($taskId: UUID!, $first: Int, $after: String) {\n    task(id: $taskId) {\n      id\n      comments(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...CommentThread\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.TaskCommentsDocument,
+  '\n  query LinkedComment($id: UUID!) {\n    comment(id: $id) {\n      ...CommentThread\n    }\n  }\n':
+    types.LinkedCommentDocument,
+  '\n  query TaskAttachments($taskId: UUID!) {\n    task(id: $taskId) {\n      id\n      attachments {\n        ...AttachmentItem\n      }\n    }\n  }\n':
+    types.TaskAttachmentsDocument,
+  '\n  mutation CreateComment($taskId: UUID!, $input: CreateCommentInput!) {\n    createComment(taskId: $taskId, input: $input) {\n      ...CommentThread\n    }\n  }\n':
+    types.CreateCommentDocument,
+  '\n  mutation EditComment($id: UUID!, $input: UpdateCommentInput!) {\n    editComment(id: $id, input: $input) {\n      id\n      body\n      edited\n      editedAt\n    }\n  }\n':
+    types.EditCommentDocument,
+  '\n  mutation ResolveComment($id: UUID!, $resolved: Boolean!) {\n    resolveComment(id: $id, resolved: $resolved) {\n      __typename\n      id\n      resolved\n    }\n  }\n':
+    types.ResolveCommentDocument,
+  '\n  mutation DeleteComment($id: UUID!) {\n    deleteComment(id: $id)\n  }\n':
+    types.DeleteCommentDocument,
+  '\n  mutation AddTaskAttachment($taskId: UUID!, $input: AddAttachmentInput!) {\n    addTaskAttachment(taskId: $taskId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n':
+    types.AddTaskAttachmentDocument,
+  '\n  mutation AddCommentAttachment(\n    $commentId: UUID!\n    $input: AddAttachmentInput!\n  ) {\n    addCommentAttachment(commentId: $commentId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n':
+    types.AddCommentAttachmentDocument,
+  '\n  mutation RemoveAttachment($id: UUID!) {\n    removeAttachment(id: $id)\n  }\n':
+    types.RemoveAttachmentDocument,
   '\n  fragment EpicSummary on Epic {\n    id\n    name\n    description\n    projectId\n    progress\n    completedTasks\n    totalTasks\n  }\n':
     types.EpicSummaryFragmentDoc,
   '\n  query ProjectEpics($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      epics(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...EpicSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
@@ -358,6 +400,90 @@ export function graphql(
 export function graphql(
   source: '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n',
 ): (typeof documents)['\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment CommentPerson on User {\n    id\n    name\n    avatarUrl\n  }\n',
+): (typeof documents)['\n  fragment CommentPerson on User {\n    id\n    name\n    avatarUrl\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment AttachmentItem on Attachment {\n    id\n    filename\n    contentType\n    sizeBytes\n    createdAt\n    uploadedBy {\n      id\n      name\n    }\n  }\n',
+): (typeof documents)['\n  fragment AttachmentItem on Attachment {\n    id\n    filename\n    contentType\n    sizeBytes\n    createdAt\n    uploadedBy {\n      id\n      name\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment CommentBody on Comment {\n    __typename\n    id\n    body\n    resolved\n    edited\n    editedAt\n    taskId\n    parentCommentId\n    createdAt\n    author {\n      __typename\n      ...CommentPerson\n    }\n    mentions {\n      __typename\n      id\n      name\n    }\n    attachments {\n      ...AttachmentItem\n    }\n  }\n',
+): (typeof documents)['\n  fragment CommentBody on Comment {\n    __typename\n    id\n    body\n    resolved\n    edited\n    editedAt\n    taskId\n    parentCommentId\n    createdAt\n    author {\n      __typename\n      ...CommentPerson\n    }\n    mentions {\n      __typename\n      id\n      name\n    }\n    attachments {\n      ...AttachmentItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment CommentThread on Comment {\n    ...CommentBody\n    replies {\n      ...CommentBody\n    }\n  }\n',
+): (typeof documents)['\n  fragment CommentThread on Comment {\n    ...CommentBody\n    replies {\n      ...CommentBody\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query TaskComments($taskId: UUID!, $first: Int, $after: String) {\n    task(id: $taskId) {\n      id\n      comments(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...CommentThread\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query TaskComments($taskId: UUID!, $first: Int, $after: String) {\n    task(id: $taskId) {\n      id\n      comments(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...CommentThread\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query LinkedComment($id: UUID!) {\n    comment(id: $id) {\n      ...CommentThread\n    }\n  }\n',
+): (typeof documents)['\n  query LinkedComment($id: UUID!) {\n    comment(id: $id) {\n      ...CommentThread\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query TaskAttachments($taskId: UUID!) {\n    task(id: $taskId) {\n      id\n      attachments {\n        ...AttachmentItem\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query TaskAttachments($taskId: UUID!) {\n    task(id: $taskId) {\n      id\n      attachments {\n        ...AttachmentItem\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateComment($taskId: UUID!, $input: CreateCommentInput!) {\n    createComment(taskId: $taskId, input: $input) {\n      ...CommentThread\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateComment($taskId: UUID!, $input: CreateCommentInput!) {\n    createComment(taskId: $taskId, input: $input) {\n      ...CommentThread\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation EditComment($id: UUID!, $input: UpdateCommentInput!) {\n    editComment(id: $id, input: $input) {\n      id\n      body\n      edited\n      editedAt\n    }\n  }\n',
+): (typeof documents)['\n  mutation EditComment($id: UUID!, $input: UpdateCommentInput!) {\n    editComment(id: $id, input: $input) {\n      id\n      body\n      edited\n      editedAt\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ResolveComment($id: UUID!, $resolved: Boolean!) {\n    resolveComment(id: $id, resolved: $resolved) {\n      __typename\n      id\n      resolved\n    }\n  }\n',
+): (typeof documents)['\n  mutation ResolveComment($id: UUID!, $resolved: Boolean!) {\n    resolveComment(id: $id, resolved: $resolved) {\n      __typename\n      id\n      resolved\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteComment($id: UUID!) {\n    deleteComment(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteComment($id: UUID!) {\n    deleteComment(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddTaskAttachment($taskId: UUID!, $input: AddAttachmentInput!) {\n    addTaskAttachment(taskId: $taskId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddTaskAttachment($taskId: UUID!, $input: AddAttachmentInput!) {\n    addTaskAttachment(taskId: $taskId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddCommentAttachment(\n    $commentId: UUID!\n    $input: AddAttachmentInput!\n  ) {\n    addCommentAttachment(commentId: $commentId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddCommentAttachment(\n    $commentId: UUID!\n    $input: AddAttachmentInput!\n  ) {\n    addCommentAttachment(commentId: $commentId, input: $input) {\n      ...AttachmentItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RemoveAttachment($id: UUID!) {\n    removeAttachment(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation RemoveAttachment($id: UUID!) {\n    removeAttachment(id: $id)\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
