@@ -37,6 +37,18 @@ export type ChangePasswordInput = {
   newPassword: string;
 };
 
+export type CreateEpicInput = {
+  description?: string | null | undefined;
+  name: string;
+};
+
+export type CreateMilestoneInput = {
+  description?: string | null | undefined;
+  dueDate?: string | null | undefined;
+  epicId?: string | null | undefined;
+  name: string;
+};
+
 export type CreateOrganizationInput = {
   description?: string | null | undefined;
   logoUrl?: string | null | undefined;
@@ -46,6 +58,14 @@ export type CreateOrganizationInput = {
 export type CreateProjectInput = {
   description?: string | null | undefined;
   name: string;
+};
+
+export type CreateSprintInput = {
+  capacity?: number | null | undefined;
+  endDate?: string | null | undefined;
+  goal?: string | null | undefined;
+  name: string;
+  startDate?: string | null | undefined;
 };
 
 export type CreateTaskInput = {
@@ -126,6 +146,11 @@ export type TaskStatus =
 
 export type TeamRole = 'LEAD' | 'MEMBER';
 
+export type UpdateEpicInput = {
+  description?: string | null | undefined;
+  name?: string | null | undefined;
+};
+
 export type UpdateOrganizationInput = {
   description?: string | null | undefined;
   logoUrl?: string | null | undefined;
@@ -142,6 +167,14 @@ export type UpdateProfileInput = {
 export type UpdateProjectInput = {
   description?: string | null | undefined;
   name?: string | null | undefined;
+};
+
+export type UpdateSprintInput = {
+  capacity?: number | null | undefined;
+  endDate?: string | null | undefined;
+  goal?: string | null | undefined;
+  name?: string | null | undefined;
+  startDate?: string | null | undefined;
 };
 
 export type UpdateTaskInput = {
@@ -258,6 +291,148 @@ export type AcceptInvitationMutation = {
     user: { id: string; name: string };
   };
 };
+
+export type EpicSummaryFragment = {
+  id: string;
+  name: string;
+  description: string | null;
+  projectId: string;
+  progress: number;
+  completedTasks: number;
+  totalTasks: number;
+};
+
+export type ProjectEpicsQueryVariables = Exact<{
+  projectId: string;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
+}>;
+
+export type ProjectEpicsQuery = {
+  project: {
+    id: string;
+    epics: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          id: string;
+          name: string;
+          description: string | null;
+          projectId: string;
+          progress: number;
+          completedTasks: number;
+          totalTasks: number;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  };
+};
+
+export type EpicQueryVariables = Exact<{
+  id: string;
+  tasksFirst?: number | null | undefined;
+  tasksAfter?: string | null | undefined;
+}>;
+
+export type EpicQuery = {
+  epic: {
+    id: string;
+    name: string;
+    description: string | null;
+    projectId: string;
+    progress: number;
+    completedTasks: number;
+    totalTasks: number;
+    milestones: Array<{
+      id: string;
+      name: string;
+      description: string | null;
+      dueDate: string | null;
+      epicId: string | null;
+    }>;
+    tasks: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          id: string;
+          title: string;
+          status: TaskStatus;
+          storyPoints: number | null;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  };
+};
+
+export type CreateEpicMutationVariables = Exact<{
+  projectId: string;
+  input: CreateEpicInput;
+}>;
+
+export type CreateEpicMutation = {
+  createEpic: {
+    id: string;
+    name: string;
+    description: string | null;
+    projectId: string;
+    progress: number;
+    completedTasks: number;
+    totalTasks: number;
+  };
+};
+
+export type UpdateEpicMutationVariables = Exact<{
+  id: string;
+  input: UpdateEpicInput;
+}>;
+
+export type UpdateEpicMutation = {
+  updateEpic: { id: string; name: string; description: string | null };
+};
+
+export type DeleteEpicMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type DeleteEpicMutation = { deleteEpic: boolean };
+
+export type RefreshEpicProgressMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type RefreshEpicProgressMutation = {
+  refreshEpicProgress: {
+    id: string;
+    progress: number;
+    completedTasks: number;
+    totalTasks: number;
+  };
+};
+
+export type CreateMilestoneMutationVariables = Exact<{
+  projectId: string;
+  input: CreateMilestoneInput;
+}>;
+
+export type CreateMilestoneMutation = {
+  createMilestone: {
+    id: string;
+    name: string;
+    description: string | null;
+    dueDate: string | null;
+    epicId: string | null;
+  };
+};
+
+export type DeleteMilestoneMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type DeleteMilestoneMutation = { deleteMilestone: boolean };
 
 export type MyNotificationsQueryVariables = Exact<{
   first?: number | null | undefined;
@@ -585,6 +760,213 @@ export type RemoveProjectMemberMutationVariables = Exact<{
 }>;
 
 export type RemoveProjectMemberMutation = { removeProjectMember: boolean };
+
+export type SprintSummaryFragment = {
+  id: string;
+  name: string;
+  goal: string | null;
+  state: SprintState;
+  startDate: string | null;
+  endDate: string | null;
+  capacity: number | null;
+  projectId: string;
+  taskCount: number;
+};
+
+export type SprintTaskFragment = {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  storyPoints: number | null;
+  sprintId: string | null;
+  assignee: { id: string; name: string; avatarUrl: string | null } | null;
+};
+
+export type ProjectSprintsQueryVariables = Exact<{
+  projectId: string;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
+}>;
+
+export type ProjectSprintsQuery = {
+  project: {
+    id: string;
+    sprints: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          id: string;
+          name: string;
+          goal: string | null;
+          state: SprintState;
+          startDate: string | null;
+          endDate: string | null;
+          capacity: number | null;
+          projectId: string;
+          taskCount: number;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  };
+};
+
+export type SprintQueryVariables = Exact<{
+  id: string;
+  tasksFirst?: number | null | undefined;
+  tasksAfter?: string | null | undefined;
+}>;
+
+export type SprintQuery = {
+  sprint: {
+    id: string;
+    name: string;
+    goal: string | null;
+    state: SprintState;
+    startDate: string | null;
+    endDate: string | null;
+    capacity: number | null;
+    projectId: string;
+    taskCount: number;
+    metrics: {
+      totalStoryPoints: number;
+      completedStoryPoints: number;
+      remainingStoryPoints: number;
+      totalTasks: number;
+      completedTasks: number;
+      completionRate: number;
+      velocity: number;
+      capacity: number | null;
+      overCapacity: boolean;
+      workloadDistribution: Array<{
+        assigneeId: string | null;
+        storyPoints: number;
+        taskCount: number;
+        user: { id: string; name: string; avatarUrl: string | null } | null;
+      }>;
+    };
+    burndown: Array<{
+      date: string;
+      idealRemaining: number;
+      actualRemaining: number;
+    }>;
+    tasks: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          id: string;
+          title: string;
+          status: TaskStatus;
+          priority: TaskPriority;
+          storyPoints: number | null;
+          sprintId: string | null;
+          assignee: {
+            id: string;
+            name: string;
+            avatarUrl: string | null;
+          } | null;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  };
+};
+
+export type SprintTaskCandidatesQueryVariables = Exact<{
+  projectId: string;
+  first?: number | null | undefined;
+}>;
+
+export type SprintTaskCandidatesQuery = {
+  project: {
+    id: string;
+    tasks: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          id: string;
+          title: string;
+          status: TaskStatus;
+          sprintId: string | null;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  };
+};
+
+export type CreateSprintMutationVariables = Exact<{
+  projectId: string;
+  input: CreateSprintInput;
+}>;
+
+export type CreateSprintMutation = {
+  createSprint: {
+    id: string;
+    name: string;
+    goal: string | null;
+    state: SprintState;
+    startDate: string | null;
+    endDate: string | null;
+    capacity: number | null;
+    projectId: string;
+    taskCount: number;
+  };
+};
+
+export type UpdateSprintMutationVariables = Exact<{
+  id: string;
+  input: UpdateSprintInput;
+}>;
+
+export type UpdateSprintMutation = {
+  updateSprint: {
+    id: string;
+    name: string;
+    goal: string | null;
+    state: SprintState;
+    startDate: string | null;
+    endDate: string | null;
+    capacity: number | null;
+    projectId: string;
+    taskCount: number;
+  };
+};
+
+export type ChangeSprintStateMutationVariables = Exact<{
+  id: string;
+  state: SprintState;
+}>;
+
+export type ChangeSprintStateMutation = {
+  changeSprintState: { id: string; state: SprintState };
+};
+
+export type DeleteSprintMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type DeleteSprintMutation = { deleteSprint: boolean };
+
+export type AddTaskToSprintMutationVariables = Exact<{
+  sprintId: string;
+  taskId: string;
+}>;
+
+export type AddTaskToSprintMutation = { addTaskToSprint: { id: string } };
+
+export type RemoveTaskFromSprintMutationVariables = Exact<{
+  sprintId: string;
+  taskId: string;
+}>;
+
+export type RemoveTaskFromSprintMutation = {
+  removeTaskFromSprint: { id: string };
+};
 
 export type TaskPersonFragment = {
   id: string;
@@ -1392,6 +1774,94 @@ export type HealthQuery = {
   health: { status: string; uptimeSeconds: number; timestamp: string };
 };
 
+export const EpicSummaryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EpicSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Epic' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedTasks' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EpicSummaryFragment, unknown>;
+export const SprintSummaryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'goal' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SprintSummaryFragment, unknown>;
+export const SprintTaskFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Task' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'priority' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'storyPoints' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sprintId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'assignee' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SprintTaskFragment, unknown>;
 export const TaskPersonFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -2194,6 +2664,737 @@ export const AcceptInvitationDocument = {
 } as unknown as DocumentNode<
   AcceptInvitationMutation,
   AcceptInvitationMutationVariables
+>;
+export const ProjectEpicsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProjectEpics' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'first' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'after' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'epics' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'first' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'first' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'after' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'after' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'cursor' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'FragmentSpread',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'EpicSummary',
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'hasNextPage' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'endCursor' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalCount' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EpicSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Epic' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedTasks' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectEpicsQuery, ProjectEpicsQueryVariables>;
+export const EpicDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Epic' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'tasksFirst' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'tasksAfter' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'epic' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EpicSummary' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'milestones' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dueDate' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'epicId' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tasks' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'first' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'tasksFirst' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'after' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'tasksAfter' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'cursor' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'status' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'storyPoints',
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'hasNextPage' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'endCursor' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalCount' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EpicSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Epic' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedTasks' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EpicQuery, EpicQueryVariables>;
+export const CreateEpicDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateEpic' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateEpicInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createEpic' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'EpicSummary' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'EpicSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Epic' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedTasks' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateEpicMutation, CreateEpicMutationVariables>;
+export const UpdateEpicDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateEpic' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateEpicInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateEpic' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateEpicMutation, UpdateEpicMutationVariables>;
+export const DeleteEpicDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteEpic' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteEpic' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteEpicMutation, DeleteEpicMutationVariables>;
+export const RefreshEpicProgressDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RefreshEpicProgress' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'refreshEpicProgress' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RefreshEpicProgressMutation,
+  RefreshEpicProgressMutationVariables
+>;
+export const CreateMilestoneDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateMilestone' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateMilestoneInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createMilestone' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'dueDate' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'epicId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateMilestoneMutation,
+  CreateMilestoneMutationVariables
+>;
+export const DeleteMilestoneDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteMilestone' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteMilestone' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteMilestoneMutation,
+  DeleteMilestoneMutationVariables
 >;
 export const MyNotificationsDocument = {
   kind: 'Document',
@@ -4199,6 +5400,1058 @@ export const RemoveProjectMemberDocument = {
 } as unknown as DocumentNode<
   RemoveProjectMemberMutation,
   RemoveProjectMemberMutationVariables
+>;
+export const ProjectSprintsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProjectSprints' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'first' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'after' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'sprints' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'first' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'first' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'after' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'after' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'cursor' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'FragmentSpread',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'SprintSummary',
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'hasNextPage' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'endCursor' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalCount' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'goal' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectSprintsQuery, ProjectSprintsQueryVariables>;
+export const SprintDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Sprint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'tasksFirst' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'tasksAfter' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'sprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SprintSummary' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'metrics' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completedStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'remainingStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalTasks' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completedTasks' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completionRate' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'velocity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'capacity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'overCapacity' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'workloadDistribution' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'assigneeId' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'storyPoints' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'taskCount' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'user' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'avatarUrl' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'burndown' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'idealRemaining' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'actualRemaining' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tasks' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'first' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'tasksFirst' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'after' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'tasksAfter' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'cursor' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'FragmentSpread',
+                                    name: { kind: 'Name', value: 'SprintTask' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'hasNextPage' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'endCursor' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalCount' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'goal' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Task' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'priority' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'storyPoints' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sprintId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'assignee' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SprintQuery, SprintQueryVariables>;
+export const SprintTaskCandidatesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SprintTaskCandidates' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'first' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tasks' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'first' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'first' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'sortField' },
+                      value: { kind: 'EnumValue', value: 'CREATED_AT' },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'sortDirection' },
+                      value: { kind: 'EnumValue', value: 'DESC' },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'cursor' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'title' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'status' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'sprintId' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'hasNextPage' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'endCursor' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalCount' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SprintTaskCandidatesQuery,
+  SprintTaskCandidatesQueryVariables
+>;
+export const CreateSprintDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateSprint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateSprintInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createSprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SprintSummary' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'goal' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateSprintMutation,
+  CreateSprintMutationVariables
+>;
+export const UpdateSprintDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateSprint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateSprintInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateSprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SprintSummary' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'goal' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateSprintMutation,
+  UpdateSprintMutationVariables
+>;
+export const ChangeSprintStateDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ChangeSprintState' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'state' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SprintState' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'changeSprintState' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'state' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'state' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ChangeSprintStateMutation,
+  ChangeSprintStateMutationVariables
+>;
+export const DeleteSprintDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteSprint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteSprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteSprintMutation,
+  DeleteSprintMutationVariables
+>;
+export const AddTaskToSprintDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddTaskToSprint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sprintId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addTaskToSprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sprintId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sprintId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddTaskToSprintMutation,
+  AddTaskToSprintMutationVariables
+>;
+export const RemoveTaskFromSprintDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveTaskFromSprint' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'sprintId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeTaskFromSprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'sprintId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'sprintId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveTaskFromSprintMutation,
+  RemoveTaskFromSprintMutationVariables
 >;
 export const ProjectBoardDocument = {
   kind: 'Document',

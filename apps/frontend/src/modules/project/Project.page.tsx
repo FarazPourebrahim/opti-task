@@ -20,9 +20,11 @@ import {
   ROUTE_PARAMS,
   organizationPath,
   projectBoardPath,
+  projectEpicsPath,
   projectMembersPath,
   projectPath,
   projectSettingsPath,
+  projectSprintsPath,
   projectTasksPath,
   projectTeamsPath,
 } from '@/shared/routes/route.constants';
@@ -47,9 +49,8 @@ function Tab({ to, labelKey, end = false }: TabProps) {
 
 /**
  * The frame around one project: its header and tabs, with the current tab's
- * page rendered inside. Sprints, epics, analytics and AI tabs join as their
- * phases land — a tab is added with the screen behind it, never
- * before.
+ * page rendered inside. Analytics and AI tabs join as their phases land — a
+ * tab is added with the screen behind it, never before.
  */
 export function ProjectPage() {
   const { t } = useTranslation();
@@ -137,6 +138,11 @@ export function ProjectPage() {
         />
         <Tab to={projectBoardPath(project.id)} labelKey="project.tabs.board" />
         <Tab to={projectTasksPath(project.id)} labelKey="project.tabs.tasks" />
+        <Tab
+          to={projectSprintsPath(project.id)}
+          labelKey="project.tabs.sprints"
+        />
+        <Tab to={projectEpicsPath(project.id)} labelKey="project.tabs.epics" />
         <Tab
           to={projectMembersPath(project.id)}
           labelKey="project.tabs.members"

@@ -198,6 +198,11 @@ function createCache(): InMemoryCache {
           activities: relayStylePagination(),
         },
       },
+      Sprint: {
+        fields: {
+          tasks: relayStylePagination(),
+        },
+      },
       Epic: {
         fields: {
           tasks: relayStylePagination(),

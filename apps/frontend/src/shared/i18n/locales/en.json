@@ -126,7 +126,11 @@
     "team": "Team",
     "board": "Board",
     "tasks": "Tasks",
-    "task": "Task"
+    "task": "Task",
+    "sprints": "Sprints",
+    "sprint": "Sprint",
+    "epics": "Epics",
+    "epic": "Epic"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -218,6 +222,12 @@
     "sortDirection": {
       "ASC": "Ascending",
       "DESC": "Descending"
+    },
+    "sprintState": {
+      "PLANNED": "Planned",
+      "ACTIVE": "Active",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
     }
   },
   "organization": {
@@ -369,7 +379,9 @@
       "teams": "Teams",
       "settings": "Settings",
       "board": "Board",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "sprints": "Sprints",
+      "epics": "Epics"
     },
     "lifecycleTitle": "Lifecycle",
     "peopleTitle": "People",
@@ -635,6 +647,166 @@
       "timeInvalid": "Enter whole hours, and minutes from 0 to 59.",
       "timeRequired": "Enter some time to log.",
       "labelRequired": "Enter a label."
+    }
+  },
+  "sprint": {
+    "listLoadFailed": "Could not load the sprints.",
+    "loadFailed": "Could not load this sprint.",
+    "new": "New sprint",
+    "empty": "This project has no sprints yet.",
+    "taskCount_one": "{{count}} task",
+    "taskCount_other": "{{count}} tasks",
+    "dateRange": "{{start}} – {{end}}",
+    "startsOn": "Starts {{date}}",
+    "endsOn": "Ends {{date}}",
+    "noDates": "No dates set",
+    "notSet": "Not set",
+    "noGoal": "No goal set.",
+    "name": "Name",
+    "goal": "Goal",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "datesHint": "The burndown needs both dates.",
+    "capacity": "Capacity",
+    "capacityHint": "In story points. Leave empty for no limit.",
+    "createTitle": "Create a sprint",
+    "create": "Create sprint",
+    "created": "{{name}} has been created.",
+    "edit": "Edit sprint",
+    "editTitle": "Edit sprint",
+    "updated": "Sprint details saved.",
+    "delete": "Delete sprint",
+    "deleted": "{{name}} has been deleted.",
+    "deleteConfirmTitle": "Delete {{name}}?",
+    "deleteConfirmBody": "Its tasks stay in the project, but they leave the sprint and its history of figures is lost. This cannot be undone.",
+    "state": "State",
+    "stateChange": "Change sprint state",
+    "stateFinal": "This sprint is closed and cannot be reopened.",
+    "stateChanged": "The sprint is now {{state}}.",
+    "stateRejected": "That change isn’t allowed from the sprint’s current state. Reload to see where it stands.",
+    "transition": {
+      "ACTIVE": "Start sprint",
+      "COMPLETED": "Complete sprint",
+      "CANCELLED": "Cancel sprint",
+      "PLANNED": "Back to planned"
+    },
+    "metrics": {
+      "title": "Sprint figures",
+      "totalPoints": "Committed points",
+      "completedPoints": "Completed points",
+      "remainingPoints": "Remaining points",
+      "tasks": "Tasks done",
+      "tasksValue": "{{completed}} of {{total}}",
+      "velocity": "Velocity",
+      "capacity": "Capacity",
+      "noCapacity": "Not set",
+      "completionRate": "Completion",
+      "percent": "{{value}}%",
+      "capacityUse": "Capacity used",
+      "capacityValue": "{{committed}} of {{capacity}} points",
+      "overCapacityTitle": "This sprint is over capacity",
+      "overCapacityBody": "{{committed}} points are committed against a capacity of {{capacity}} — {{over}} too many."
+    },
+    "burndown": {
+      "title": "Burndown",
+      "label": "Remaining story points per day, ideal against actual",
+      "ideal": "Ideal",
+      "actual": "Actual",
+      "needsDates": "A burndown needs a start date and an end date. Edit the sprint to set them.",
+      "empty": "There is nothing to chart for this sprint yet."
+    },
+    "workload": {
+      "title": "Workload",
+      "empty": "No one carries any work in this sprint yet.",
+      "assignee": "Assignee",
+      "tasks": "Tasks",
+      "points": "Points",
+      "share": "Share",
+      "unassigned": "Unassigned",
+      "shareOf": "{{name}}: {{points}} points"
+    },
+    "tasks": {
+      "title": "Tasks in this sprint",
+      "empty": "This sprint has no tasks yet.",
+      "addLabel": "Add a task",
+      "addHint": "The project’s 100 most recent tasks that are not in this sprint.",
+      "addPlaceholder": "Choose a task",
+      "add": "Add to sprint",
+      "added": "“{{title}}” has been added to the sprint.",
+      "noCandidates": "Every recent task in this project is already in this sprint.",
+      "remove": "Remove",
+      "removeNamed": "Remove “{{title}}” from the sprint",
+      "removed": "“{{title}}” has been removed from the sprint.",
+      "columns": {
+        "task": "Task",
+        "status": "Status",
+        "priority": "Priority",
+        "assignee": "Assignee",
+        "points": "Points",
+        "actions": "Actions"
+      }
+    },
+    "validation": {
+      "nameRequired": "Enter a name.",
+      "nameTooLong": "Use 120 characters or fewer.",
+      "goalTooLong": "Use 2,000 characters or fewer.",
+      "dateInvalid": "Enter a real date.",
+      "endBeforeStart": "The end date cannot be before the start date.",
+      "capacityRange": "Enter a whole number from 0 to 100,000."
+    }
+  },
+  "epic": {
+    "listLoadFailed": "Could not load the epics.",
+    "loadFailed": "Could not load this epic.",
+    "new": "New epic",
+    "empty": "This project has no epics yet.",
+    "name": "Name",
+    "description": "Description",
+    "noDescription": "No description.",
+    "createTitle": "Create an epic",
+    "create": "Create epic",
+    "created": "{{name}} has been created.",
+    "edit": "Edit epic",
+    "editTitle": "Edit epic",
+    "updated": "Epic details saved.",
+    "delete": "Delete epic",
+    "deleted": "{{name}} has been deleted.",
+    "deleteConfirmTitle": "Delete {{name}}?",
+    "deleteConfirmBody": "Its tasks stay in the project without an epic. This cannot be undone.",
+    "progress": "Progress",
+    "progressOf": "Progress of {{name}}",
+    "tasksDone": "{{completed}} of {{total}} tasks done",
+    "percent": "{{value}}%",
+    "progressLive": "This figure is worked out from the epic’s tasks each time it is shown, so it is always current. Saving it stores today’s figure on the epic for reports that read the stored value; it does not change what you see here.",
+    "progressSave": "Save progress",
+    "progressSaved": "Progress saved at {{value}}%.",
+    "tasks": {
+      "title": "Tasks in this epic",
+      "empty": "This epic has no tasks yet. A task joins an epic when it is created."
+    },
+    "milestone": {
+      "title": "Milestones",
+      "new": "New milestone",
+      "empty": "This epic has no milestones yet.",
+      "name": "Name",
+      "description": "Description",
+      "dueDate": "Due date",
+      "due": "Due {{date}}",
+      "noDueDate": "No due date",
+      "createTitle": "Create a milestone",
+      "create": "Create milestone",
+      "created": "{{name}} has been created.",
+      "deleteNamed": "Delete {{name}}",
+      "deleted": "{{name}} has been deleted.",
+      "deleteConfirmTitle": "Delete {{name}}?",
+      "deleteConfirmBody": "This cannot be undone.",
+      "noEdit": "A milestone cannot be edited once created. To change one, delete it and create it again."
+    },
+    "validation": {
+      "nameRequired": "Enter a name.",
+      "nameTooLong": "Use 150 characters or fewer.",
+      "descriptionTooLong": "Use 5,000 characters or fewer.",
+      "dueDateInvalid": "Enter a real date."
     }
   }
 }

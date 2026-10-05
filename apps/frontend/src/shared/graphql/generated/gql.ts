@@ -23,6 +23,15 @@ type Documents = {
   '\n  mutation ChangePassword($input: ChangePasswordInput!) {\n    changePassword(input: $input)\n  }\n': typeof types.ChangePasswordDocument;
   '\n  mutation RequestPasswordReset($email: String!) {\n    requestPasswordReset(email: $email)\n  }\n': typeof types.RequestPasswordResetDocument;
   '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n': typeof types.AcceptInvitationDocument;
+  '\n  fragment EpicSummary on Epic {\n    id\n    name\n    description\n    projectId\n    progress\n    completedTasks\n    totalTasks\n  }\n': typeof types.EpicSummaryFragmentDoc;
+  '\n  query ProjectEpics($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      epics(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...EpicSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.ProjectEpicsDocument;
+  '\n  query Epic($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    epic(id: $id) {\n      ...EpicSummary\n      milestones {\n        id\n        name\n        description\n        dueDate\n        epicId\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            storyPoints\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.EpicDocument;
+  '\n  mutation CreateEpic($projectId: UUID!, $input: CreateEpicInput!) {\n    createEpic(projectId: $projectId, input: $input) {\n      ...EpicSummary\n    }\n  }\n': typeof types.CreateEpicDocument;
+  '\n  mutation UpdateEpic($id: UUID!, $input: UpdateEpicInput!) {\n    updateEpic(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n': typeof types.UpdateEpicDocument;
+  '\n  mutation DeleteEpic($id: UUID!) {\n    deleteEpic(id: $id)\n  }\n': typeof types.DeleteEpicDocument;
+  '\n  mutation RefreshEpicProgress($id: UUID!) {\n    refreshEpicProgress(id: $id) {\n      id\n      progress\n      completedTasks\n      totalTasks\n    }\n  }\n': typeof types.RefreshEpicProgressDocument;
+  '\n  mutation CreateMilestone($projectId: UUID!, $input: CreateMilestoneInput!) {\n    createMilestone(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      dueDate\n      epicId\n    }\n  }\n': typeof types.CreateMilestoneDocument;
+  '\n  mutation DeleteMilestone($id: UUID!) {\n    deleteMilestone(id: $id)\n  }\n': typeof types.DeleteMilestoneDocument;
   '\n  query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {\n    myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {\n      edges {\n        cursor\n        node {\n          id\n          type\n          title\n          body\n          read\n          createdAt\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n': typeof types.MyNotificationsDocument;
   '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n': typeof types.UnreadNotificationCountDocument;
   '\n  query MyOrganizations($first: Int, $after: String) {\n    myOrganizations(first: $first, after: $after) {\n      edges {\n        cursor\n        node {\n          id\n          name\n          description\n          logoUrl\n          memberCount\n          projectCount\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n': typeof types.MyOrganizationsDocument;
@@ -45,6 +54,17 @@ type Documents = {
   '\n  mutation AddProjectMember(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    addProjectMember(projectId: $projectId, userId: $userId, role: $role) {\n      id\n      role\n    }\n  }\n': typeof types.AddProjectMemberDocument;
   '\n  mutation UpdateProjectMemberRole(\n    $projectId: UUID!\n    $userId: UUID!\n    $role: ProjectRole!\n  ) {\n    updateProjectMemberRole(\n      projectId: $projectId\n      userId: $userId\n      role: $role\n    ) {\n      id\n      role\n    }\n  }\n': typeof types.UpdateProjectMemberRoleDocument;
   '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n': typeof types.RemoveProjectMemberDocument;
+  '\n  fragment SprintSummary on Sprint {\n    id\n    name\n    goal\n    state\n    startDate\n    endDate\n    capacity\n    projectId\n    taskCount\n  }\n': typeof types.SprintSummaryFragmentDoc;
+  '\n  fragment SprintTask on Task {\n    id\n    title\n    status\n    priority\n    storyPoints\n    sprintId\n    assignee {\n      id\n      name\n      avatarUrl\n    }\n  }\n': typeof types.SprintTaskFragmentDoc;
+  '\n  query ProjectSprints($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...SprintSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.ProjectSprintsDocument;
+  '\n  query Sprint($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    sprint(id: $id) {\n      ...SprintSummary\n      metrics {\n        totalStoryPoints\n        completedStoryPoints\n        remainingStoryPoints\n        totalTasks\n        completedTasks\n        completionRate\n        velocity\n        capacity\n        overCapacity\n        workloadDistribution {\n          assigneeId\n          storyPoints\n          taskCount\n          user {\n            id\n            name\n            avatarUrl\n          }\n        }\n      }\n      burndown {\n        date\n        idealRemaining\n        actualRemaining\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            ...SprintTask\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.SprintDocument;
+  '\n  query SprintTaskCandidates($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            sprintId\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.SprintTaskCandidatesDocument;
+  '\n  mutation CreateSprint($projectId: UUID!, $input: CreateSprintInput!) {\n    createSprint(projectId: $projectId, input: $input) {\n      ...SprintSummary\n    }\n  }\n': typeof types.CreateSprintDocument;
+  '\n  mutation UpdateSprint($id: UUID!, $input: UpdateSprintInput!) {\n    updateSprint(id: $id, input: $input) {\n      ...SprintSummary\n    }\n  }\n': typeof types.UpdateSprintDocument;
+  '\n  mutation ChangeSprintState($id: UUID!, $state: SprintState!) {\n    changeSprintState(id: $id, state: $state) {\n      id\n      state\n    }\n  }\n': typeof types.ChangeSprintStateDocument;
+  '\n  mutation DeleteSprint($id: UUID!) {\n    deleteSprint(id: $id)\n  }\n': typeof types.DeleteSprintDocument;
+  '\n  mutation AddTaskToSprint($sprintId: UUID!, $taskId: UUID!) {\n    addTaskToSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n': typeof types.AddTaskToSprintDocument;
+  '\n  mutation RemoveTaskFromSprint($sprintId: UUID!, $taskId: UUID!) {\n    removeTaskFromSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n': typeof types.RemoveTaskFromSprintDocument;
   '\n  fragment TaskPerson on User {\n    id\n    name\n    avatarUrl\n  }\n': typeof types.TaskPersonFragmentDoc;
   '\n  fragment TaskCard on Task {\n    id\n    title\n    priority\n    status\n    storyPoints\n    projectId\n    assigneeId\n    reporterId\n    sprintId\n    epicId\n    dueDate\n    createdAt\n    assignee {\n      ...TaskPerson\n    }\n    labels {\n      id\n      name\n    }\n  }\n': typeof types.TaskCardFragmentDoc;
   '\n  fragment TaskPage on TaskConnection {\n    edges {\n      cursor\n      node {\n        ...TaskCard\n      }\n    }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    totalCount\n  }\n': typeof types.TaskPageFragmentDoc;
@@ -104,6 +124,24 @@ const documents: Documents = {
     types.RequestPasswordResetDocument,
   '\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n      role\n      user {\n        id\n        name\n      }\n    }\n  }\n':
     types.AcceptInvitationDocument,
+  '\n  fragment EpicSummary on Epic {\n    id\n    name\n    description\n    projectId\n    progress\n    completedTasks\n    totalTasks\n  }\n':
+    types.EpicSummaryFragmentDoc,
+  '\n  query ProjectEpics($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      epics(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...EpicSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.ProjectEpicsDocument,
+  '\n  query Epic($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    epic(id: $id) {\n      ...EpicSummary\n      milestones {\n        id\n        name\n        description\n        dueDate\n        epicId\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            storyPoints\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.EpicDocument,
+  '\n  mutation CreateEpic($projectId: UUID!, $input: CreateEpicInput!) {\n    createEpic(projectId: $projectId, input: $input) {\n      ...EpicSummary\n    }\n  }\n':
+    types.CreateEpicDocument,
+  '\n  mutation UpdateEpic($id: UUID!, $input: UpdateEpicInput!) {\n    updateEpic(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n':
+    types.UpdateEpicDocument,
+  '\n  mutation DeleteEpic($id: UUID!) {\n    deleteEpic(id: $id)\n  }\n':
+    types.DeleteEpicDocument,
+  '\n  mutation RefreshEpicProgress($id: UUID!) {\n    refreshEpicProgress(id: $id) {\n      id\n      progress\n      completedTasks\n      totalTasks\n    }\n  }\n':
+    types.RefreshEpicProgressDocument,
+  '\n  mutation CreateMilestone($projectId: UUID!, $input: CreateMilestoneInput!) {\n    createMilestone(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      dueDate\n      epicId\n    }\n  }\n':
+    types.CreateMilestoneDocument,
+  '\n  mutation DeleteMilestone($id: UUID!) {\n    deleteMilestone(id: $id)\n  }\n':
+    types.DeleteMilestoneDocument,
   '\n  query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {\n    myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {\n      edges {\n        cursor\n        node {\n          id\n          type\n          title\n          body\n          read\n          createdAt\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n':
     types.MyNotificationsDocument,
   '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n':
@@ -148,6 +186,28 @@ const documents: Documents = {
     types.UpdateProjectMemberRoleDocument,
   '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n':
     types.RemoveProjectMemberDocument,
+  '\n  fragment SprintSummary on Sprint {\n    id\n    name\n    goal\n    state\n    startDate\n    endDate\n    capacity\n    projectId\n    taskCount\n  }\n':
+    types.SprintSummaryFragmentDoc,
+  '\n  fragment SprintTask on Task {\n    id\n    title\n    status\n    priority\n    storyPoints\n    sprintId\n    assignee {\n      id\n      name\n      avatarUrl\n    }\n  }\n':
+    types.SprintTaskFragmentDoc,
+  '\n  query ProjectSprints($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...SprintSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.ProjectSprintsDocument,
+  '\n  query Sprint($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    sprint(id: $id) {\n      ...SprintSummary\n      metrics {\n        totalStoryPoints\n        completedStoryPoints\n        remainingStoryPoints\n        totalTasks\n        completedTasks\n        completionRate\n        velocity\n        capacity\n        overCapacity\n        workloadDistribution {\n          assigneeId\n          storyPoints\n          taskCount\n          user {\n            id\n            name\n            avatarUrl\n          }\n        }\n      }\n      burndown {\n        date\n        idealRemaining\n        actualRemaining\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            ...SprintTask\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.SprintDocument,
+  '\n  query SprintTaskCandidates($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            sprintId\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.SprintTaskCandidatesDocument,
+  '\n  mutation CreateSprint($projectId: UUID!, $input: CreateSprintInput!) {\n    createSprint(projectId: $projectId, input: $input) {\n      ...SprintSummary\n    }\n  }\n':
+    types.CreateSprintDocument,
+  '\n  mutation UpdateSprint($id: UUID!, $input: UpdateSprintInput!) {\n    updateSprint(id: $id, input: $input) {\n      ...SprintSummary\n    }\n  }\n':
+    types.UpdateSprintDocument,
+  '\n  mutation ChangeSprintState($id: UUID!, $state: SprintState!) {\n    changeSprintState(id: $id, state: $state) {\n      id\n      state\n    }\n  }\n':
+    types.ChangeSprintStateDocument,
+  '\n  mutation DeleteSprint($id: UUID!) {\n    deleteSprint(id: $id)\n  }\n':
+    types.DeleteSprintDocument,
+  '\n  mutation AddTaskToSprint($sprintId: UUID!, $taskId: UUID!) {\n    addTaskToSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n':
+    types.AddTaskToSprintDocument,
+  '\n  mutation RemoveTaskFromSprint($sprintId: UUID!, $taskId: UUID!) {\n    removeTaskFromSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n':
+    types.RemoveTaskFromSprintDocument,
   '\n  fragment TaskPerson on User {\n    id\n    name\n    avatarUrl\n  }\n':
     types.TaskPersonFragmentDoc,
   '\n  fragment TaskCard on Task {\n    id\n    title\n    priority\n    status\n    storyPoints\n    projectId\n    assigneeId\n    reporterId\n    sprintId\n    epicId\n    dueDate\n    createdAt\n    assignee {\n      ...TaskPerson\n    }\n    labels {\n      id\n      name\n    }\n  }\n':
@@ -302,6 +362,60 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
+  source: '\n  fragment EpicSummary on Epic {\n    id\n    name\n    description\n    projectId\n    progress\n    completedTasks\n    totalTasks\n  }\n',
+): (typeof documents)['\n  fragment EpicSummary on Epic {\n    id\n    name\n    description\n    projectId\n    progress\n    completedTasks\n    totalTasks\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectEpics($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      epics(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...EpicSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectEpics($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      epics(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...EpicSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Epic($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    epic(id: $id) {\n      ...EpicSummary\n      milestones {\n        id\n        name\n        description\n        dueDate\n        epicId\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            storyPoints\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query Epic($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    epic(id: $id) {\n      ...EpicSummary\n      milestones {\n        id\n        name\n        description\n        dueDate\n        epicId\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            storyPoints\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateEpic($projectId: UUID!, $input: CreateEpicInput!) {\n    createEpic(projectId: $projectId, input: $input) {\n      ...EpicSummary\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateEpic($projectId: UUID!, $input: CreateEpicInput!) {\n    createEpic(projectId: $projectId, input: $input) {\n      ...EpicSummary\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateEpic($id: UUID!, $input: UpdateEpicInput!) {\n    updateEpic(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateEpic($id: UUID!, $input: UpdateEpicInput!) {\n    updateEpic(id: $id, input: $input) {\n      id\n      name\n      description\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteEpic($id: UUID!) {\n    deleteEpic(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteEpic($id: UUID!) {\n    deleteEpic(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RefreshEpicProgress($id: UUID!) {\n    refreshEpicProgress(id: $id) {\n      id\n      progress\n      completedTasks\n      totalTasks\n    }\n  }\n',
+): (typeof documents)['\n  mutation RefreshEpicProgress($id: UUID!) {\n    refreshEpicProgress(id: $id) {\n      id\n      progress\n      completedTasks\n      totalTasks\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateMilestone($projectId: UUID!, $input: CreateMilestoneInput!) {\n    createMilestone(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      dueDate\n      epicId\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateMilestone($projectId: UUID!, $input: CreateMilestoneInput!) {\n    createMilestone(projectId: $projectId, input: $input) {\n      id\n      name\n      description\n      dueDate\n      epicId\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteMilestone($id: UUID!) {\n    deleteMilestone(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteMilestone($id: UUID!) {\n    deleteMilestone(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
   source: '\n  query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {\n    myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {\n      edges {\n        cursor\n        node {\n          id\n          type\n          title\n          body\n          read\n          createdAt\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n',
 ): (typeof documents)['\n  query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {\n    myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {\n      edges {\n        cursor\n        node {\n          id\n          type\n          title\n          body\n          read\n          createdAt\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      totalCount\n    }\n  }\n'];
 /**
@@ -430,6 +544,72 @@ export function graphql(
 export function graphql(
   source: '\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n',
 ): (typeof documents)['\n  mutation RemoveProjectMember($projectId: UUID!, $userId: UUID!) {\n    removeProjectMember(projectId: $projectId, userId: $userId)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment SprintSummary on Sprint {\n    id\n    name\n    goal\n    state\n    startDate\n    endDate\n    capacity\n    projectId\n    taskCount\n  }\n',
+): (typeof documents)['\n  fragment SprintSummary on Sprint {\n    id\n    name\n    goal\n    state\n    startDate\n    endDate\n    capacity\n    projectId\n    taskCount\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  fragment SprintTask on Task {\n    id\n    title\n    status\n    priority\n    storyPoints\n    sprintId\n    assignee {\n      id\n      name\n      avatarUrl\n    }\n  }\n',
+): (typeof documents)['\n  fragment SprintTask on Task {\n    id\n    title\n    status\n    priority\n    storyPoints\n    sprintId\n    assignee {\n      id\n      name\n      avatarUrl\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectSprints($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...SprintSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectSprints($projectId: UUID!, $first: Int, $after: String) {\n    project(id: $projectId) {\n      id\n      sprints(first: $first, after: $after) {\n        edges {\n          cursor\n          node {\n            ...SprintSummary\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Sprint($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    sprint(id: $id) {\n      ...SprintSummary\n      metrics {\n        totalStoryPoints\n        completedStoryPoints\n        remainingStoryPoints\n        totalTasks\n        completedTasks\n        completionRate\n        velocity\n        capacity\n        overCapacity\n        workloadDistribution {\n          assigneeId\n          storyPoints\n          taskCount\n          user {\n            id\n            name\n            avatarUrl\n          }\n        }\n      }\n      burndown {\n        date\n        idealRemaining\n        actualRemaining\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            ...SprintTask\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query Sprint($id: UUID!, $tasksFirst: Int, $tasksAfter: String) {\n    sprint(id: $id) {\n      ...SprintSummary\n      metrics {\n        totalStoryPoints\n        completedStoryPoints\n        remainingStoryPoints\n        totalTasks\n        completedTasks\n        completionRate\n        velocity\n        capacity\n        overCapacity\n        workloadDistribution {\n          assigneeId\n          storyPoints\n          taskCount\n          user {\n            id\n            name\n            avatarUrl\n          }\n        }\n      }\n      burndown {\n        date\n        idealRemaining\n        actualRemaining\n      }\n      tasks(first: $tasksFirst, after: $tasksAfter) {\n        edges {\n          cursor\n          node {\n            ...SprintTask\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query SprintTaskCandidates($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            sprintId\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query SprintTaskCandidates($projectId: UUID!, $first: Int) {\n    project(id: $projectId) {\n      id\n      tasks(first: $first, sortField: CREATED_AT, sortDirection: DESC) {\n        edges {\n          cursor\n          node {\n            id\n            title\n            status\n            sprintId\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation CreateSprint($projectId: UUID!, $input: CreateSprintInput!) {\n    createSprint(projectId: $projectId, input: $input) {\n      ...SprintSummary\n    }\n  }\n',
+): (typeof documents)['\n  mutation CreateSprint($projectId: UUID!, $input: CreateSprintInput!) {\n    createSprint(projectId: $projectId, input: $input) {\n      ...SprintSummary\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation UpdateSprint($id: UUID!, $input: UpdateSprintInput!) {\n    updateSprint(id: $id, input: $input) {\n      ...SprintSummary\n    }\n  }\n',
+): (typeof documents)['\n  mutation UpdateSprint($id: UUID!, $input: UpdateSprintInput!) {\n    updateSprint(id: $id, input: $input) {\n      ...SprintSummary\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ChangeSprintState($id: UUID!, $state: SprintState!) {\n    changeSprintState(id: $id, state: $state) {\n      id\n      state\n    }\n  }\n',
+): (typeof documents)['\n  mutation ChangeSprintState($id: UUID!, $state: SprintState!) {\n    changeSprintState(id: $id, state: $state) {\n      id\n      state\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeleteSprint($id: UUID!) {\n    deleteSprint(id: $id)\n  }\n',
+): (typeof documents)['\n  mutation DeleteSprint($id: UUID!) {\n    deleteSprint(id: $id)\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation AddTaskToSprint($sprintId: UUID!, $taskId: UUID!) {\n    addTaskToSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n',
+): (typeof documents)['\n  mutation AddTaskToSprint($sprintId: UUID!, $taskId: UUID!) {\n    addTaskToSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RemoveTaskFromSprint($sprintId: UUID!, $taskId: UUID!) {\n    removeTaskFromSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n',
+): (typeof documents)['\n  mutation RemoveTaskFromSprint($sprintId: UUID!, $taskId: UUID!) {\n    removeTaskFromSprint(sprintId: $sprintId, taskId: $taskId) {\n      id\n    }\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
