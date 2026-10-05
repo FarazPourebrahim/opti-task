@@ -173,3 +173,16 @@ export const RemoveAttachmentMutation = graphql(`
     removeAttachment(id: $id)
   }
 `);
+
+/** Someone commented on this task. The event carries the comment in full. */
+export const CommentAddedSubscription = graphql(`
+  subscription CommentAdded($taskId: UUID!) {
+    commentAdded(taskId: $taskId) {
+      commentId
+      taskId
+      comment {
+        ...CommentThread
+      }
+    }
+  }
+`);

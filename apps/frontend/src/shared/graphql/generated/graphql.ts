@@ -36,6 +36,18 @@ export type AddTeamMemberInput = {
   workload?: number | null | undefined;
 };
 
+export type AiApprovalStatus =
+  'APPROVED' | 'OVERRIDDEN' | 'PENDING' | 'REJECTED';
+
+export type AiRecommendationType =
+  | 'PROGRESS_TRACKING'
+  | 'RECOMMENDATION'
+  | 'SPRINT_HEALTH'
+  | 'STORY_POINT_ESTIMATION'
+  | 'TASK_ASSIGNMENT';
+
+export type AiResolutionStatus = 'DISMISSED' | 'OPEN' | 'RESOLVED';
+
 export type AvailabilityStatus = 'AVAILABLE' | 'AWAY' | 'BUSY' | 'OFFLINE';
 
 export type ChangePasswordInput = {
@@ -210,6 +222,53 @@ export type UpdateTeamMemberInput = {
   responsibilities?: string | null | undefined;
   role?: TeamRole | null | undefined;
   workload?: number | null | undefined;
+};
+
+export type AiRecommendationItemFragment = {
+  id: string;
+  type: AiRecommendationType;
+  text: string;
+  confidenceScore: number | null;
+  provider: string | null;
+  approvalStatus: AiApprovalStatus;
+  resolutionStatus: AiResolutionStatus;
+  metadata: Record<string, unknown>;
+  projectId: string;
+  taskId: string | null;
+  sprintId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  requestedBy: { id: string; name: string } | null;
+  approvedBy: { id: string; name: string } | null;
+};
+
+export type AiRecommendationUpdatedSubscriptionVariables = Exact<{
+  projectId: string;
+}>;
+
+export type AiRecommendationUpdatedSubscription = {
+  aiRecommendationUpdated: {
+    recommendationId: string;
+    projectId: string;
+    approvalStatus: AiApprovalStatus;
+    recommendation: {
+      id: string;
+      type: AiRecommendationType;
+      text: string;
+      confidenceScore: number | null;
+      provider: string | null;
+      approvalStatus: AiApprovalStatus;
+      resolutionStatus: AiResolutionStatus;
+      metadata: Record<string, unknown>;
+      projectId: string;
+      taskId: string | null;
+      sprintId: string | null;
+      createdAt: string;
+      updatedAt: string;
+      requestedBy: { id: string; name: string } | null;
+      approvedBy: { id: string; name: string } | null;
+    } | null;
+  };
 };
 
 export type CurrentUserQueryVariables = Exact<{ [key: string]: never }>;
@@ -678,6 +737,69 @@ export type RemoveAttachmentMutationVariables = Exact<{
 
 export type RemoveAttachmentMutation = { removeAttachment: boolean };
 
+export type CommentAddedSubscriptionVariables = Exact<{
+  taskId: string;
+}>;
+
+export type CommentAddedSubscription = {
+  commentAdded: {
+    commentId: string;
+    taskId: string;
+    comment: {
+      __typename: 'Comment';
+      id: string;
+      body: string;
+      resolved: boolean;
+      edited: boolean;
+      editedAt: string | null;
+      taskId: string;
+      parentCommentId: string | null;
+      createdAt: string;
+      replies: Array<{
+        __typename: 'Comment';
+        id: string;
+        body: string;
+        resolved: boolean;
+        edited: boolean;
+        editedAt: string | null;
+        taskId: string;
+        parentCommentId: string | null;
+        createdAt: string;
+        author: {
+          __typename: 'User';
+          id: string;
+          name: string;
+          avatarUrl: string | null;
+        };
+        mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+        attachments: Array<{
+          id: string;
+          filename: string;
+          contentType: string | null;
+          sizeBytes: number | null;
+          createdAt: string;
+          uploadedBy: { id: string; name: string };
+        }>;
+      }>;
+      author: {
+        __typename: 'User';
+        id: string;
+        name: string;
+        avatarUrl: string | null;
+      };
+      mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+      attachments: Array<{
+        id: string;
+        filename: string;
+        contentType: string | null;
+        sizeBytes: number | null;
+        createdAt: string;
+        uploadedBy: { id: string; name: string };
+      }>;
+    } | null;
+  };
+};
+
 export type EpicSummaryFragment = {
   id: string;
   name: string;
@@ -820,6 +942,39 @@ export type DeleteMilestoneMutationVariables = Exact<{
 
 export type DeleteMilestoneMutation = { deleteMilestone: boolean };
 
+export type EpicProgressQueryVariables = Exact<{
+  id: string;
+}>;
+
+export type EpicProgressQuery = {
+  epic: {
+    id: string;
+    progress: number;
+    completedTasks: number;
+    totalTasks: number;
+  };
+};
+
+export type NotificationItemFragment = {
+  __typename: 'Notification';
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  metadata: Record<string, unknown>;
+  read: boolean;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export type UnreadNotificationCountQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type UnreadNotificationCountQuery = { unreadNotificationCount: number };
+
 export type MyNotificationsQueryVariables = Exact<{
   first?: number | null | undefined;
   after?: string | null | undefined;
@@ -832,11 +987,16 @@ export type MyNotificationsQuery = {
     edges: Array<{
       cursor: string;
       node: {
+        __typename: 'Notification';
         id: string;
         type: NotificationType;
         title: string;
         body: string | null;
+        entityType: string | null;
+        entityId: string | null;
+        metadata: Record<string, unknown>;
         read: boolean;
+        readAt: string | null;
         createdAt: string;
       };
     }>;
@@ -844,11 +1004,49 @@ export type MyNotificationsQuery = {
   };
 };
 
-export type UnreadNotificationCountQueryVariables = Exact<{
+export type MarkNotificationReadMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type MarkNotificationReadMutation = {
+  markNotificationRead: {
+    __typename: 'Notification';
+    id: string;
+    read: boolean;
+    readAt: string | null;
+  };
+};
+
+export type MarkAllNotificationsReadMutationVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type UnreadNotificationCountQuery = { unreadNotificationCount: number };
+export type MarkAllNotificationsReadMutation = {
+  markAllNotificationsRead: number;
+};
+
+export type NotificationReceivedSubscriptionVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type NotificationReceivedSubscription = {
+  notificationReceived: {
+    notificationId: string;
+    notification: {
+      __typename: 'Notification';
+      id: string;
+      type: NotificationType;
+      title: string;
+      body: string | null;
+      entityType: string | null;
+      entityId: string | null;
+      metadata: Record<string, unknown>;
+      read: boolean;
+      readAt: string | null;
+      createdAt: string;
+    } | null;
+  };
+};
 
 export type MyOrganizationsQueryVariables = Exact<{
   first?: number | null | undefined;
@@ -1169,6 +1367,31 @@ export type SprintTaskFragment = {
   assignee: { id: string; name: string; avatarUrl: string | null } | null;
 };
 
+export type SprintFiguresFragment = {
+  metrics: {
+    totalStoryPoints: number;
+    completedStoryPoints: number;
+    remainingStoryPoints: number;
+    totalTasks: number;
+    completedTasks: number;
+    completionRate: number;
+    velocity: number;
+    capacity: number | null;
+    overCapacity: boolean;
+    workloadDistribution: Array<{
+      assigneeId: string | null;
+      storyPoints: number;
+      taskCount: number;
+      user: { id: string; name: string; avatarUrl: string | null } | null;
+    }>;
+  };
+  burndown: Array<{
+    date: string;
+    idealRemaining: number;
+    actualRemaining: number;
+  }>;
+};
+
 export type ProjectSprintsQueryVariables = Exact<{
   projectId: string;
   first?: number | null | undefined;
@@ -1216,6 +1439,26 @@ export type SprintQuery = {
     capacity: number | null;
     projectId: string;
     taskCount: number;
+    tasks: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          id: string;
+          title: string;
+          status: TaskStatus;
+          priority: TaskPriority;
+          storyPoints: number | null;
+          sprintId: string | null;
+          assignee: {
+            id: string;
+            name: string;
+            avatarUrl: string | null;
+          } | null;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
     metrics: {
       totalStoryPoints: number;
       completedStoryPoints: number;
@@ -1238,26 +1481,6 @@ export type SprintQuery = {
       idealRemaining: number;
       actualRemaining: number;
     }>;
-    tasks: {
-      totalCount: number;
-      edges: Array<{
-        cursor: string;
-        node: {
-          id: string;
-          title: string;
-          status: TaskStatus;
-          priority: TaskPriority;
-          storyPoints: number | null;
-          sprintId: string | null;
-          assignee: {
-            id: string;
-            name: string;
-            avatarUrl: string | null;
-          } | null;
-        };
-      }>;
-      pageInfo: { hasNextPage: boolean; endCursor: string | null };
-    };
   };
 };
 
@@ -1352,6 +1575,62 @@ export type RemoveTaskFromSprintMutationVariables = Exact<{
 
 export type RemoveTaskFromSprintMutation = {
   removeTaskFromSprint: { id: string };
+};
+
+export type SprintFiguresQueryVariables = Exact<{
+  id: string;
+}>;
+
+export type SprintFiguresQuery = {
+  sprint: {
+    id: string;
+    state: SprintState;
+    taskCount: number;
+    metrics: {
+      totalStoryPoints: number;
+      completedStoryPoints: number;
+      remainingStoryPoints: number;
+      totalTasks: number;
+      completedTasks: number;
+      completionRate: number;
+      velocity: number;
+      capacity: number | null;
+      overCapacity: boolean;
+      workloadDistribution: Array<{
+        assigneeId: string | null;
+        storyPoints: number;
+        taskCount: number;
+        user: { id: string; name: string; avatarUrl: string | null } | null;
+      }>;
+    };
+    burndown: Array<{
+      date: string;
+      idealRemaining: number;
+      actualRemaining: number;
+    }>;
+  };
+};
+
+export type SprintUpdatedSubscriptionVariables = Exact<{
+  projectId: string;
+}>;
+
+export type SprintUpdatedSubscription = {
+  sprintUpdated: {
+    sprintId: string;
+    projectId: string;
+    sprint: {
+      id: string;
+      name: string;
+      goal: string | null;
+      state: SprintState;
+      startDate: string | null;
+      endDate: string | null;
+      capacity: number | null;
+      projectId: string;
+      taskCount: number;
+    } | null;
+  };
 };
 
 export type TaskPersonFragment = {
@@ -1971,6 +2250,39 @@ export type RemoveTaskLabelMutation = {
   removeTaskLabel: { id: string; labels: Array<{ id: string; name: string }> };
 };
 
+export type TaskUpdatedSubscriptionVariables = Exact<{
+  projectId: string;
+}>;
+
+export type TaskUpdatedSubscription = {
+  taskUpdated: {
+    taskId: string;
+    projectId: string;
+    task: {
+      description: string | null;
+      loggedSeconds: number;
+      updatedAt: string;
+      id: string;
+      title: string;
+      priority: TaskPriority;
+      status: TaskStatus;
+      storyPoints: number | null;
+      projectId: string;
+      assigneeId: string | null;
+      reporterId: string | null;
+      sprintId: string | null;
+      epicId: string | null;
+      dueDate: string | null;
+      createdAt: string;
+      reporter: { id: string; name: string; avatarUrl: string | null } | null;
+      watchers: Array<{ id: string; name: string; avatarUrl: string | null }>;
+      dependencies: Array<{ id: string; title: string; status: TaskStatus }>;
+      assignee: { id: string; name: string; avatarUrl: string | null } | null;
+      labels: Array<{ id: string; name: string }>;
+    } | null;
+  };
+};
+
 export type TeamQueryVariables = Exact<{
   id: string;
 }>;
@@ -2160,6 +2472,59 @@ export type HealthQuery = {
   health: { status: string; uptimeSeconds: number; timestamp: string };
 };
 
+export const AiRecommendationItemFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AiRecommendationItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AiRecommendation' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'text' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'confidenceScore' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'approvalStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolutionStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sprintId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'requestedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'approvedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AiRecommendationItemFragment, unknown>;
 export const CommentPersonFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -2492,6 +2857,35 @@ export const EpicSummaryFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<EpicSummaryFragment, unknown>;
+export const NotificationItemFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'NotificationItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Notification' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entityType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entityId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'read' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'readAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<NotificationItemFragment, unknown>;
 export const SprintSummaryFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -2555,6 +2949,120 @@ export const SprintTaskFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<SprintTaskFragment, unknown>;
+export const SprintFiguresFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintFigures' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'metrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'remainingStoryPoints' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completionRate' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'velocity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'overCapacity' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'workloadDistribution' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'assigneeId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'storyPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskCount' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'user' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatarUrl' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'burndown' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'idealRemaining' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'actualRemaining' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SprintFiguresFragment, unknown>;
 export const TaskPersonFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -2922,6 +3430,126 @@ export const TaskActivityFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<TaskActivityFragment, unknown>;
+export const AiRecommendationUpdatedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'AiRecommendationUpdated' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'aiRecommendationUpdated' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'recommendationId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'approvalStatus' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'recommendation' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'AiRecommendationItem' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AiRecommendationItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AiRecommendation' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'text' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'confidenceScore' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'approvalStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolutionStatus' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sprintId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'requestedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'approvedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AiRecommendationUpdatedSubscription,
+  AiRecommendationUpdatedSubscriptionVariables
+>;
 export const CurrentUserDocument = {
   kind: 'Document',
   definitions: [
@@ -4560,6 +5188,207 @@ export const RemoveAttachmentDocument = {
   RemoveAttachmentMutation,
   RemoveAttachmentMutationVariables
 >;
+export const CommentAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'CommentAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'commentAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'commentId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'comment' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'CommentThread' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentBody' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommentId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mentions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'attachments' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentThread' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'CommentBody' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'replies' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentBody' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CommentAddedSubscription,
+  CommentAddedSubscriptionVariables
+>;
 export const ProjectEpicsDocument = {
   kind: 'Document',
   definitions: [
@@ -5291,6 +6120,79 @@ export const DeleteMilestoneDocument = {
   DeleteMilestoneMutation,
   DeleteMilestoneMutationVariables
 >;
+export const EpicProgressDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'EpicProgress' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'epic' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'progress' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EpicProgressQuery, EpicProgressQueryVariables>;
+export const UnreadNotificationCountDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'UnreadNotificationCount' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'unreadNotificationCount' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UnreadNotificationCountQuery,
+  UnreadNotificationCountQueryVariables
+>;
 export const MyNotificationsDocument = {
   kind: 'Document',
   definitions: [
@@ -5376,28 +6278,8 @@ export const MyNotificationsDocument = {
                           kind: 'SelectionSet',
                           selections: [
                             {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'type' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'title' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'body' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'read' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'createdAt' },
+                              kind: 'FragmentSpread',
+                              name: { kind: 'Name', value: 'NotificationItem' },
                             },
                           ],
                         },
@@ -5429,32 +6311,175 @@ export const MyNotificationsDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'NotificationItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Notification' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entityType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entityId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'read' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'readAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<
   MyNotificationsQuery,
   MyNotificationsQueryVariables
 >;
-export const UnreadNotificationCountDocument = {
+export const MarkNotificationReadDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'UnreadNotificationCount' },
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'MarkNotificationRead' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'unreadNotificationCount' },
+            name: { kind: 'Name', value: 'markNotificationRead' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'read' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'readAt' } },
+              ],
+            },
           },
         ],
       },
     },
   ],
 } as unknown as DocumentNode<
-  UnreadNotificationCountQuery,
-  UnreadNotificationCountQueryVariables
+  MarkNotificationReadMutation,
+  MarkNotificationReadMutationVariables
+>;
+export const MarkAllNotificationsReadDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'MarkAllNotificationsRead' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'markAllNotificationsRead' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  MarkAllNotificationsReadMutation,
+  MarkAllNotificationsReadMutationVariables
+>;
+export const NotificationReceivedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'NotificationReceived' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'notificationReceived' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'notificationId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'notification' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'NotificationItem' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'NotificationItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Notification' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entityType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entityId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'metadata' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'read' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'readAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  NotificationReceivedSubscription,
+  NotificationReceivedSubscriptionVariables
 >;
 export const MyOrganizationsDocument = {
   kind: 'Document',
@@ -7516,109 +8541,8 @@ export const SprintDocument = {
                   name: { kind: 'Name', value: 'SprintSummary' },
                 },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'metrics' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'totalStoryPoints' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'completedStoryPoints' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'remainingStoryPoints' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'totalTasks' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'completedTasks' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'completionRate' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'velocity' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'capacity' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'overCapacity' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'workloadDistribution' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'assigneeId' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'storyPoints' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'taskCount' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'user' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'avatarUrl' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'burndown' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'date' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'idealRemaining' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'actualRemaining' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SprintFigures' },
                 },
                 {
                   kind: 'Field',
@@ -7719,6 +8643,115 @@ export const SprintDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintFigures' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'metrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'remainingStoryPoints' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completionRate' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'velocity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'overCapacity' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'workloadDistribution' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'assigneeId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'storyPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskCount' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'user' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatarUrl' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'burndown' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'idealRemaining' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'actualRemaining' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -8347,6 +9380,253 @@ export const RemoveTaskFromSprintDocument = {
 } as unknown as DocumentNode<
   RemoveTaskFromSprintMutation,
   RemoveTaskFromSprintMutationVariables
+>;
+export const SprintFiguresDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SprintFigures' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'sprint' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SprintFigures' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintFigures' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'metrics' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'remainingStoryPoints' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completionRate' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'velocity' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'overCapacity' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'workloadDistribution' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'assigneeId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'storyPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'taskCount' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'user' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatarUrl' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'burndown' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'date' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'idealRemaining' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'actualRemaining' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SprintFiguresQuery, SprintFiguresQueryVariables>;
+export const SprintUpdatedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'SprintUpdated' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'sprintUpdated' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'sprintId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'sprint' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'SprintSummary' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SprintSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Sprint' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'goal' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'capacity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SprintUpdatedSubscription,
+  SprintUpdatedSubscriptionVariables
 >;
 export const ProjectBoardDocument = {
   kind: 'Document',
@@ -11026,6 +12306,191 @@ export const RemoveTaskLabelDocument = {
 } as unknown as DocumentNode<
   RemoveTaskLabelMutation,
   RemoveTaskLabelMutationVariables
+>;
+export const TaskUpdatedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'TaskUpdated' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskUpdated' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'task' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'TaskDetail' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Task' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'priority' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'storyPoints' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'assigneeId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reporterId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sprintId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'epicId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dueDate' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'assignee' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'labels' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Task' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'TaskCard' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'loggedSeconds' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'reporter' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'watchers' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'dependencies' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskUpdatedSubscription,
+  TaskUpdatedSubscriptionVariables
 >;
 export const TeamDocument = {
   kind: 'Document',

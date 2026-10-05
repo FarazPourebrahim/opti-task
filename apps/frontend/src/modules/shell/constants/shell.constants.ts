@@ -1,4 +1,5 @@
 import {
+  Bell,
   Building2,
   House,
   KeyRound,
@@ -29,6 +30,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     labelKey: 'nav.organizations',
     icon: Building2,
   },
+  { to: ROUTES.notifications, labelKey: 'nav.notifications', icon: Bell },
 ];
 
 export const ACCOUNT_NAV: readonly NavItem[] = [

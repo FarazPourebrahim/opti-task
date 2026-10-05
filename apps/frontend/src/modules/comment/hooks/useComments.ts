@@ -2,6 +2,8 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
 import { DEFAULT_PAGE_SIZE } from '@contracts';
 import {
+  CommentAddedSubscription,
+  CommentThreadFragment as CommentThreadDocument,
   CreateCommentMutation,
   DeleteCommentMutation,
   EditCommentMutation,
@@ -13,18 +15,25 @@ import type {
   CommentEditInput,
   CommentInput,
 } from '@/modules/comment/schemas/comment.schema';
-import { nextPendingCommentId } from '@/modules/comment/utils/comment.utils';
+import {
+  hasOwnCommentInFlight,
+  nextPendingCommentId,
+  trackOwnComment,
+} from '@/modules/comment/utils/comment.utils';
 import type {
   CommentBodyFragment,
   CommentThreadFragment,
 } from '@/shared/graphql/generated/graphql';
 import { useLoadMore } from '@/shared/hooks/useLoadMore';
+import { useRealtimeSubscription } from '@/shared/hooks/useRealtime';
 import { ApiError } from '@/shared/lib/apiError';
 import {
   appendToConnection,
   appendToList,
+  isCached,
   removeFromConnection,
   removeFromList,
+  writeEntity,
 } from '@/shared/utils/cache.utils';
 
 /** One comment, without its replies. */
@@ -111,64 +120,66 @@ export function useCommentActions(taskId: string) {
    */
   const createComment = useCallback(
     async ({ input, parentCommentId, author, mentions }: NewComment) => {
-      await create({
-        variables: {
-          taskId,
-          input: {
-            body: input.body,
-            mentionedUserIds: input.mentionedUserIds,
-            ...(parentCommentId ? { parentCommentId } : {}),
-          },
-        },
-        optimisticResponse: {
-          createComment: {
-            __typename: 'Comment',
-            id: nextPendingCommentId(),
-            body: input.body,
-            resolved: false,
-            edited: false,
-            editedAt: null,
+      await trackOwnComment(
+        create({
+          variables: {
             taskId,
-            parentCommentId,
-            createdAt: new Date().toISOString(),
-            author: {
-              __typename: 'User',
-              id: author.id,
-              name: author.name,
-              avatarUrl: author.avatarUrl ?? null,
+            input: {
+              body: input.body,
+              mentionedUserIds: input.mentionedUserIds,
+              ...(parentCommentId ? { parentCommentId } : {}),
             },
-            mentions: mentions.map((person) => ({
-              __typename: 'User' as const,
-              id: person.id,
-              name: person.name,
-            })),
-            attachments: [],
-            replies: [],
           },
-        },
-        update: (cache, { data }) => {
-          const created = data?.createComment;
-          if (!created) return;
+          optimisticResponse: {
+            createComment: {
+              __typename: 'Comment',
+              id: nextPendingCommentId(),
+              body: input.body,
+              resolved: false,
+              edited: false,
+              editedAt: null,
+              taskId,
+              parentCommentId,
+              createdAt: new Date().toISOString(),
+              author: {
+                __typename: 'User',
+                id: author.id,
+                name: author.name,
+                avatarUrl: author.avatarUrl ?? null,
+              },
+              mentions: mentions.map((person) => ({
+                __typename: 'User' as const,
+                id: person.id,
+                name: person.name,
+              })),
+              attachments: [],
+              replies: [],
+            },
+          },
+          update: (cache, { data }) => {
+            const created = data?.createComment;
+            if (!created) return;
 
-          const node = { __typename: 'Comment', id: created.id };
+            const node = { __typename: 'Comment', id: created.id };
 
-          if (created.parentCommentId) {
-            appendToList(cache, {
-              owner: { __typename: 'Comment', id: created.parentCommentId },
-              listField: 'replies',
+            if (created.parentCommentId) {
+              appendToList(cache, {
+                owner: { __typename: 'Comment', id: created.parentCommentId },
+                listField: 'replies',
+                node,
+              });
+              return;
+            }
+
+            appendToConnection(cache, {
+              owner: { __typename: 'Task', id: taskId },
+              connectionField: 'comments',
+              edgeTypename: 'CommentEdge',
               node,
             });
-            return;
-          }
-
-          appendToConnection(cache, {
-            owner: { __typename: 'Task', id: taskId },
-            connectionField: 'comments',
-            edgeTypename: 'CommentEdge',
-            node,
-          });
-        },
-      });
+          },
+        }),
+      );
     },
     [create, taskId],
   );
@@ -227,4 +238,56 @@ export function useCommentActions(taskId: string) {
     resolveComment,
     deleteComment,
   };
+}
+
+/**
+ * Brings other people's comments into an open thread as they are written.
+ *
+ * Write source of truth: `createComment`. This only reconciles: the comment
+ * the event carries is filed where a fetch would have put it, at the end of
+ * the thread or under the comment it replies to. One that is already there is
+ * left alone, and so is a reply whose thread this client has not loaded.
+ */
+export function useCommentRealtime(
+  taskId: string,
+  viewerId: string | undefined,
+): void {
+  useRealtimeSubscription(CommentAddedSubscription, {
+    variables: { taskId },
+    onEvent: (data, client) => {
+      const comment = data.commentAdded.comment;
+      if (!comment) return;
+      // The viewer's own comment, still being sent: see `trackOwnComment`.
+      if (comment.author.id === viewerId && hasOwnCommentInFlight()) return;
+
+      const { cache } = client;
+      const node = { __typename: 'Comment', id: comment.id };
+      if (isCached(cache, node)) return;
+
+      const parent = comment.parentCommentId
+        ? { __typename: 'Comment', id: comment.parentCommentId }
+        : null;
+      const home = parent ?? { __typename: 'Task', id: taskId };
+      if (!isCached(cache, home)) return;
+
+      writeEntity(cache, {
+        entity: node,
+        fragment: CommentThreadDocument,
+        fragmentName: 'CommentThread',
+        data: comment,
+      });
+
+      if (parent) {
+        appendToList(cache, { owner: parent, listField: 'replies', node });
+        return;
+      }
+
+      appendToConnection(cache, {
+        owner: home,
+        connectionField: 'comments',
+        edgeTypename: 'CommentEdge',
+        node,
+      });
+    },
+  });
 }

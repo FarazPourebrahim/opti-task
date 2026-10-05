@@ -411,3 +411,19 @@ export const RemoveTaskLabelMutation = graphql(`
     }
   }
 `);
+
+/*
+ * Someone changed a task in this project. The event carries the task as it is
+ * now, so a task already in the cache is brought up to date without a request.
+ */
+export const TaskUpdatedSubscription = graphql(`
+  subscription TaskUpdated($projectId: UUID!) {
+    taskUpdated(projectId: $projectId) {
+      taskId
+      projectId
+      task {
+        ...TaskDetail
+      }
+    }
+  }
+`);

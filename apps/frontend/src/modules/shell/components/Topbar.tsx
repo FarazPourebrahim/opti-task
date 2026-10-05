@@ -1,6 +1,8 @@
 import { Button } from '@averoui/react';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { NotificationBell } from '@/modules/notification/components/NotificationBell';
+import { ConnectionStatus } from '@/modules/shell/components/ConnectionStatus';
 import { MobileNavigation } from '@/modules/shell/components/MobileNavigation';
 import { UserMenu } from '@/modules/shell/components/UserMenu';
 import { useBreadcrumbs } from '@/modules/shell/hooks/useBreadcrumbs';
@@ -25,6 +27,8 @@ export function Topbar({ onOpenCommandPalette }: TopbarProps) {
         ) : null}
       </div>
 
+      <ConnectionStatus />
+
       <Button
         variant="outline"
         size="sm"
@@ -34,6 +38,8 @@ export function Topbar({ onOpenCommandPalette }: TopbarProps) {
         <Search aria-hidden className="size-4" />
         {t('shell.search')}
       </Button>
+
+      <NotificationBell />
 
       <UserMenu />
     </header>

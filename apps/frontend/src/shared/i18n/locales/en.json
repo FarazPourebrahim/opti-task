@@ -130,7 +130,8 @@
     "sprints": "Sprints",
     "sprint": "Sprint",
     "epics": "Epics",
-    "epic": "Epic"
+    "epic": "Epic",
+    "notifications": "Notifications"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -142,6 +143,15 @@
       "empty": "No matching pages or actions.",
       "navigation": "Go to",
       "actions": "Actions"
+    },
+    "connection": {
+      "label": "Live updates:",
+      "live": "Live",
+      "liveHint": "Changes other people make appear here as they happen.",
+      "reconnecting": "Reconnecting…",
+      "reconnectingHint": "Live updates are paused while the connection is restored. Everything else works as usual.",
+      "offline": "Offline",
+      "offlineHint": "Live updates are off. You can keep working; reload to see changes other people have made."
     }
   },
   "status": {
@@ -159,6 +169,14 @@
     "noOrganizations": "You’re not part of an organisation yet."
   },
   "enums": {
+    "notificationType": {
+      "TASK_ASSIGNED": "Assignment",
+      "MENTION": "Mention",
+      "SPRINT_UPDATE": "Sprint",
+      "DEADLINE_REMINDER": "Deadline",
+      "AI_RECOMMENDATION": "AI recommendation",
+      "APPROVAL_REQUEST": "Approval request"
+    },
     "orgRole": {
       "OWNER": "Owner",
       "ADMIN": "Admin",
@@ -860,6 +878,31 @@
       "bodyTooLong": "Use 10,000 characters or fewer.",
       "tooManyMentions": "Mention 50 people or fewer."
     }
+  },
+  "notification": {
+    "title": "Notifications",
+    "subtitle": "What has happened that involves you: tasks assigned to you and comments that mention you.",
+    "bell": "Notifications",
+    "bellUnread_one": "Notifications, {{count}} unread",
+    "bellUnread_other": "Notifications, {{count}} unread",
+    "badgeOverflow": "{{max}}+",
+    "unread": "Unread",
+    "markRead": "Mark as read",
+    "markReadNamed": "Mark “{{title}}” as read",
+    "markAllRead": "Mark all as read",
+    "markedAll_one": "{{count}} notification marked as read.",
+    "markedAll_other": "{{count}} notifications marked as read.",
+    "noneToMark": "There was nothing left to mark as read.",
+    "loading": "Loading notifications",
+    "loadFailed": "Could not load your notifications.",
+    "empty": "You have no notifications yet.",
+    "emptyUnread": "You have read everything.",
+    "seeAll": "See all notifications",
+    "seeAllCount_one": "See all notifications ({{count}})",
+    "seeAllCount_other": "See all notifications ({{count}})",
+    "filterLabel": "Which notifications to show",
+    "filterAll": "All",
+    "filterUnread": "Unread"
   },
   "attachment": {
     "title": "Attachments",

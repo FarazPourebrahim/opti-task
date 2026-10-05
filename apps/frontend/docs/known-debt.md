@@ -356,10 +356,12 @@ same Radix primitives.
   stays until the list is next fetched.
 - **Why**: the same cached-list design; the list shows what the server last
   returned for that filter.
-- **Right fix**: Phase 11's `taskUpdated` subscription can refetch the list
-  being shown, or drop the row when its task stops matching.
-- **Impact**: after changing a task elsewhere, a filtered list can show it
-  until a reload or a filter change.
+- **Right fix**: drop the row when its task stops matching the filter on
+  screen. Phase 11's `taskUpdated` now keeps the row's own fields current, but
+  deliberately does not refetch the list: that would return a list paged to
+  its third page to its first every time anyone touched a task.
+- **Impact**: after a task is changed, here or by someone else, a filtered
+  list can go on showing it until a reload or a filter change.
 
 - **What**: the label filter offers only labels seen on tasks loaded so far.
 - **Why**: the API has no list of a project's labels; a label is only ever
@@ -395,9 +397,14 @@ same Radix primitives.
 - **What**: the detail page re-reads the whole task after each audited change
   (status, assignee, estimate, sprint) to pick up the new activity entry.
 - **Why**: the mutations return the task, not the activity they wrote.
-- **Right fix**: Phase 11's `taskUpdated` subscription.
-- **Impact**: one extra request per change, and a paged-out activity list
-  returns to its first page.
+- **Right fix**: an event (or a mutation result) that carries the activity
+  entry, so it can be added without re-reading. Phase 11's `taskUpdated`
+  carries the task only, so the page still re-reads — now also when someone
+  else changes the task, and twice for one's own change (once from the page,
+  once from the echo). The page's own re-read stays because the socket may be
+  down.
+- **Impact**: up to two extra requests per change, and a paged-out activity
+  list returns to its first page.
 
 - **What**: the assignee picker and the assignee filter list only project
   members from the first loaded page; an assignee who is not a project member
@@ -571,14 +578,14 @@ same Radix primitives.
   of 45" with the new comment last. With more than one page still to load,
   it leaves the screen until its page arrives.
 
-- **What**: someone else's comment does not appear until the thread is next
-  fetched.
-- **Why**: nothing listens for it yet.
-- **Right fix**: Phase 11's `commentAdded` subscription, through
-  `appendToConnection` / `appendToList`, which already skip a comment that is
-  listed.
-- **Impact**: two people on the same task see each other's comments after a
-  reload.
+- **What**: ~~someone else's comment does not appear until the thread is next
+  fetched~~ — RESOLVED in Phase 11.
+- **Why**: nothing listened for it.
+- **Right fix**: done. `commentAdded` files the comment at the end of the
+  thread or under its parent.
+- **Impact**: none for a new comment. An edit, a resolve or a delete made by
+  someone else still arrives only with the next fetch: the API publishes an
+  event for a new comment and for nothing else.
 
 - **What**: the linked comment is shown read-only in a panel above the
   thread, and — when it is on a loaded page — a second time in the thread.
@@ -609,7 +616,8 @@ same Radix primitives.
   audit trail.
 - **Why**: as in Phase 8 — the mutation returns the comment, not the activity
   it wrote.
-- **Right fix**: Phase 11's `taskUpdated` subscription.
+- **Right fix**: as in Phase 8. `taskUpdated` is not published for a comment,
+  so the subscription does not cover this.
 - **Impact**: one extra request per comment, and a paged-out activity list
   returns to its first page.
 
@@ -619,6 +627,114 @@ same Radix primitives.
   loaded.
 - **Right fix**: none needed. A count that included replies would be worth
   showing on the task card, and needs a backend field.
+- **Impact**: none.
+
+## Phase 11 — Notifications & Realtime
+
+- **What**: the socket layer has only ever run against a stand-in server.
+- **Why**: no browser and no running backend were available to the agent.
+  `shared/tests/realtime.ts` speaks the `graphql-ws` protocol to the real
+  client, so the link, reconnection and every reconciler are exercised — but
+  the far end is ours.
+- **Right fix**: run the two together and try the cases the tests model: a
+  dropped line, a token that expires while the socket is open, a refused
+  subscription, sign-out. Then a `graphql-ws` case in the Phase 14 browser
+  suite.
+- **Impact**: a difference between the stand-in and the real server would show
+  up only then. Realtime failing leaves every screen working, so the risk is
+  stale screens, not broken ones.
+
+- **What**: after a reload, starting the socket costs a session refresh.
+- **Why**: the socket authenticates with a token in `connectionParams`, the
+  token is kept in memory only, and a reload empties memory; the HTTP side
+  carries on with its cookies and never needs it. The only way to a token is
+  `refreshToken`.
+- **Right fix**: let the API authenticate a socket from the same HTTP-only
+  cookies (they are sent with the upgrade request on the same site), and drop
+  the in-memory token altogether.
+- **Impact**: every page load rotates the refresh token once. A load in two
+  tabs at the same moment makes two rotations; the second presents a token the
+  first has just replaced, which the backend's reuse detection may answer by
+  revoking the session. Worth checking against the real backend.
+
+- **What**: only five kinds of change are announced, so most of what other
+  people do still arrives with the next fetch.
+- **Why**: the API publishes `taskUpdated` for a task's details, status,
+  assignee, estimate and sprint; `sprintUpdated` for a change of state;
+  `commentAdded` for a new comment. It publishes nothing for a task created or
+  deleted, a label, a dependency, logged time, a watcher, an edited or deleted
+  comment, an attachment, a sprint's details or tasks, an epic or a milestone.
+- **Right fix**: publish those on the backend. The client side is one more
+  reconciler each.
+- **Impact**: a card someone else creates does not appear on an open board,
+  and one they delete does not leave it, until the board is fetched again.
+
+- **What**: a notification arriving is announced with a toast as well as
+  counted.
+- **Why**: a badge changing from 2 to 3 is easy to miss and is not announced
+  to a screen reader; a toast is both seen and spoken.
+- **Right fix**: none needed, unless it proves noisy — then a setting.
+- **Impact**: a burst of mentions is a burst of toasts.
+
+- **What**: a notification's title and body are shown as the server wrote
+  them, in English.
+- **Why**: they are the server's sentences ("You were assigned “Build
+  login”."), not codes this app could translate. The kind of notification is
+  named from this app's strings.
+- **Right fix**: have the API send a type and its parameters only, and compose
+  the sentence here.
+- **Impact**: none while the app ships `en` only. A second locale would show
+  translated labels around untranslated sentences.
+
+- **What**: a notification leads somewhere only for a task or a comment.
+- **Why**: those are the two the backend records today, with the project (and
+  for a comment, the task) in `metadata`. The four other kinds are defined but
+  never sent, so where they should lead is not known.
+- **Right fix**: add each to `notificationTarget` as the backend starts
+  sending it.
+- **Impact**: none today. A new kind would be listed without a link.
+
+- **What**: the unread count is corrected by hand when a notification is read
+  or arrives.
+- **Why**: `markNotificationRead` returns the notification, not the new count,
+  and an event carries no count.
+- **Right fix**: none needed. "Mark all as read" and the catch-up after a gap
+  both re-read it.
+- **Impact**: a notification read in another tab leaves this tab's count one
+  too high until the next re-read.
+
+- **What**: after a gap in the connection every query on screen is re-read,
+  which returns a paged list to its first page.
+- **Why**: the server keeps no backlog, so there is no way to ask what was
+  missed. Re-reading is the only honest way to be current.
+- **Right fix**: a sequence number on events and a "since" argument, on the
+  backend.
+- **Impact**: someone three pages into a list when their wifi blinks is back
+  on page one. A restart the client makes itself, to present a new token, is
+  not treated as a gap.
+
+- **What**: the connection badge explains itself only on hover (a `title`).
+- **Why**: Avero's `Tooltip` was not reached for, and nothing has been seen
+  to judge how much room the top bar has.
+- **Right fix**: after a visual pass, a tooltip or a popover that says what
+  "Offline" means for the reader, reachable by keyboard and touch.
+- **Impact**: someone on a phone sees "Offline" with no explanation that the
+  app still works.
+
+- **What**: `modules/ai` holds a fragment, a subscription and a hook, and no
+  screen.
+- **Why**: Phase 11 wires all five subscriptions; the AI queue is Phase 12.
+- **Right fix**: Phase 12 builds on the fragment and extends the hook to add a
+  new recommendation to its lists.
+- **Impact**: none. A recommendation is only updated if something has loaded
+  it, and nothing does yet.
+
+- **What**: Phase 3's placeholder `notification.operations.ts` was replaced
+  rather than extended.
+- **Why**: it selected six fields for the cache-policy tests; the feed needs
+  eleven and a fragment. `unreadOnly` stays optional so those tests are
+  unchanged; the feed always sends it.
+- **Right fix**: none needed.
 - **Impact**: none.
 
 ## Amendment A1 — Avero migration

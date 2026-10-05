@@ -3,8 +3,11 @@ import { Suspense, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, Outlet, useMatch } from 'react-router';
 import type { ParseKeys } from 'i18next';
+import { useAiRecommendationRealtime } from '@/modules/ai/hooks/useAiRecommendationRealtime';
 import { useProject } from '@/modules/project/hooks/useProject';
 import type { ProjectOutletContext } from '@/modules/project/hooks/useProjectContext';
+import { useSprintRealtime } from '@/modules/sprint/hooks/useSprintRealtime';
+import { useTaskRealtime } from '@/modules/task/hooks/useTaskRealtime';
 import {
   AppLink,
   ErrorState,
@@ -72,6 +75,12 @@ export function ProjectPage() {
 
   useEscalateRouteError(error);
   useBreadcrumbLabel(CRUMB_IDS.project, project?.name);
+
+  // One subscription per topic for the whole project, held open while any of
+  // its tabs is: each tab then follows other people's changes as they happen.
+  useTaskRealtime(projectId);
+  useSprintRealtime(projectId);
+  useAiRecommendationRealtime(projectId);
 
   const candidates = useMemo(
     () =>

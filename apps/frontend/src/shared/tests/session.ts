@@ -28,6 +28,11 @@ export function signedIn(user: typeof TEST_USER = TEST_USER) {
     graphql.query('CurrentUser', () =>
       HttpResponse.json({ data: { me: user } }),
     ),
+    // The shell's bell asks for this on every signed-in screen. None unread,
+    // unless a test about notifications puts its own handler first.
+    graphql.query('UnreadNotificationCount', () =>
+      HttpResponse.json({ data: { unreadNotificationCount: 0 } }),
+    ),
   ];
 }
 

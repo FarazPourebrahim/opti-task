@@ -1,6 +1,6 @@
 # Frontend Handoff
 
-State of `apps/frontend` as of **2026-10-05**, written so a new session can pick
+State of `apps/frontend` as of **2026-10-06**, written so a new session can pick
 up without the previous conversation. Read this, then `CLIENT_PLAN.md` (the
 phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 (every shortcut, with its right fix).
@@ -9,8 +9,8 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 
 ## Where things stand
 
-**Progress: 85%** — Phases 0–10 and Amendment A1 are complete. Phase 11
-(Notifications and realtime) is next.
+**Progress: 90%** — Phases 0–11 and Amendment A1 are complete. Phase 12
+(AI recommendations and approval) is next.
 
 | Phase | What exists |
 |---|---|
@@ -23,14 +23,16 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 | 8 | Tasks: board with drag, keyboard and tap moves and windowed columns, filtered list, detail page with every task mutation |
 | 9 | Sprints (list, detail, lifecycle, figures, burndown, workload, add/remove tasks) and epics (list, detail, progress, milestones) |
 | 10 | Comments on a task (threads, one level of replies, mentions, edit, resolve, delete, link to a comment) and attachment records on tasks and comments |
+| 11 | Notification bell and page; the socket (status, backoff, re-auth, catch-up); all five subscriptions reconciling the cache |
 
 Verified at handoff: `pnpm --filter optitask-frontend run verify` exits 0
-(typecheck, lint, query-depth check, **555 tests in 21 files**) and
+(typecheck, lint, query-depth check, **601 tests in 24 files**) and
 `run build` succeeds.
 
 **Never verified:** nothing has been seen in a browser, and nothing has run
 against the real backend. Every response in the tests is a mock shaped from the
-SDL. Ten phases of UI are unseen — a visual pass at 360px and desktop width is
+SDL. The socket has only ever met a stand-in server (`shared/tests/realtime.ts`).
+Eleven phases of UI are unseen — a visual pass at 360px and desktop width is
 overdue. The owner was offered one on 2026-10-05 and chose to go on to Phase
 10 first. Card dragging, the burndown chart and the row of buttons on each
 comment are what tests can say least about.
@@ -41,11 +43,11 @@ comment are what tests can say least about.
 
 | Branch | State |
 |---|---|
-| `frontend/F10` | Phase 10. Pushed. **Not merged** — waiting for the owner's go-ahead. |
-| `frontend/main` | Phases 0–9 + A1. Pushed, in sync with origin. |
+| `frontend/F11` | Phase 11. Pushed. **Not merged** — waiting for the owner's go-ahead. |
+| `frontend/main` | Phases 0–10 + A1. Pushed, in sync with origin. |
 | `main` | **Local is 2 commits ahead of `origin/main`** (the merge of the partner's amber `colors.md`). `git push origin main` is **rejected by a repository rule** — do not work around it; the owner must push or open a PR. |
 | `ai/main` | The AI team's branch. Leave it alone. |
-| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `averoui-migration` | Merged; kept locally. |
+| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `averoui-migration` | Merged; kept locally. |
 
 Workflow the owner has confirmed, phase by phase:
 
@@ -107,6 +109,8 @@ Still undecided, and worth raising:
 | Attachments store no file | Backend | Records only; the UI says so and has no upload or download |
 | Attachment size capped at 2^31 − 1 bytes | Backend | `sizeBytes` is a GraphQL `Int`; the server's 5 GB rule is unreachable |
 | A comment's mentions cannot be edited; replies are an unpaginated list, one level per query | Backend | See known-debt, Phase 10 |
+| Most changes are not announced over the socket (task created or deleted, labels, comments edited or deleted, epics…) | Backend | Only five kinds of change publish an event; see known-debt, Phase 11 |
+| A socket cannot authenticate from the session cookies | Backend | So a reload costs a token refresh; two tabs loading at once may trip reuse detection — untested |
 | `main` push rejected | Repo owner | See Git state |
 
 ---
@@ -246,48 +250,58 @@ src/
 
 ---
 
-## What is next — Phase 11
+## What is next — Phase 12
 
-Tracker and exit criteria are in `CLIENT_PLAN.md`: the notification bell and
-feed, and all five subscriptions, with an honest connection state.
+Tracker and exit criteria are in `CLIENT_PLAN.md`: the AI recommendation
+queue on a project, request actions on a task and a sprint, and the decision
+flow (approve, reject, override) with a preview of what approving changes.
 
-Things already in place that Phase 11 leans on:
+Things already in place that Phase 12 leans on:
 
-- The socket link exists (`createWsLink` in `apollo.client.ts`): it
-  authenticates through `connectionParams` from the in-memory token and
-  reconnects when the token changes. Tests run with `enableSubscriptions:
-  false`, so Phase 11 needs its own way to drive a subscription under test.
-- `myNotifications` is relay-paginated in the cache, keyed by `unreadOnly`.
-- `commentAdded` can go straight through `appendToConnection` (a new thread)
-  or `appendToList` (a reply) in `shared/utils/cache.utils.ts`. Both skip a
-  comment that is already listed, which is what makes "mutation result and
-  subscription event for the same change" a single update.
-- A mention notification can link to `taskCommentPath(projectId, taskId,
-  commentId)`; the task page shows that comment above the thread.
-- The slot for the bell is plain JSX in `Topbar`.
-- Known-debt entries that say "Phase 11's subscription" (the filtered task
-  list, the task's audit trail after a change, other people's comments) are
-  the list of things to wire.
+- `modules/ai` exists with `AiRecommendationItemFragment`, the
+  `aiRecommendationUpdated` subscription and `useAiRecommendationRealtime`
+  (mounted by the project frame). It updates a recommendation the cache
+  holds; Phase 12 should extend it to add a *new* one to the queue's lists
+  (`prependToConnection`, as the notification feed does).
+- `Project.aiRecommendations` is relay-paginated in the cache, keyed by `type`
+  and `approvalStatus`.
+- `SERVICE_UNAVAILABLE` already maps to its own `ApiError` kind and message
+  ("The AI service is unavailable right now. Nothing was saved.").
+- `can(roles, 'ai:request')` and `can(roles, 'ai:approve')` are in
+  `capabilities.ts`.
+- The provider is a deterministic stub on the backend; the request button
+  must still show a pending state for the provider's timeout (8s by default).
+- A new tab on the project frame, added with the screen: see `Project.page.tsx`.
 
-### Notes from Phase 10 worth keeping
+### Notes from Phase 11 worth keeping
 
-- **Where things live**: `modules/comment` owns comments *and* attachments, as
-  the backend does. The task page mounts two section components,
-  `TaskComments` and `TaskAttachments`, each making its own query — so a
-  failed comment load is an error inside its card, not a failed page.
-- **Every task page test loads a discussion**: `detailScenario` in
-  `task.fixtures.ts` ends with `discussionScenario(TASK_ID)` (empty). A test
-  about comments puts its own handlers first — see `taskPage()` in
-  `comment.test.tsx`. `comment.fixtures.ts` must not import the task
-  fixtures, or the two import each other.
-- **Optimistic comment**: `createComment` writes a stand-in with an id from
-  `nextPendingCommentId()`; `isPendingComment` hides its actions. The same
-  `update` runs for the stand-in and the real comment. To test it, hold the
-  mutation's response (`gate()` in `comment.test.tsx`).
-- **Replies are one level**: the reply composer always sends the thread's
-  first comment as `parentCommentId`.
-- **A scoped query in a page-level test**: buttons such as "Open navigation"
-  live in the shell, so assert on `within(row)` rather than the whole screen.
+- **One socket, one status**: `shared/services/realtime.client.ts` builds the
+  link and owns the app-wide status (`idle | connecting | live | reconnecting
+  | offline`). Creating a new link retires the previous one, which can then no
+  longer report status — that is what keeps tests, and a hot reload, from
+  showing a dead socket's state.
+- **Subscribing**: `useRealtimeSubscription(document, { variables, onEvent })`
+  in `shared/hooks/useRealtime.ts`. It is `no-cache` on purpose: the event
+  reaches the cache only through `onEvent`. Use `isCached` before `writeEntity`
+  so an event about something not loaded is dropped.
+- **Passing an event on**: a reconciler may call `announceRealtimeEvent`, and
+  a hook listens with `useRealtimeEvent` to re-read a figure the event does
+  not carry (`useSprint`, `useEpic`, `useTask`). Re-read the smallest query
+  that holds the figure (`SprintFiguresQuery`, `EpicProgressQuery`), not the
+  page's main query, or its paged list returns to page one.
+- **Testing realtime**: `createRealtimeServer()` + `createRealtimeTestClient`
+  from `shared/tests/realtime.ts`; pass the client as `apolloClient` to
+  `renderRoutes`. Call `setAccessToken('…')` first, or the socket starts with
+  a refresh and needs a `Refresh` handler. `socket.push(operationName, data)`
+  sends an event; `subscribed`, `drop`, `goDown`, `refuse` do the rest. Wait
+  for `socket.subscribed(...)` before pushing.
+- **Every signed-in test asks for the unread count**: `signedIn()` answers it
+  with zero. A notification test puts `inboxScenario(...).handlers` first.
+- **With the socket off** (`enableSubscriptions: false`, the default under
+  test) a subscription goes to an inert link: it never emits and never fails.
+- **Do not write files with a shell heredoc on this machine** when the text
+  holds quotes and backticks: it failed twice with an unmatched-quote error.
+  Use the editor tools, or a script file.
 
 ### Notes from Phases 8 and 9 worth keeping
 

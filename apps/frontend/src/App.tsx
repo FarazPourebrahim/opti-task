@@ -108,6 +108,10 @@ const EpicsPage = lazy(async () => ({
 const EpicDetailPage = lazy(async () => ({
   default: (await import('@/modules/epic/EpicDetail.page')).EpicDetailPage,
 }));
+const NotificationsPage = lazy(async () => ({
+  default: (await import('@/modules/notification/Notifications.page'))
+    .NotificationsPage,
+}));
 const AppLayout = lazy(async () => ({
   default: (await import('@/modules/shell/components/AppLayout')).AppLayout,
 }));
@@ -302,6 +306,13 @@ export const routes: RouteObject[] = [
                         handle: { crumb: 'nav.settings' } satisfies RouteHandle,
                       },
                     ],
+                  },
+                  {
+                    path: ROUTES.notifications,
+                    element: <NotificationsPage />,
+                    handle: {
+                      crumb: 'nav.notifications',
+                    } satisfies RouteHandle,
                   },
                   {
                     path: ROUTES.user,

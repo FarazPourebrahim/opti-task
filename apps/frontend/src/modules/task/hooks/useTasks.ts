@@ -24,6 +24,7 @@ import type {
   TaskSortField,
 } from '@/shared/graphql/generated/graphql';
 import { useLoadMore } from '@/shared/hooks/useLoadMore';
+import { useRealtimeEvent } from '@/shared/hooks/useRealtime';
 import { ApiError } from '@/shared/lib/apiError';
 
 export type TaskCardData = TaskCardFragment;
@@ -204,6 +205,12 @@ export function useTask(taskId: string) {
   });
 
   const task = data?.task ?? null;
+
+  // Someone else changed this task: the fields arrive with the event, but the
+  // entry it added to the audit trail does not, so the task is re-read.
+  useRealtimeEvent('taskUpdated', (event) => {
+    if (event.taskId === taskId) void refetch();
+  });
 
   const activities = useMemo(
     () => task?.activities.edges.map((edge) => edge.node) ?? [],

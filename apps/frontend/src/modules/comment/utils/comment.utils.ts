@@ -58,3 +58,28 @@ export function formatFileSize(bytes: number, locale?: string): string {
     maximumFractionDigits: 1,
   }).format(value);
 }
+
+let ownCommentsInFlight = 0;
+
+/**
+ * Marks a comment of the viewer's own as on its way to the server.
+ *
+ * The realtime event for a comment can arrive before the mutation that made it
+ * has answered. While that is so the comment is already on screen as a pending
+ * stand-in, and adding the event's copy beside it would show it twice. So the
+ * viewer's own comments are left to the mutation while one is in flight.
+ */
+export async function trackOwnComment<Result>(
+  send: Promise<Result>,
+): Promise<Result> {
+  ownCommentsInFlight += 1;
+  try {
+    return await send;
+  } finally {
+    ownCommentsInFlight -= 1;
+  }
+}
+
+export function hasOwnCommentInFlight(): boolean {
+  return ownCommentsInFlight > 0;
+}

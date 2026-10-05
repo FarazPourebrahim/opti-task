@@ -32,6 +32,7 @@ export const ROUTES = {
   sprint: '/projects/:projectId/sprints/:sprintId',
   projectEpics: '/projects/:projectId/epics',
   epic: '/projects/:projectId/epics/:epicId',
+  notifications: '/notifications',
 } as const;
 
 export const ROUTE_PARAMS = {
