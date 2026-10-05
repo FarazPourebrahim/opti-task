@@ -303,12 +303,12 @@ line is not done, regardless of whether the feature "works".
 | 8 | Task — Board, List & Detail | 72% | ✅ |
 | 9 | Sprint & Epic | 79% | ✅ |
 | 10 | Collaboration — Comments & Attachments | 85% | ✅ |
-| 11 | Notifications & Realtime | 90% | ⬜ |
+| 11 | Notifications & Realtime | 90% | ✅ |
 | 12 | AI Recommendations & Approval | 95% | ⬜ |
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 85%** (Phases 0–10 and Amendment A1 complete).
+**Current overall progress: 90%** (Phases 0–11 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -943,37 +943,78 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F11.1 | Notification bell — `unreadNotificationCount`, popover feed | ⬜ |
-| F11.2 | `Notifications.page.tsx` — paginated, `unreadOnly` filter, per-type presentation for all 6 `NotificationType`s | ⬜ |
-| F11.3 | `markNotificationRead`, `markAllNotificationsRead` (returns a count → toast) | ⬜ |
-| F11.4 | `realtime.client.ts` — `graphql-ws` link authenticated via `connectionParams` from the in-memory token; reconnect with backoff; re-auth after refresh | ⬜ |
-| F11.5 | `notificationReceived` → increments the badge and prepends to the feed | ⬜ |
-| F11.6 | `taskUpdated(projectId)` → updates board/list/detail cache in place | ⬜ |
-| F11.7 | `commentAdded(taskId)` → appends to the open thread | ⬜ |
-| F11.8 | `sprintUpdated(projectId)` → refreshes sprint state and metrics | ⬜ |
-| F11.9 | `aiRecommendationUpdated(projectId)` → updates the AI queue | ⬜ |
-| F11.10 | Connection status indicator (live / reconnecting / offline) | ⬜ |
+| F11.1 | Notification bell — `unreadNotificationCount` in the top bar, a popover with the newest five, fetched only once opened | ✅ |
+| F11.2 | `Notifications.page.tsx` — paginated, `unreadOnly` filter, per-type presentation for all 6 `NotificationType`s; a notification links to its task or comment when the record says where | ✅ |
+| F11.3 | `markNotificationRead`, `markAllNotificationsRead` (returns a count → toast) | ✅ |
+| F11.4 | `realtime.client.ts` — `graphql-ws` link authenticated via `connectionParams` from the in-memory token; reconnect with capped backoff; re-auth after refresh. After a reload there is no token in memory, so one refresh obtains it | ✅ |
+| F11.5 | `notificationReceived` → increments the badge, prepends to the feed, and announces the notification in a toast | ✅ |
+| F11.6 | `taskUpdated(projectId)` → updates board/list/detail cache in place; the open task re-reads its audit trail | ✅ |
+| F11.7 | `commentAdded(taskId)` → appends to the open thread, or under the comment it replies to | ✅ |
+| F11.8 | `sprintUpdated(projectId)` → sprint state in place; the sprint page re-reads its figures alone, on this and on any task change in the project. An epic re-reads its progress the same way | ✅ |
+| F11.9 | `aiRecommendationUpdated(projectId)` → updates a recommendation the client holds. The queue itself is Phase 12, which adds new ones to its lists from the same hook | ✅ |
+| F11.10 | Connection status indicator in the top bar (live / reconnecting / offline), in words | ✅ |
+| F11.11 | Catch-up: when the socket returns after a gap, every query on screen is re-read | ✅ |
+| F11.12 | A fake socket server for tests (`shared/tests/realtime.ts`): the real `graphql-ws` client, link and reconcilers run against it | ✅ |
+
+### Write source of truth, per subscription
+
+Every write is a mutation. A subscription never originates a change; it brings
+this client's cache up to date with one made elsewhere, and writes only what
+the client already holds.
+
+| Subscription | Written by | What the event reconciles | Held open by |
+|---|---|---|---|
+| `notificationReceived` | the server (assignment, mention) | writes the notification, first in each cached feed, unread count +1 | the bell — every signed-in screen |
+| `taskUpdated` | task mutations | replaces the cached task; passes the event on so the open task re-reads its audit trail and a sprint or epic re-reads its figures | the project frame |
+| `commentAdded` | `createComment` | writes the comment and files it at the end of the thread or under its parent | the task's comment thread |
+| `sprintUpdated` | `changeSprintState` | replaces the cached sprint's summary; passes the event on so the sprint page re-reads its figures | the project frame |
+| `aiRecommendationUpdated` | AI decision mutations | replaces the cached recommendation | the project frame |
 
 ### Exit criteria (DoD)
 
-- [ ] **Write source of truth is explicit and singular**: mutations own writes;
-      subscriptions only reconcile the cache. Documented per subscription. No
-      state has two write paths.
-- [ ] The socket authenticates via `connectionParams`, and the token comes from
-      the in-memory store — never from storage.
-- [ ] After a token refresh the socket re-authenticates without dropping subscriptions.
-- [ ] On logout the socket closes immediately and does not reconnect.
-- [ ] Reconnect uses capped exponential backoff and does not hammer the server —
-      asserted with a fake-timer test.
-- [ ] An event for an entity not currently cached does **not** create a partial
-      cache entry.
-- [ ] A duplicate event (mutation result and subscription event for the same
-      change) produces exactly one visual update, not a flicker.
-- [ ] The connection indicator tells the truth in all three states.
-- [ ] The app is fully usable with the socket **down** — realtime is an
-      enhancement, never a dependency. Verified by blocking the WS.
-- [ ] Two browser windows: a change in one appears in the other without a reload.
-- [ ] Empty state for an empty notification feed; distinct state for "no unread".
+- [x] **Write source of truth is explicit and singular**: the table above, and a
+      comment on each subscription hook. Subscriptions run with `no-cache`, so
+      nothing reaches the cache except through a reconciler.
+- [x] The socket authenticates via `connectionParams`, and the token comes from
+      the in-memory store — asserted, with `localStorage` and `sessionStorage`
+      asserted empty.
+- [x] After a token refresh the socket re-authenticates without dropping
+      subscriptions: a new connection carries the new token, the subscription
+      is re-sent, and an event still reaches its subscriber (asserted). A
+      subscription refused as `UNAUTHENTICATED` renews the session once and
+      resubscribes.
+- [x] On logout the socket closes immediately and does not reconnect (asserted
+      at the transport and through the account menu).
+- [x] Reconnect uses capped exponential backoff — 1s doubling to a 30s cap, plus
+      jitter — and does not hammer the server: with fake timers, an unreachable
+      server sees six attempts in a minute.
+- [x] An event for an entity not currently cached does **not** create a cache
+      entry: asserted for a task and for an AI recommendation by reading the
+      cache's keys.
+- [x] A duplicate event produces exactly one update: a repeated notification, a
+      repeated comment, a status change whose echo arrives before the
+      mutation's answer, and the viewer's own comment whose echo arrives while
+      it is still being sent (asserted: never two on screen).
+- [x] The connection indicator tells the truth in all three states (asserted:
+      Live, Reconnecting…, Offline). It says so in words, not by color alone.
+- [x] The app is fully usable with the socket **down**: with the fake server
+      refusing every connection, a task page loads and a status change is sent
+      and shown (asserted). Not verified by blocking a real WebSocket.
+- [~] Two browser windows: a change in one appears in the other without a
+      reload. **Not verified** — it needs two real browsers and the running
+      backend. The tests stand a fake socket in for the second window.
+- [x] Empty state for an empty notification feed; distinct state for "no unread".
+- [x] Tests: 46 new (11 transport, 19 notifications, 16 cross-feature); the
+      suite is 601 tests in 24 files. `axe` on the notifications page and the
+      bell's popover, which found and fixed an unnamed dialog.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend or a real WebSocket. The socket layer is
+> tested against a stand-in that speaks the `graphql-ws` protocol; whether the
+> real server behaves the same on a dropped line, an expired token and a
+> refused subscription is the first thing to check when the two are run
+> together. The top bar now carries a status badge, the search button, the
+> bell and the avatar: whether that fits at 360px is unseen.
 
 > **Note:** the backend pubsub is in-process (known-debt). Events are delivered
 > only by the instance that published them, so cross-instance realtime is a
@@ -1143,8 +1184,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `sprint` | 9 | ✅ |
 | `epic` | 9 | ✅ |
 | `comment` | 10 | ✅ |
-| `myNotifications` | 11 | ⬜ |
-| `unreadNotificationCount` | 11 | ⬜ |
+| `myNotifications` | 11 | ✅ |
+| `unreadNotificationCount` | 11 | ✅ |
 | `aiRecommendation` | 12 | ⬜ |
 | `assignmentContext` | 12 | ⬜ |
 | `projectAnalytics` | 13 | ⬜ |
@@ -1163,7 +1204,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ✅ |
 | Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ✅ — a milestone is always created on an epic: one without an epic cannot be listed by any query |
 | Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ✅ — attachments are records only; `Attachment.url` is deliberately never selected (known-debt) |
-| Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ⬜ |
+| Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ✅ |
 | AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ⬜ |
 | Analytics | `recomputeUserStatistics` | 13 | ⬜ |
 
@@ -1171,11 +1212,11 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 
 | Operation | Phase | Status |
 |---|---|:--:|
-| `taskUpdated` | 11 | ⬜ |
-| `commentAdded` | 11 | ⬜ |
-| `sprintUpdated` | 11 | ⬜ |
-| `notificationReceived` | 11 | ⬜ |
-| `aiRecommendationUpdated` | 11 | ⬜ |
+| `taskUpdated` | 11 | ✅ |
+| `commentAdded` | 11 | ✅ |
+| `sprintUpdated` | 11 | ✅ |
+| `notificationReceived` | 11 | ✅ |
+| `aiRecommendationUpdated` | 11 | ✅ — wired and reconciling; its screen is Phase 12 |
 
 ---
 
