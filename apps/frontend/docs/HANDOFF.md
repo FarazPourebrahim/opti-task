@@ -9,8 +9,8 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 
 ## Where things stand
 
-**Progress: 90%** — Phases 0–11 and Amendment A1 are complete. Phase 12
-(AI recommendations and approval) is next.
+**Progress: 95%** — Phases 0–12 and Amendment A1 are complete. Phase 13
+(Analytics) is next, then Phase 14 (hardening and release).
 
 | Phase | What exists |
 |---|---|
@@ -24,15 +24,16 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 | 9 | Sprints (list, detail, lifecycle, figures, burndown, workload, add/remove tasks) and epics (list, detail, progress, milestones) |
 | 10 | Comments on a task (threads, one level of replies, mentions, edit, resolve, delete, link to a comment) and attachment records on tasks and comments |
 | 11 | Notification bell and page; the socket (status, backoff, re-auth, catch-up); all five subscriptions reconciling the cache |
+| 12 | AI: the project's recommendation queue, request panels on a task and a sprint, approve (with a preview), reject, override, the assignment candidates table |
 
 Verified at handoff: `pnpm --filter optitask-frontend run verify` exits 0
-(typecheck, lint, query-depth check, **601 tests in 24 files**) and
+(typecheck, lint, query-depth check, **629 tests in 25 files**) and
 `run build` succeeds.
 
 **Never verified:** nothing has been seen in a browser, and nothing has run
 against the real backend. Every response in the tests is a mock shaped from the
 SDL. The socket has only ever met a stand-in server (`shared/tests/realtime.ts`).
-Eleven phases of UI are unseen — a visual pass at 360px and desktop width is
+Twelve phases of UI are unseen — a visual pass at 360px and desktop width is
 overdue. The owner was offered one on 2026-10-05 and chose to go on to Phase
 10 first. Card dragging, the burndown chart and the row of buttons on each
 comment are what tests can say least about.
@@ -43,11 +44,11 @@ comment are what tests can say least about.
 
 | Branch | State |
 |---|---|
-| `frontend/F11` | Phase 11. Pushed. **Not merged** — waiting for the owner's go-ahead. |
-| `frontend/main` | Phases 0–10 + A1. Pushed, in sync with origin. |
+| `frontend/F12` | Phase 12. Pushed. **Not merged** — waiting for the owner's go-ahead. |
+| `frontend/main` | Phases 0–11 + A1. Pushed, in sync with origin. |
 | `main` | **Local is 2 commits ahead of `origin/main`** (the merge of the partner's amber `colors.md`). `git push origin main` is **rejected by a repository rule** — do not work around it; the owner must push or open a PR. |
 | `ai/main` | The AI team's branch. Leave it alone. |
-| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `averoui-migration` | Merged; kept locally. |
+| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `averoui-migration` | Merged; kept locally. |
 
 Workflow the owner has confirmed, phase by phase:
 
@@ -110,6 +111,8 @@ Still undecided, and worth raising:
 | Attachment size capped at 2^31 − 1 bytes | Backend | `sizeBytes` is a GraphQL `Int`; the server's 5 GB rule is unreachable |
 | A comment's mentions cannot be edited; replies are an unpaginated list, one level per query | Backend | See known-debt, Phase 10 |
 | Most changes are not announced over the socket (task created or deleted, labels, comments edited or deleted, epics…) | Backend | Only five kinds of change publish an event; see known-debt, Phase 11 |
+| A recommendation cannot be listed by task or sprint, and does not name its task, sprint or suggested person | Backend | So a task shows only this visit's suggestions; see known-debt, Phase 12 |
+| A decision changes a task without returning it or announcing it | Backend | The client re-reads the task's two fields after each applied decision |
 | A socket cannot authenticate from the session cookies | Backend | So a reload costs a token refresh; two tabs loading at once may trip reuse detection — untested |
 | `main` push rejected | Repo owner | See Git state |
 
@@ -250,28 +253,51 @@ src/
 
 ---
 
-## What is next — Phase 12
+## What is next — Phase 13
 
-Tracker and exit criteria are in `CLIENT_PLAN.md`: the AI recommendation
-queue on a project, request actions on a task and a sprint, and the decision
-flow (approve, reject, override) with a preview of what approving changes.
+Tracker and exit criteria are in `CLIENT_PLAN.md`: project analytics (totals,
+distribution by status and priority, story points per sprint, individual
+workloads) and user analytics, with `recomputeUserStatistics`.
 
-Things already in place that Phase 12 leans on:
+Things already in place that Phase 13 leans on:
 
-- `modules/ai` exists with `AiRecommendationItemFragment`, the
-  `aiRecommendationUpdated` subscription and `useAiRecommendationRealtime`
-  (mounted by the project frame). It updates a recommendation the cache
-  holds; Phase 12 should extend it to add a *new* one to the queue's lists
-  (`prependToConnection`, as the notification feed does).
-- `Project.aiRecommendations` is relay-paginated in the cache, keyed by `type`
-  and `approvalStatus`.
-- `SERVICE_UNAVAILABLE` already maps to its own `ApiError` kind and message
-  ("The AI service is unavailable right now. Nothing was saved.").
-- `can(roles, 'ai:request')` and `can(roles, 'ai:approve')` are in
-  `capabilities.ts`.
-- The provider is a deterministic stub on the backend; the request button
-  must still show a pending state for the provider's timeout (8s by default).
-- A new tab on the project frame, added with the screen: see `Project.page.tsx`.
+- `@averoui/charts` is installed: `LineChart`, `AreaChart`, `ChartCard` and
+  `ChartDataTable`, no bar or pie chart. See the Avero notes above and
+  `modules/sprint/components/SprintBurndown.tsx` for a chart with its empty
+  states. A distribution is best shown as a table with a `Progress` bar per
+  row, as `SprintWorkload.tsx` does.
+- `ProjectAnalytics` and `UserAnalytics` are keyed in the cache by
+  `projectId` / `userId` (`apollo.client.ts`).
+- `can(roles, 'analytics:view')` is in `capabilities.ts`: owners, org and
+  project admins and team leads. Plain members and viewers are refused.
+- `userAnalytics` is open to the user themselves and to org admins.
+- `formatDuration` (`modules/task/utils/task.utils.ts`) writes seconds as a
+  duration; `avgCompletionSeconds` can be null.
+- A chart page should be preloaded in `beforeAll` in its test file (see
+  `sprint.test.tsx`).
+- `useRealtimeEvent('taskUpdated', …)` is there if the page should follow
+  work as it moves; re-read the analytics query, which has no paged list.
+
+### Notes from Phase 12 worth keeping
+
+- **Where things live**: `modules/ai`. `RecommendationCard` is a view;
+  `RecommendationDecision` holds approve / reject / override and their
+  dialogs; `AiRequestPanel` asks for suggestions about one task or sprint and
+  shows what came back; `AssignmentContextPanel` is the candidates table.
+- **A requested suggestion is shown from the cache** (`useAiRecommendation`,
+  a `useFragment`), not from the mutation's answer, so a decision on it —
+  the viewer's or someone else's, heard over the socket — shows at once.
+- **Reading `metadata`**: `readSuggestion` in `ai.utils.ts` is the only place
+  that looks inside it, and trusts nothing about its shape.
+- **After an applied decision**: `useAiDecisions` re-reads the task's two
+  fields (`AiAppliedTaskQuery`) and announces `taskUpdated` inside the app. A
+  test that approves an estimate or an assignment needs an `AiAppliedTask`
+  handler; one that approves an insight must not need it.
+- **Heading levels**: `RecommendationCard` takes `headingLevel` (3 on the
+  queue, 4 inside a titled card) so the page outline has no gap; `axe`
+  checks it.
+- **Fixtures with the same id are the same entity** in the cache: two cards
+  from one fixture function need different ids, or they render alike.
 
 ### Notes from Phase 11 worth keeping
 

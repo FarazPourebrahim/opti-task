@@ -721,13 +721,11 @@ same Radix primitives.
 - **Impact**: someone on a phone sees "Offline" with no explanation that the
   app still works.
 
-- **What**: `modules/ai` holds a fragment, a subscription and a hook, and no
-  screen.
-- **Why**: Phase 11 wires all five subscriptions; the AI queue is Phase 12.
-- **Right fix**: Phase 12 builds on the fragment and extends the hook to add a
-  new recommendation to its lists.
-- **Impact**: none. A recommendation is only updated if something has loaded
-  it, and nothing does yet.
+- **What**: ~~`modules/ai` holds a fragment, a subscription and a hook, and no
+  screen~~ — RESOLVED in Phase 12, which built the queue and the panels.
+- **Why**: Phase 11 wired all five subscriptions; the AI queue was Phase 12.
+- **Right fix**: done.
+- **Impact**: none.
 
 - **What**: Phase 3's placeholder `notification.operations.ts` was replaced
   rather than extended.
@@ -736,6 +734,92 @@ same Radix primitives.
   unchanged; the feed always sends it.
 - **Right fix**: none needed.
 - **Impact**: none.
+
+## Phase 12 — AI Recommendations & Approval
+
+- **What**: a task or a sprint shows only the suggestions asked for during
+  this visit. Earlier ones are on the project's AI tab.
+- **Why**: `Project.aiRecommendations` filters by kind and by decision, not by
+  task or sprint, and there is no `Task.aiRecommendations`.
+- **Right fix**: a `taskId` / `sprintId` filter on the project's list, or a
+  field on `Task` and `Sprint`.
+- **Impact**: reopening a task does not show the estimate someone asked for
+  yesterday; they have to look for it in the queue, where a card names its
+  task only as a link ("Open the task").
+
+- **What**: a recommendation names its task or sprint only as a link, never
+  by title.
+- **Why**: `AiRecommendation` carries `taskId` and `sprintId` and no relation
+  to either.
+- **Right fix**: `task { id title }` and `sprint { id name }` on the type.
+- **Impact**: in the queue, two estimates for different tasks look alike until
+  one is opened.
+
+- **What**: an applied decision is followed by a second request, for the
+  task's estimate and assignee.
+- **Why**: approving or overriding changes the task, but the mutation returns
+  the recommendation only and the backend publishes no `taskUpdated` for it.
+- **Right fix**: return the task from the decision (or publish the event).
+- **Impact**: one extra request per applied decision. If it fails, the
+  decision still stands and the task on screen is stale until re-read; that
+  failure is deliberately not shown as the decision's.
+
+- **What**: someone else's new suggestion does not appear until the queue is
+  next fetched.
+- **Why**: the API announces decisions (`aiRecommendationUpdated`) and not
+  requests.
+- **Right fix**: publish the event when a recommendation is created.
+- **Impact**: two admins reviewing the queue see each other's decisions at
+  once, and each other's requests after a reload.
+
+- **What**: after a decision the queue is re-read, which returns it to its
+  first page.
+- **Why**: a decided recommendation may no longer belong in the list on
+  screen (a "Pending" filter), and which lists it belongs in is the server's
+  to say — so the cached lists are dropped.
+- **Right fix**: take the row out of the lists whose filter it no longer
+  matches, as the notification feed does for "unread".
+- **Impact**: someone deciding their way down a long queue is returned to the
+  top after each decision. The rows stay on screen while it re-reads.
+
+- **What**: an override always names a value. Unassigning a task through an
+  override is not offered, though the API accepts a null assignee.
+- **Why**: "use my own value" with no value is a rejection in all but name,
+  and the form would need a way to say "nobody" that is not just an empty
+  field.
+- **Right fix**: none needed; reject the suggestion and unassign on the task.
+- **Impact**: none through the UI.
+
+- **What**: approving a suggestion that names nobody, or carries no number,
+  unassigns the task or clears its estimate.
+- **Why**: that is what the backend does with a null suggestion. The dialog
+  says so before it is confirmed.
+- **Right fix**: on the backend, refuse to approve a suggestion with nothing
+  in it.
+- **Impact**: none unseen; the consequence is spelled out.
+
+- **What**: a suggested assignee who is not among the project's loaded members
+  is described ("someone who is not listed on this project"), not named.
+- **Why**: the suggestion carries an id, and candidates come from the
+  project's teams, whose members need not be project members; the id is never
+  shown.
+- **Right fix**: `suggestedAssignee { id name }` on the recommendation.
+- **Impact**: an admin may be asked to approve assigning a task to someone the
+  card cannot name. The candidates table on the task page does name them.
+
+- **What**: the wait for a suggestion is said to take "several seconds",
+  without a figure.
+- **Why**: the provider's timeout is the backend's setting (8s by default,
+  tried twice), and the client is not told it.
+- **Right fix**: none needed.
+- **Impact**: none.
+
+- **What**: `RECOMMENDATION` is offered as a filter and handled as an insight,
+  though nothing creates one.
+- **Why**: it is in the API's enum; the backend's four request mutations make
+  the other four kinds.
+- **Right fix**: none needed until the backend makes one.
+- **Impact**: a filter option that always finds nothing.
 
 ## Amendment A1 — Avero migration
 
