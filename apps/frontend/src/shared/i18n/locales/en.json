@@ -131,7 +131,8 @@
     "sprint": "Sprint",
     "epics": "Epics",
     "epic": "Epic",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "ai": "AI"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -169,6 +170,24 @@
     "noOrganizations": "You’re not part of an organisation yet."
   },
   "enums": {
+    "aiRecommendationType": {
+      "STORY_POINT_ESTIMATION": "Story point estimate",
+      "TASK_ASSIGNMENT": "Assignment suggestion",
+      "SPRINT_HEALTH": "Sprint health",
+      "PROGRESS_TRACKING": "Progress forecast",
+      "RECOMMENDATION": "Recommendation"
+    },
+    "aiApprovalStatus": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "OVERRIDDEN": "Overridden"
+    },
+    "aiResolutionStatus": {
+      "OPEN": "Open",
+      "RESOLVED": "Resolved",
+      "DISMISSED": "Dismissed"
+    },
     "notificationType": {
       "TASK_ASSIGNED": "Assignment",
       "MENTION": "Mention",
@@ -399,7 +418,8 @@
       "board": "Board",
       "tasks": "Tasks",
       "sprints": "Sprints",
-      "epics": "Epics"
+      "epics": "Epics",
+      "ai": "AI"
     },
     "lifecycleTitle": "Lifecycle",
     "peopleTitle": "People",
@@ -877,6 +897,108 @@
       "bodyRequired": "Write something first.",
       "bodyTooLong": "Use 10,000 characters or fewer.",
       "tooManyMentions": "Mention 50 people or fewer."
+    }
+  },
+  "ai": {
+    "title": "AI recommendations",
+    "subtitle": "The AI suggests; a person decides. Nothing here changes a task until someone with permission approves it.",
+    "taskTitle": "AI suggestions",
+    "sprintTitle": "AI insights",
+    "loadFailed": "Could not load the recommendations.",
+    "empty": "No recommendations yet. Ask for one from a task or a sprint.",
+    "emptyFiltered": "No recommendations match these filters.",
+    "cardLabel": "{{type}}, from the AI",
+    "decision": "Decision",
+    "outcome": "Outcome",
+    "confidence": "Confidence",
+    "confidenceValue": "{{value}}%",
+    "confidenceOf": "Confidence {{value}}%",
+    "confidenceUnknown": "Not reported",
+    "provider": "From {{provider}}",
+    "providerUnknown": "an unnamed provider",
+    "requestedBy": "Requested by {{name}}",
+    "requestedByUnknown": "Requester unknown",
+    "decidedBy": "Decided by {{name}}",
+    "openTask": "Open the task",
+    "openSprint": "Open the sprint",
+    "risksTitle": "Risks it names",
+    "noRisks": "It names no risks.",
+    "alreadyDecided": "Someone else has already decided on this. It now shows their decision.",
+    "suggests": {
+      "storyPoints_one": "Suggests {{count}} story point",
+      "storyPoints_other": "Suggests {{count}} story points",
+      "noEstimate": "Suggests no estimate",
+      "assignee": "Suggests assigning this to {{name}}",
+      "unknownAssignee": "Suggests assigning this to someone who is not listed on this project",
+      "noAssignee": "Suggests no one: there was nobody to choose from",
+      "insight": "For information only"
+    },
+    "filter": {
+      "type": "Kind",
+      "anyType": "Any kind",
+      "decision": "Decision",
+      "anyDecision": "Any decision"
+    },
+    "request": {
+      "explainer": "Asking for a suggestion changes nothing. It is saved for someone with permission to approve, reject or replace.",
+      "storyPoints": "Estimate story points",
+      "assignment": "Suggest an assignee",
+      "sprintHealth": "Analyse sprint health",
+      "progress": "Forecast progress",
+      "waiting": "Asking the AI service. This can take several seconds.",
+      "unavailableTitle": "The AI service did not answer",
+      "unavailableBody": "This is a problem with the AI service, not with what you asked. Nothing was saved. Try again in a moment.",
+      "seeAll": "See every recommendation in this project"
+    },
+    "approve": {
+      "action": "Approve",
+      "confirmTitle": "Approve this suggestion?",
+      "done": "Suggestion approved.",
+      "effectStoryPoints_one": "Approving sets this task’s estimate to {{count}} story point.",
+      "effectStoryPoints_other": "Approving sets this task’s estimate to {{count}} story points.",
+      "effectNoEstimate": "Approving clears this task’s estimate: the suggestion carries no number.",
+      "effectAssignee": "Approving assigns this task to {{name}}, and notifies them.",
+      "effectUnknownAssignee": "Approving assigns this task to someone who is not listed on this project.",
+      "effectNoAssignee": "Approving leaves this task with no assignee, removing the current one: the suggestion names nobody.",
+      "effectInsight": "Approving records that this has been reviewed. It changes nothing in the project."
+    },
+    "reject": {
+      "action": "Reject",
+      "done": "Suggestion rejected. Nothing was changed."
+    },
+    "override": {
+      "action": "Use my own",
+      "title": "Use your own value instead",
+      "storyPoints": "Story points",
+      "assignee": "Assign to",
+      "submit": "Save my value",
+      "done": "Your value was saved in place of the suggestion.",
+      "effectStoryPoints_one": "Saving sets this task’s estimate to {{count}} story point and records that the suggestion was overridden.",
+      "effectStoryPoints_other": "Saving sets this task’s estimate to {{count}} story points and records that the suggestion was overridden.",
+      "effectStoryPointsBlank": "Enter the estimate to use instead of the suggestion.",
+      "effectAssignee": "Saving assigns this task to {{name}} and records that the suggestion was overridden.",
+      "effectAssigneeBlank": "Pick who to assign the task to instead of the suggestion."
+    },
+    "context": {
+      "title": "Who an assignment suggestion chooses among",
+      "show": "Show who the AI chooses among",
+      "hide": "Hide who the AI chooses among",
+      "loading": "Loading the candidates",
+      "loadFailed": "Could not load the candidates.",
+      "empty": "No one is on a team in this project, so there is nobody for the AI to suggest. Add people to a team first.",
+      "person": "Person",
+      "skills": "Skills",
+      "expertise": "Expertise",
+      "availability": "Availability",
+      "workload": "Workload",
+      "active": "Active tasks",
+      "completed": "Completed tasks",
+      "none": "None listed",
+      "unknown": "Not set"
+    },
+    "validation": {
+      "storyPointsRange": "Enter a whole number from 0 to 1,000.",
+      "assigneeRequired": "Pick someone."
     }
   },
   "notification": {
