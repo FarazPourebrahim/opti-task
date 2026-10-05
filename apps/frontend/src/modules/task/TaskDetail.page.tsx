@@ -14,6 +14,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { TaskStatus } from '@contracts';
+import { AiRequestPanel } from '@/modules/ai/components/AiRequestPanel';
+import { AssignmentContextPanel } from '@/modules/ai/components/AssignmentContextPanel';
+import { AI_TASK_REQUESTS } from '@/modules/ai/constants/ai.constants';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { TaskAttachments } from '@/modules/comment/components/TaskAttachments';
 import { TaskComments } from '@/modules/comment/components/TaskComments';
@@ -395,6 +398,21 @@ export function TaskDetailPage() {
                   .catch(showError);
               }}
             />
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle as="h3">{t('ai.taskTitle')}</CardTitle>
+            </CardHeader>
+            <AiRequestPanel
+              projectId={project.id}
+              subjectId={taskId}
+              kinds={AI_TASK_REQUESTS}
+              roles={roles}
+              members={assignees}
+            >
+              <AssignmentContextPanel taskId={taskId} />
+            </AiRequestPanel>
           </Card>
 
           <Card>
