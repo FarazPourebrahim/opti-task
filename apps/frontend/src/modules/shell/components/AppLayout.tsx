@@ -8,6 +8,7 @@ import { MAIN_CONTENT_ID } from '@/modules/shell/constants/shell.constants';
 import { useCommandPaletteShortcut } from '@/modules/shell/hooks/useCommandPaletteShortcut';
 import { PageSkeleton } from '@/shared/components';
 import { BreadcrumbProvider } from '@/shared/context/breadcrumb.context';
+import { useRealtimeCatchUp } from '@/shared/hooks/useRealtime';
 
 /**
  * The frame every signed-in screen renders inside: sidebar, top bar and the
@@ -25,6 +26,8 @@ export function AppLayout() {
     [],
   );
   useCommandPaletteShortcut(togglePalette);
+  // After the live connection has been down, what is on screen is re-read.
+  useRealtimeCatchUp();
 
   return (
     <BreadcrumbProvider>
