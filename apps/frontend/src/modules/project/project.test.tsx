@@ -249,6 +249,7 @@ describe('project frame', () => {
         'Tasks',
         'Sprints',
         'Epics',
+        'AI',
         'Members',
         'Teams',
         'Settings',
@@ -257,7 +258,16 @@ describe('project frame', () => {
     [
       'a project member',
       'MEMBER',
-      ['Overview', 'Board', 'Tasks', 'Sprints', 'Epics', 'Members', 'Teams'],
+      [
+        'Overview',
+        'Board',
+        'Tasks',
+        'Sprints',
+        'Epics',
+        'AI',
+        'Members',
+        'Teams',
+      ],
     ],
   ])('shows the right tabs to %s', async (_label, role, expected) => {
     // Arrange
