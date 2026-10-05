@@ -1,5 +1,6 @@
 import { HttpResponse } from 'msw';
 import type { TaskStatus } from '@contracts';
+import { discussionScenario } from '@/modules/comment/comment.fixtures';
 import {
   PAT,
   PROJECT_ID,
@@ -320,6 +321,9 @@ export function detailScenario(
         },
       }),
     ),
+    // The page also loads the task's discussion: empty here. A test about
+    // comments or attachments puts its own handlers ahead of this scenario.
+    ...discussionScenario(TASK_ID),
   ];
 }
 

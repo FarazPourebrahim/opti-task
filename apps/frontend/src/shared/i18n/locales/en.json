@@ -808,5 +808,87 @@
       "descriptionTooLong": "Use 5,000 characters or fewer.",
       "dueDateInvalid": "Enter a real date."
     }
+  },
+  "comment": {
+    "title": "Comments",
+    "loading": "Loading comments",
+    "loadFailed": "Could not load the comments.",
+    "empty": "No comments yet.",
+    "emptyCanComment": "No comments yet. Start the discussion below.",
+    "add": "Add a comment",
+    "submit": "Comment",
+    "reply": "Reply",
+    "replyTo": "Reply to {{name}}",
+    "repliesLabel": "Replies to {{name}}",
+    "byAuthor": "Comment by {{name}}",
+    "sending": "Sending…",
+    "edited": "Edited",
+    "resolved": "Resolved",
+    "resolve": "Resolve",
+    "reopen": "Reopen",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied.",
+    "linkCopyFailed": "Could not copy the link.",
+    "mentions": "Mentions {{names}}",
+    "updated": "Comment saved.",
+    "delete": "Delete comment",
+    "deleted": "Comment deleted.",
+    "deleteConfirmTitle": "Delete this comment by {{name}}?",
+    "deleteConfirmBody": "Its replies and attachment records are deleted with it. This cannot be undone.",
+    "deleteReplyConfirmBody": "Its attachment records are deleted with it. This cannot be undone.",
+    "composer": {
+      "shortcut": "Press Ctrl+Enter, or ⌘+Enter on a Mac, to send."
+    },
+    "mention": {
+      "label": "Mention someone",
+      "hint": "Only people picked here are notified. Typing @name in the text mentions no one.",
+      "listLabel": "People mentioned",
+      "remove": "Remove mention of {{name}}"
+    },
+    "edit": {
+      "label": "Edit comment",
+      "mentionsKept": "Editing changes the text only. The people already mentioned stay mentioned."
+    },
+    "linked": {
+      "title": "Linked comment",
+      "dismiss": "Dismiss",
+      "gone": "This comment is not here. It may have been deleted, or the link may be wrong.",
+      "loadFailed": "Could not load the linked comment."
+    },
+    "validation": {
+      "bodyRequired": "Write something first.",
+      "bodyTooLong": "Use 10,000 characters or fewer.",
+      "tooManyMentions": "Mention 50 people or fewer."
+    }
+  },
+  "attachment": {
+    "title": "Attachments",
+    "loading": "Loading attachments",
+    "loadFailed": "Could not load the attachments.",
+    "empty": "No attachment records yet.",
+    "recordsOnly": "These are records of files — a name, a type and a size. The files themselves are not stored here and cannot be opened or downloaded.",
+    "recordsTitle": "Attachment records",
+    "recordedBy": "Recorded by {{name}}, {{when}}",
+    "remove": "Remove record",
+    "removeNamed": "Remove the record of {{name}}",
+    "removed": "The record of {{name}} has been removed.",
+    "removeConfirmTitle": "Remove the record of {{name}}?",
+    "removeConfirmBody": "Only the record is removed. No file is stored here, so none is deleted.",
+    "noticeTitle": "No file is uploaded",
+    "noticeBody": "This records that a file exists and what it is called. Keep the file itself somewhere your team can reach it.",
+    "filename": "File name",
+    "contentType": "File type",
+    "contentTypeHint": "Optional. For example, application/pdf.",
+    "size": "Size in bytes",
+    "record": "Record attachment",
+    "recordShort": "Record a file",
+    "recordNew": "Record an attachment",
+    "recorded": "A record of {{name}} has been added.",
+    "validation": {
+      "filenameRequired": "Enter the file’s name.",
+      "filenameTooLong": "Use 255 characters or fewer.",
+      "contentTypeTooLong": "Use 255 characters or fewer.",
+      "sizeInvalid": "Enter a whole number of bytes, up to 2,147,483,647."
+    }
   }
 }

@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { TaskStatus } from '@contracts';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { TaskAttachments } from '@/modules/comment/components/TaskAttachments';
+import { TaskComments } from '@/modules/comment/components/TaskComments';
 import { useProjectContext } from '@/modules/project/hooks/useProjectContext';
 import { TaskActivityList } from '@/modules/task/components/TaskActivityList';
 import { TaskAssigneeControl } from '@/modules/task/components/TaskAssigneeControl';
@@ -397,6 +399,20 @@ export function TaskDetailPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle as="h3">{t('comment.title')}</CardTitle>
+            </CardHeader>
+            <TaskComments
+              projectId={project.id}
+              taskId={taskId}
+              roles={roles}
+              viewer={user}
+              members={assignees}
+              onCommentAdded={refreshActivity}
+            />
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle as="h3">{t('task.activityTitle')}</CardTitle>
             </CardHeader>
             <TaskActivityList
@@ -545,6 +561,17 @@ export function TaskDetailPage() {
               onRemove={(name) => {
                 actions.removeTaskLabel(name).catch(showError);
               }}
+            />
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle as="h3">{t('attachment.title')}</CardTitle>
+            </CardHeader>
+            <TaskAttachments
+              taskId={taskId}
+              roles={roles}
+              viewerId={user?.id}
             />
           </Card>
         </div>

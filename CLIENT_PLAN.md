@@ -302,13 +302,13 @@ line is not done, regardless of whether the feature "works".
 | 7 | Project & Team | 61% | ✅ |
 | 8 | Task — Board, List & Detail | 72% | ✅ |
 | 9 | Sprint & Epic | 79% | ✅ |
-| 10 | Collaboration — Comments & Attachments | 85% | ⬜ |
+| 10 | Collaboration — Comments & Attachments | 85% | ✅ |
 | 11 | Notifications & Realtime | 90% | ⬜ |
 | 12 | AI Recommendations & Approval | 95% | ⬜ |
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 79%** (Phases 0–9 and Amendment A1 complete).
+**Current overall progress: 85%** (Phases 0–10 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -886,29 +886,52 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F10.1 | Comment thread — `Task.comments` paginated, nested replies via `parentCommentId` | ⬜ |
-| F10.2 | Composer — `createComment`, submit on ⌘/Ctrl+Enter | ⬜ |
-| F10.3 | Mention picker — resolves **project members** to `mentionedUserIds` (the API takes explicit IDs; it does not parse `@handle`) | ⬜ |
-| F10.4 | Edit (`editComment`, shows an `edited` marker), `resolveComment` toggle, `deleteComment` with confirm | ⬜ |
-| F10.5 | Attachments — `addTaskAttachment`, `addCommentAttachment`, `removeAttachment` as **metadata records** | ⬜ |
-| F10.6 | Attachment UI states the storage limitation plainly; no fake upload progress, no dead download button | ⬜ |
+| F10.1 | Comment thread — `Task.comments` paginated (top-level comments, oldest first), replies nested one level via `parentCommentId` | ✅ |
+| F10.2 | Composer — `createComment`, submit on ⌘/Ctrl+Enter | ✅ |
+| F10.3 | Mention picker — resolves **project members** to `mentionedUserIds` (the API takes explicit IDs; it does not parse `@handle`) | ✅ |
+| F10.4 | Edit (`editComment`, shows an `edited` marker), `resolveComment` toggle, `deleteComment` with confirm | ✅ |
+| F10.5 | Attachments — `addTaskAttachment`, `addCommentAttachment`, `removeAttachment` as **metadata records** | ✅ |
+| F10.6 | Attachment UI states the storage limitation plainly; no fake upload progress, no dead download button | ✅ |
+| F10.7 | Link to a comment — "Copy link" on every comment, and the `comment` query shows the linked one above the thread (`?comment=<id>`). Added so the query is reachable (D6); Phase 11's mention notifications will point here | ✅ |
+| F10.8 | Shared cache helpers for lists a mutation adds to or removes from: `appendToConnection`, `appendToList`, `removeFromList` | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Mentions are sent as validated `mentionedUserIds`; the composer never
-      guesses a user from free text.
-- [ ] The mention picker is keyboard-driven and sourced from project membership.
-- [ ] An edited comment shows the `edited` marker; a resolved thread is visually distinct.
-- [ ] Author-only vs admin permissions are reflected in the UI, and a `FORBIDDEN`
-      on edit/delete is handled gracefully.
-- [ ] Comment bodies are rendered as **plain text** (or sanitized markdown behind a
-      `// BOUNDARY:` note) — no unsanitized HTML path exists.
-- [ ] The attachment UI never implies a file was stored or can be downloaded.
-      The known-debt limitation is stated in the interface itself.
-- [ ] Empty states: no comments yet, no attachments.
-- [ ] Optimistic comment insert with a tested rollback.
-- [ ] Tests: post, edit, resolve, delete, mention resolution, `FORBIDDEN` on
-      another user's comment, network failure.
+- [x] Mentions are sent as validated `mentionedUserIds`; the composer never
+      guesses a user from free text. Asserted: a comment whose text says
+      `@Terry Teammate` with Pat picked sends Pat's id alone.
+- [x] The mention picker is keyboard-driven (type to filter, Enter to pick —
+      tested without the mouse) and sourced from project membership. The viewer
+      is not offered to themselves.
+- [x] An edited comment shows the `edited` marker; a resolved thread carries a
+      "Resolved" badge and muted text. Said in words, never by color alone.
+- [x] Author-only vs admin permissions are reflected in the UI: a member is
+      offered edit, resolve and delete on their own comment and none on anyone
+      else's; an admin is offered them on every comment. A `FORBIDDEN` on edit,
+      resolve, delete and attachment removal is each handled and tested.
+- [x] Comment bodies are rendered as **plain text** — a body of HTML is shown
+      literally (asserted). No `dangerouslySetInnerHTML` exists.
+- [x] The attachment UI never implies a file was stored or can be downloaded.
+      A file name is text, not a link; there is no file picker (asserted);
+      `Attachment.url` is never selected (a standing test reads the operations
+      file); and the limitation is stated on the card, in the form and in the
+      removal dialog.
+- [x] Empty states: no comments yet (worded differently for someone who can
+      start the discussion), no attachment records.
+- [x] Optimistic comment insert with a tested rollback: the comment is on
+      screen, marked "Sending…" and without actions, before the held response
+      is released; on `FORBIDDEN`, `BAD_USER_INPUT` and a network failure it is
+      taken back and the typed text returns to the field. Resolving a thread is
+      optimistic too, with its own rollback test.
+- [x] Tests: post, edit, resolve, delete, mention resolution, `FORBIDDEN` on
+      another user's comment, network failure, pagination, linked comment,
+      attachment records, `axe`. 43 new tests; the suite is 555 tests in 21
+      files.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend. Each comment carries up to six small
+> buttons in a row; whether that reads as clutter, and whether a resolved
+> thread is distinct enough, can only be judged by eye.
 
 ---
 
@@ -1119,7 +1142,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `task` | 8 | ✅ |
 | `sprint` | 9 | ✅ |
 | `epic` | 9 | ✅ |
-| `comment` | 10 | ⬜ |
+| `comment` | 10 | ✅ |
 | `myNotifications` | 11 | ⬜ |
 | `unreadNotificationCount` | 11 | ⬜ |
 | `aiRecommendation` | 12 | ⬜ |
@@ -1139,7 +1162,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ✅ |
 | Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ✅ |
 | Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ✅ — a milestone is always created on an epic: one without an epic cannot be listed by any query |
-| Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ⬜ |
+| Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ✅ — attachments are records only; `Attachment.url` is deliberately never selected (known-debt) |
 | Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ⬜ |
 | AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ⬜ |
 | Analytics | `recomputeUserStatistics` | 13 | ⬜ |

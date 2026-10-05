@@ -18,6 +18,12 @@ export type ActivityType =
   | 'TASK_CREATED'
   | 'USER_APPROVAL';
 
+export type AddAttachmentInput = {
+  contentType?: string | null | undefined;
+  filename: string;
+  sizeBytes?: number | null | undefined;
+};
+
 export type AddExpertiseInput = {
   confidenceScore?: number | null | undefined;
   tag: string;
@@ -35,6 +41,12 @@ export type AvailabilityStatus = 'AVAILABLE' | 'AWAY' | 'BUSY' | 'OFFLINE';
 export type ChangePasswordInput = {
   currentPassword: string;
   newPassword: string;
+};
+
+export type CreateCommentInput = {
+  body: string;
+  mentionedUserIds?: Array<string> | null | undefined;
+  parentCommentId?: string | null | undefined;
 };
 
 export type CreateEpicInput = {
@@ -145,6 +157,10 @@ export type TaskStatus =
   | 'TODO';
 
 export type TeamRole = 'LEAD' | 'MEMBER';
+
+export type UpdateCommentInput = {
+  body: string;
+};
 
 export type UpdateEpicInput = {
   description?: string | null | undefined;
@@ -291,6 +307,376 @@ export type AcceptInvitationMutation = {
     user: { id: string; name: string };
   };
 };
+
+export type CommentPersonFragment = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+};
+
+export type AttachmentItemFragment = {
+  id: string;
+  filename: string;
+  contentType: string | null;
+  sizeBytes: number | null;
+  createdAt: string;
+  uploadedBy: { id: string; name: string };
+};
+
+export type CommentBodyFragment = {
+  __typename: 'Comment';
+  id: string;
+  body: string;
+  resolved: boolean;
+  edited: boolean;
+  editedAt: string | null;
+  taskId: string;
+  parentCommentId: string | null;
+  createdAt: string;
+  author: {
+    __typename: 'User';
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+  };
+  mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+  attachments: Array<{
+    id: string;
+    filename: string;
+    contentType: string | null;
+    sizeBytes: number | null;
+    createdAt: string;
+    uploadedBy: { id: string; name: string };
+  }>;
+};
+
+export type CommentThreadFragment = {
+  __typename: 'Comment';
+  id: string;
+  body: string;
+  resolved: boolean;
+  edited: boolean;
+  editedAt: string | null;
+  taskId: string;
+  parentCommentId: string | null;
+  createdAt: string;
+  replies: Array<{
+    __typename: 'Comment';
+    id: string;
+    body: string;
+    resolved: boolean;
+    edited: boolean;
+    editedAt: string | null;
+    taskId: string;
+    parentCommentId: string | null;
+    createdAt: string;
+    author: {
+      __typename: 'User';
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+    mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+    attachments: Array<{
+      id: string;
+      filename: string;
+      contentType: string | null;
+      sizeBytes: number | null;
+      createdAt: string;
+      uploadedBy: { id: string; name: string };
+    }>;
+  }>;
+  author: {
+    __typename: 'User';
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+  };
+  mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+  attachments: Array<{
+    id: string;
+    filename: string;
+    contentType: string | null;
+    sizeBytes: number | null;
+    createdAt: string;
+    uploadedBy: { id: string; name: string };
+  }>;
+};
+
+export type TaskCommentsQueryVariables = Exact<{
+  taskId: string;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
+}>;
+
+export type TaskCommentsQuery = {
+  task: {
+    id: string;
+    comments: {
+      totalCount: number;
+      edges: Array<{
+        cursor: string;
+        node: {
+          __typename: 'Comment';
+          id: string;
+          body: string;
+          resolved: boolean;
+          edited: boolean;
+          editedAt: string | null;
+          taskId: string;
+          parentCommentId: string | null;
+          createdAt: string;
+          replies: Array<{
+            __typename: 'Comment';
+            id: string;
+            body: string;
+            resolved: boolean;
+            edited: boolean;
+            editedAt: string | null;
+            taskId: string;
+            parentCommentId: string | null;
+            createdAt: string;
+            author: {
+              __typename: 'User';
+              id: string;
+              name: string;
+              avatarUrl: string | null;
+            };
+            mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+            attachments: Array<{
+              id: string;
+              filename: string;
+              contentType: string | null;
+              sizeBytes: number | null;
+              createdAt: string;
+              uploadedBy: { id: string; name: string };
+            }>;
+          }>;
+          author: {
+            __typename: 'User';
+            id: string;
+            name: string;
+            avatarUrl: string | null;
+          };
+          mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+          attachments: Array<{
+            id: string;
+            filename: string;
+            contentType: string | null;
+            sizeBytes: number | null;
+            createdAt: string;
+            uploadedBy: { id: string; name: string };
+          }>;
+        };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  };
+};
+
+export type LinkedCommentQueryVariables = Exact<{
+  id: string;
+}>;
+
+export type LinkedCommentQuery = {
+  comment: {
+    __typename: 'Comment';
+    id: string;
+    body: string;
+    resolved: boolean;
+    edited: boolean;
+    editedAt: string | null;
+    taskId: string;
+    parentCommentId: string | null;
+    createdAt: string;
+    replies: Array<{
+      __typename: 'Comment';
+      id: string;
+      body: string;
+      resolved: boolean;
+      edited: boolean;
+      editedAt: string | null;
+      taskId: string;
+      parentCommentId: string | null;
+      createdAt: string;
+      author: {
+        __typename: 'User';
+        id: string;
+        name: string;
+        avatarUrl: string | null;
+      };
+      mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+      attachments: Array<{
+        id: string;
+        filename: string;
+        contentType: string | null;
+        sizeBytes: number | null;
+        createdAt: string;
+        uploadedBy: { id: string; name: string };
+      }>;
+    }>;
+    author: {
+      __typename: 'User';
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+    mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+    attachments: Array<{
+      id: string;
+      filename: string;
+      contentType: string | null;
+      sizeBytes: number | null;
+      createdAt: string;
+      uploadedBy: { id: string; name: string };
+    }>;
+  };
+};
+
+export type TaskAttachmentsQueryVariables = Exact<{
+  taskId: string;
+}>;
+
+export type TaskAttachmentsQuery = {
+  task: {
+    id: string;
+    attachments: Array<{
+      id: string;
+      filename: string;
+      contentType: string | null;
+      sizeBytes: number | null;
+      createdAt: string;
+      uploadedBy: { id: string; name: string };
+    }>;
+  };
+};
+
+export type CreateCommentMutationVariables = Exact<{
+  taskId: string;
+  input: CreateCommentInput;
+}>;
+
+export type CreateCommentMutation = {
+  createComment: {
+    __typename: 'Comment';
+    id: string;
+    body: string;
+    resolved: boolean;
+    edited: boolean;
+    editedAt: string | null;
+    taskId: string;
+    parentCommentId: string | null;
+    createdAt: string;
+    replies: Array<{
+      __typename: 'Comment';
+      id: string;
+      body: string;
+      resolved: boolean;
+      edited: boolean;
+      editedAt: string | null;
+      taskId: string;
+      parentCommentId: string | null;
+      createdAt: string;
+      author: {
+        __typename: 'User';
+        id: string;
+        name: string;
+        avatarUrl: string | null;
+      };
+      mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+      attachments: Array<{
+        id: string;
+        filename: string;
+        contentType: string | null;
+        sizeBytes: number | null;
+        createdAt: string;
+        uploadedBy: { id: string; name: string };
+      }>;
+    }>;
+    author: {
+      __typename: 'User';
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+    mentions: Array<{ __typename: 'User'; id: string; name: string }>;
+    attachments: Array<{
+      id: string;
+      filename: string;
+      contentType: string | null;
+      sizeBytes: number | null;
+      createdAt: string;
+      uploadedBy: { id: string; name: string };
+    }>;
+  };
+};
+
+export type EditCommentMutationVariables = Exact<{
+  id: string;
+  input: UpdateCommentInput;
+}>;
+
+export type EditCommentMutation = {
+  editComment: {
+    id: string;
+    body: string;
+    edited: boolean;
+    editedAt: string | null;
+  };
+};
+
+export type ResolveCommentMutationVariables = Exact<{
+  id: string;
+  resolved: boolean;
+}>;
+
+export type ResolveCommentMutation = {
+  resolveComment: { __typename: 'Comment'; id: string; resolved: boolean };
+};
+
+export type DeleteCommentMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type DeleteCommentMutation = { deleteComment: boolean };
+
+export type AddTaskAttachmentMutationVariables = Exact<{
+  taskId: string;
+  input: AddAttachmentInput;
+}>;
+
+export type AddTaskAttachmentMutation = {
+  addTaskAttachment: {
+    id: string;
+    filename: string;
+    contentType: string | null;
+    sizeBytes: number | null;
+    createdAt: string;
+    uploadedBy: { id: string; name: string };
+  };
+};
+
+export type AddCommentAttachmentMutationVariables = Exact<{
+  commentId: string;
+  input: AddAttachmentInput;
+}>;
+
+export type AddCommentAttachmentMutation = {
+  addCommentAttachment: {
+    id: string;
+    filename: string;
+    contentType: string | null;
+    sizeBytes: number | null;
+    createdAt: string;
+    uploadedBy: { id: string; name: string };
+  };
+};
+
+export type RemoveAttachmentMutationVariables = Exact<{
+  id: string;
+}>;
+
+export type RemoveAttachmentMutation = { removeAttachment: boolean };
 
 export type EpicSummaryFragment = {
   id: string;
@@ -1774,6 +2160,313 @@ export type HealthQuery = {
   health: { status: string; uptimeSeconds: number; timestamp: string };
 };
 
+export const CommentPersonFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CommentPersonFragment, unknown>;
+export const AttachmentItemFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AttachmentItemFragment, unknown>;
+export const CommentBodyFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentBody' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommentId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mentions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'attachments' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CommentBodyFragment, unknown>;
+export const CommentThreadFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentThread' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'CommentBody' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'replies' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentBody' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentBody' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommentId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mentions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'attachments' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CommentThreadFragment, unknown>;
 export const EpicSummaryFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -2664,6 +3357,1208 @@ export const AcceptInvitationDocument = {
 } as unknown as DocumentNode<
   AcceptInvitationMutation,
   AcceptInvitationMutationVariables
+>;
+export const TaskCommentsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TaskComments' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'first' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'after' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'task' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'comments' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'first' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'first' },
+                      },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'after' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'after' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'edges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'cursor' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'node' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'FragmentSpread',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'CommentThread',
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'hasNextPage' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'endCursor' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'totalCount' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentBody' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommentId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mentions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'attachments' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentThread' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'CommentBody' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'replies' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentBody' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TaskCommentsQuery, TaskCommentsQueryVariables>;
+export const LinkedCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'LinkedComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'comment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentThread' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentBody' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommentId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mentions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'attachments' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentThread' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'CommentBody' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'replies' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentBody' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LinkedCommentQuery, LinkedCommentQueryVariables>;
+export const TaskAttachmentsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TaskAttachments' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'task' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'attachments' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'AttachmentItem' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskAttachmentsQuery,
+  TaskAttachmentsQueryVariables
+>;
+export const CreateCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateCommentInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createComment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentThread' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentPerson' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'User' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentBody' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentCommentId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentPerson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'mentions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'attachments' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CommentThread' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Comment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'CommentBody' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'replies' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CommentBody' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateCommentMutation,
+  CreateCommentMutationVariables
+>;
+export const EditCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'EditComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateCommentInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'editComment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'edited' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'editedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EditCommentMutation, EditCommentMutationVariables>;
+export const ResolveCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ResolveComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'resolved' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'resolveComment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'resolved' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'resolved' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'resolved' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ResolveCommentMutation,
+  ResolveCommentMutationVariables
+>;
+export const DeleteCommentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteComment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteComment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteCommentMutation,
+  DeleteCommentMutationVariables
+>;
+export const AddTaskAttachmentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddTaskAttachment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddAttachmentInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addTaskAttachment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddTaskAttachmentMutation,
+  AddTaskAttachmentMutationVariables
+>;
+export const AddCommentAttachmentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddCommentAttachment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'commentId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddAttachmentInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addCommentAttachment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'commentId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'commentId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AttachmentItem' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AttachmentItem' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Attachment' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filename' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'contentType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sizeBytes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadedBy' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddCommentAttachmentMutation,
+  AddCommentAttachmentMutationVariables
+>;
+export const RemoveAttachmentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveAttachment' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeAttachment' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveAttachmentMutation,
+  RemoveAttachmentMutationVariables
 >;
 export const ProjectEpicsDocument = {
   kind: 'Document',
