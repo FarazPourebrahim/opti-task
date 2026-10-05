@@ -1,4 +1,5 @@
 import type { ApolloCache, Reference } from '@apollo/client';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 /** A connection as the cache stores it: edges pointing at normalized rows. */
 type CachedConnection = {
@@ -13,9 +14,56 @@ type CachedConnection = {
 /** An entity as the cache files it: by type and id. */
 type CachedEntity = { __typename: string; id: string };
 
+/**
+ * What owns a list: an entity, or the query root for a top-level field such as
+ * `myNotifications`.
+ */
+export type CacheOwner = CachedEntity | typeof QUERY_ROOT;
+
+export const QUERY_ROOT = 'ROOT_QUERY';
+
+function ownerId(cache: ApolloCache, owner: CacheOwner): string | undefined {
+  return owner === QUERY_ROOT ? QUERY_ROOT : cache.identify(owner);
+}
+
+/**
+ * Whether an entity is in the cache at all.
+ *
+ * A realtime event about something this client never loaded is dropped rather
+ * than written: a half-known entity would satisfy no query, and would be read
+ * back as if it were the whole thing.
+ */
+export function isCached(cache: ApolloCache, entity: CachedEntity): boolean {
+  const cacheId = cache.identify(entity);
+  if (!cacheId) return false;
+
+  let found = false;
+  cache.modify<Record<string, string>>({
+    id: cacheId,
+    fields: {
+      // Every normalized entity stores its type; nothing is changed here.
+      __typename: (value) => {
+        found = true;
+        return value;
+      },
+    },
+  });
+  return found;
+}
+
+/**
+ * Chooses among the lists one field is cached as.
+ *
+ * A field cached under several argument sets (a task list per filter, the
+ * notification feed with and without `unreadOnly`) is one list each. The name
+ * given here is the cache's own, arguments included — for example
+ * `myNotifications:{"unreadOnly":true}`.
+ */
+type ListFilter = (storeFieldName: string) => boolean;
+
 type RemoveFromConnectionOptions = {
-  /** The entity that owns the connection, e.g. an `Organization`. */
-  owner: { __typename: string; id: string };
+  /** What owns the connection, e.g. an `Organization`. */
+  owner: CacheOwner;
   /** The connection field on the owner, e.g. `members`. */
   connectionField: string;
   /**
@@ -25,6 +73,8 @@ type RemoveFromConnectionOptions = {
   countField?: string;
   /** The `id` of the row to take out. */
   nodeId: string;
+  /** Limits the edit to some of the field's cached lists. All, if omitted. */
+  only?: ListFilter;
 };
 
 /**
@@ -35,15 +85,21 @@ type RemoveFromConnectionOptions = {
  * own cache entry instead would leave a dangling edge, which Apollo answers by
  * refetching the whole page.
  *
- * A field cached under several argument sets (a task list per filter) is one
- * list each, and every one of them is edited. Only a list that actually held
- * the row has its total lowered: the others never counted it.
+ * Every cached list of the field is edited, unless `only` narrows them. Only a
+ * list that actually held the row has its total lowered: the others never
+ * counted it.
  */
 export function removeFromConnection(
   cache: ApolloCache,
-  { owner, connectionField, countField, nodeId }: RemoveFromConnectionOptions,
+  {
+    owner,
+    connectionField,
+    countField,
+    nodeId,
+    only,
+  }: RemoveFromConnectionOptions,
 ): void {
-  const cacheId = cache.identify(owner);
+  const cacheId = ownerId(cache, owner);
   if (!cacheId) return;
 
   let wasListed = false;
@@ -51,7 +107,10 @@ export function removeFromConnection(
   cache.modify<Record<string, CachedConnection | number>>({
     id: cacheId,
     fields: {
-      [connectionField]: (existing, { readField, isReference }) => {
+      [connectionField]: (
+        existing,
+        { readField, isReference, storeFieldName },
+      ) => {
         // Not loaded, or not a connection: nothing here to edit.
         if (
           typeof existing === 'number' ||
@@ -60,6 +119,7 @@ export function removeFromConnection(
         ) {
           return existing;
         }
+        if (only && !only(storeFieldName)) return existing;
 
         const edges = existing.edges.filter(
           (edge) => readField('id', edge.node) !== nodeId,
@@ -87,16 +147,61 @@ export function removeFromConnection(
   });
 }
 
-type AppendToConnectionOptions = {
-  /** The entity that owns the connection, e.g. a `Task`. */
-  owner: CachedEntity;
+type AddToConnectionOptions = {
+  /** What owns the connection, e.g. a `Task`. */
+  owner: CacheOwner;
   /** The connection field on the owner, e.g. `comments`. */
   connectionField: string;
   /** The type of one edge, e.g. `CommentEdge`. */
   edgeTypename: string;
   /** The row to add. It must already be in the cache. */
   node: CachedEntity;
+  /** Limits the edit to some of the field's cached lists. All, if omitted. */
+  only?: ListFilter;
 };
+
+function addToConnection(
+  cache: ApolloCache,
+  { owner, connectionField, edgeTypename, node, only }: AddToConnectionOptions,
+  position: 'start' | 'end',
+): void {
+  const cacheId = ownerId(cache, owner);
+  if (!cacheId) return;
+
+  cache.modify<Record<string, CachedConnection>>({
+    id: cacheId,
+    fields: {
+      [connectionField]: (
+        existing,
+        { readField, isReference, toReference, storeFieldName },
+      ) => {
+        if (isReference(existing) || !('edges' in existing)) return existing;
+        if (only && !only(storeFieldName)) return existing;
+
+        // Already there: a mutation's own result and the realtime event for
+        // the same change both arrive, in either order, and add it once.
+        const isListed = existing.edges.some(
+          (edge) => readField('id', edge.node) === node.id,
+        );
+        if (isListed) return existing;
+
+        const reference = toReference(node);
+        if (!reference) return existing;
+
+        const edge = { __typename: edgeTypename, cursor: '', node: reference };
+
+        return {
+          ...existing,
+          totalCount: existing.totalCount + 1,
+          edges:
+            position === 'start'
+              ? [edge, ...existing.edges]
+              : [...existing.edges, edge],
+        };
+      },
+    },
+  });
+}
 
 /**
  * Adds a row to the end of a cached connection that lists oldest first.
@@ -111,39 +216,22 @@ type AppendToConnectionOptions = {
  */
 export function appendToConnection(
   cache: ApolloCache,
-  { owner, connectionField, edgeTypename, node }: AppendToConnectionOptions,
+  options: AddToConnectionOptions,
 ): void {
-  const cacheId = cache.identify(owner);
-  if (!cacheId) return;
+  addToConnection(cache, options, 'end');
+}
 
-  cache.modify<Record<string, CachedConnection>>({
-    id: cacheId,
-    fields: {
-      [connectionField]: (
-        existing,
-        { readField, isReference, toReference },
-      ) => {
-        if (isReference(existing) || !('edges' in existing)) return existing;
-
-        const isListed = existing.edges.some(
-          (edge) => readField('id', edge.node) === node.id,
-        );
-        if (isListed) return existing;
-
-        const reference = toReference(node);
-        if (!reference) return existing;
-
-        return {
-          ...existing,
-          totalCount: existing.totalCount + 1,
-          edges: [
-            ...existing.edges,
-            { __typename: edgeTypename, cursor: '', node: reference },
-          ],
-        };
-      },
-    },
-  });
+/**
+ * Adds a row to the start of a cached connection that lists newest first.
+ *
+ * As with `appendToConnection`, the edge carries no cursor: the next page is
+ * asked for from the last real one, which this row sits before.
+ */
+export function prependToConnection(
+  cache: ApolloCache,
+  options: AddToConnectionOptions,
+): void {
+  addToConnection(cache, options, 'start');
 }
 
 type ListEditOptions = {
@@ -194,5 +282,50 @@ export function removeFromList(
           ? existing.filter((item) => readField('id', item) !== node.id)
           : existing,
     },
+  });
+}
+
+/** Adds to a plain number on the query root, e.g. an unread count. */
+export function adjustRootCount(
+  cache: ApolloCache,
+  field: string,
+  delta: number,
+): void {
+  cache.modify<Record<string, number>>({
+    id: QUERY_ROOT,
+    fields: {
+      [field]: (count) =>
+        typeof count === 'number' ? Math.max(0, count + delta) : count,
+    },
+  });
+}
+
+type WriteEntityOptions<TData> = {
+  /** The entity's place in the cache. */
+  entity: CachedEntity;
+  fragment: TypedDocumentNode<TData, unknown>;
+  /** Needed when the fragment document spreads other fragments. */
+  fragmentName?: string;
+  data: TData;
+};
+
+/**
+ * Writes an entity a realtime event carried, in the shape of one fragment.
+ *
+ * The data is the server's, as a query would have returned it, so this is what
+ * a refetch would have written — without the request.
+ */
+export function writeEntity<TData>(
+  cache: ApolloCache,
+  { entity, fragment, fragmentName, data }: WriteEntityOptions<TData>,
+): void {
+  const id = cache.identify(entity);
+  if (!id) return;
+
+  cache.writeFragment({
+    id,
+    fragment,
+    data,
+    ...(fragmentName ? { fragmentName } : {}),
   });
 }
