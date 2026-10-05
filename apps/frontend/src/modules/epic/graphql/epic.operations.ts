@@ -124,3 +124,18 @@ export const DeleteMilestoneMutation = graphql(`
     deleteMilestone(id: $id)
   }
 `);
+
+/*
+ * An epic's progress alone: what a change to one of the project's tasks can
+ * move, re-read without disturbing the epic's task list.
+ */
+export const EpicProgressQuery = graphql(`
+  query EpicProgress($id: UUID!) {
+    epic(id: $id) {
+      id
+      progress
+      completedTasks
+      totalTasks
+    }
+  }
+`);

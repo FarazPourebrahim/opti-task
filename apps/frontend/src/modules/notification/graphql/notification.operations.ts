@@ -1,24 +1,42 @@
 import { graphql } from '@/shared/graphql/generated';
 
 /**
- * Notification feed operations.
+ * Notification operations.
  *
- * Phase 11 builds the feed UI on these. They land here in Phase 3 because the
- * cache policies need a genuinely paginated, genuinely filtered connection to
- * be proven against — `myNotifications` is both.
+ * A notification is created by the server (an assignment, a mention); a client
+ * only reads its feed and marks entries read. `myNotifications` is newest
+ * first. The feed always sends `unreadOnly`: the cache keeps one list per value.
  */
+
+export const NotificationItemFragment = graphql(`
+  fragment NotificationItem on Notification {
+    __typename
+    id
+    type
+    title
+    body
+    entityType
+    entityId
+    metadata
+    read
+    readAt
+    createdAt
+  }
+`);
+
+export const UnreadNotificationCountQuery = graphql(`
+  query UnreadNotificationCount {
+    unreadNotificationCount
+  }
+`);
+
 export const MyNotificationsQuery = graphql(`
   query MyNotifications($first: Int, $after: String, $unreadOnly: Boolean) {
     myNotifications(first: $first, after: $after, unreadOnly: $unreadOnly) {
       edges {
         cursor
         node {
-          id
-          type
-          title
-          body
-          read
-          createdAt
+          ...NotificationItem
         }
       }
       pageInfo {
@@ -30,8 +48,31 @@ export const MyNotificationsQuery = graphql(`
   }
 `);
 
-export const UnreadNotificationCountQuery = graphql(`
-  query UnreadNotificationCount {
-    unreadNotificationCount
+export const MarkNotificationReadMutation = graphql(`
+  mutation MarkNotificationRead($id: UUID!) {
+    markNotificationRead(id: $id) {
+      __typename
+      id
+      read
+      readAt
+    }
+  }
+`);
+
+export const MarkAllNotificationsReadMutation = graphql(`
+  mutation MarkAllNotificationsRead {
+    markAllNotificationsRead
+  }
+`);
+
+/** Scoped by the server to the signed-in person: it takes no arguments. */
+export const NotificationReceivedSubscription = graphql(`
+  subscription NotificationReceived {
+    notificationReceived {
+      notificationId
+      notification {
+        ...NotificationItem
+      }
+    }
   }
 `);

@@ -107,7 +107,14 @@ describe('link chain', () => {
     server.use(
       graphql.query('Health', () =>
         HttpResponse.json(
-          { errors: [{ message: 'boom', extensions: { code: 'INTERNAL_SERVER_ERROR' } }] },
+          {
+            errors: [
+              {
+                message: 'boom',
+                extensions: { code: 'INTERNAL_SERVER_ERROR' },
+              },
+            ],
+          },
           { headers: { 'x-request-id': 'req-2f9c1a' } },
         ),
       ),
@@ -209,7 +216,10 @@ describe('authentication refresh', () => {
     const health = { calls: 0 };
     const refresh = { calls: 0 };
     // Always unauthenticated, even after a successful refresh.
-    server.use(healthUntilRefreshed(refresh, health, true), refreshHandler(refresh));
+    server.use(
+      healthUntilRefreshed(refresh, health, true),
+      refreshHandler(refresh),
+    );
 
     const error = await expectApiError(client().query({ query: HealthQuery }));
 
@@ -252,7 +262,11 @@ describe('cache policies', () => {
       type: 'MENTION',
       title,
       body: null,
+      entityType: null,
+      entityId: null,
+      metadata: {},
       read,
+      readAt: read ? '2026-03-02T00:00:00.000Z' : null,
       createdAt: '2026-03-01T00:00:00.000Z',
     },
   });
@@ -322,9 +336,9 @@ describe('cache policies', () => {
       query: MyNotificationsQuery,
       variables: { first: 1 },
     });
-    expect(first.data?.myNotifications.edges.map((e) => e?.node?.title)).toEqual(
-      ['First'],
-    );
+    expect(
+      first.data?.myNotifications.edges.map((e) => e?.node?.title),
+    ).toEqual(['First']);
 
     // `network-only`, because relayStylePagination's read returns the whole
     // merged list — a cache-first read with `after` would be satisfied from
