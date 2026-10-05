@@ -15,6 +15,17 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  */
 type Documents = {
   '\n  fragment AiRecommendationItem on AiRecommendation {\n    id\n    type\n    text\n    confidenceScore\n    provider\n    approvalStatus\n    resolutionStatus\n    metadata\n    projectId\n    taskId\n    sprintId\n    createdAt\n    updatedAt\n    requestedBy {\n      id\n      name\n    }\n    approvedBy {\n      id\n      name\n    }\n  }\n': typeof types.AiRecommendationItemFragmentDoc;
+  '\n  query ProjectAiRecommendations(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $type: AiRecommendationType\n    $approvalStatus: AiApprovalStatus\n  ) {\n    project(id: $projectId) {\n      id\n      aiRecommendations(\n        first: $first\n        after: $after\n        type: $type\n        approvalStatus: $approvalStatus\n      ) {\n        edges {\n          cursor\n          node {\n            ...AiRecommendationItem\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n': typeof types.ProjectAiRecommendationsDocument;
+  '\n  query AiRecommendation($id: UUID!) {\n    aiRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.AiRecommendationDocument;
+  '\n  query AssignmentContext($taskId: UUID!) {\n    assignmentContext(taskId: $taskId) {\n      taskId\n      candidates {\n        skills\n        expertise\n        workload\n        availability\n        activeTaskCount\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n': typeof types.AssignmentContextDocument;
+  '\n  query AiAppliedTask($id: UUID!) {\n    task(id: $id) {\n      id\n      storyPoints\n      assigneeId\n      assignee {\n        id\n        name\n        avatarUrl\n      }\n    }\n  }\n': typeof types.AiAppliedTaskDocument;
+  '\n  mutation RequestStoryPointEstimate($taskId: UUID!) {\n    requestStoryPointEstimate(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.RequestStoryPointEstimateDocument;
+  '\n  mutation RequestAssignmentRecommendation($taskId: UUID!) {\n    requestAssignmentRecommendation(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.RequestAssignmentRecommendationDocument;
+  '\n  mutation RequestSprintHealthAnalysis($sprintId: UUID!) {\n    requestSprintHealthAnalysis(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.RequestSprintHealthAnalysisDocument;
+  '\n  mutation RequestProgressTracking($sprintId: UUID!) {\n    requestProgressTracking(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.RequestProgressTrackingDocument;
+  '\n  mutation ApproveRecommendation($id: UUID!) {\n    approveRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.ApproveRecommendationDocument;
+  '\n  mutation RejectRecommendation($id: UUID!) {\n    rejectRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.RejectRecommendationDocument;
+  '\n  mutation OverrideRecommendation(\n    $id: UUID!\n    $input: OverrideRecommendationInput!\n  ) {\n    overrideRecommendation(id: $id, input: $input) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.OverrideRecommendationDocument;
   '\n  subscription AiRecommendationUpdated($projectId: UUID!) {\n    aiRecommendationUpdated(projectId: $projectId) {\n      recommendationId\n      projectId\n      approvalStatus\n      recommendation {\n        ...AiRecommendationItem\n      }\n    }\n  }\n': typeof types.AiRecommendationUpdatedDocument;
   '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n': typeof types.CurrentUserDocument;
   '\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n': typeof types.LoginDocument;
@@ -135,6 +146,28 @@ type Documents = {
 const documents: Documents = {
   '\n  fragment AiRecommendationItem on AiRecommendation {\n    id\n    type\n    text\n    confidenceScore\n    provider\n    approvalStatus\n    resolutionStatus\n    metadata\n    projectId\n    taskId\n    sprintId\n    createdAt\n    updatedAt\n    requestedBy {\n      id\n      name\n    }\n    approvedBy {\n      id\n      name\n    }\n  }\n':
     types.AiRecommendationItemFragmentDoc,
+  '\n  query ProjectAiRecommendations(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $type: AiRecommendationType\n    $approvalStatus: AiApprovalStatus\n  ) {\n    project(id: $projectId) {\n      id\n      aiRecommendations(\n        first: $first\n        after: $after\n        type: $type\n        approvalStatus: $approvalStatus\n      ) {\n        edges {\n          cursor\n          node {\n            ...AiRecommendationItem\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n':
+    types.ProjectAiRecommendationsDocument,
+  '\n  query AiRecommendation($id: UUID!) {\n    aiRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.AiRecommendationDocument,
+  '\n  query AssignmentContext($taskId: UUID!) {\n    assignmentContext(taskId: $taskId) {\n      taskId\n      candidates {\n        skills\n        expertise\n        workload\n        availability\n        activeTaskCount\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n':
+    types.AssignmentContextDocument,
+  '\n  query AiAppliedTask($id: UUID!) {\n    task(id: $id) {\n      id\n      storyPoints\n      assigneeId\n      assignee {\n        id\n        name\n        avatarUrl\n      }\n    }\n  }\n':
+    types.AiAppliedTaskDocument,
+  '\n  mutation RequestStoryPointEstimate($taskId: UUID!) {\n    requestStoryPointEstimate(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.RequestStoryPointEstimateDocument,
+  '\n  mutation RequestAssignmentRecommendation($taskId: UUID!) {\n    requestAssignmentRecommendation(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.RequestAssignmentRecommendationDocument,
+  '\n  mutation RequestSprintHealthAnalysis($sprintId: UUID!) {\n    requestSprintHealthAnalysis(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.RequestSprintHealthAnalysisDocument,
+  '\n  mutation RequestProgressTracking($sprintId: UUID!) {\n    requestProgressTracking(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.RequestProgressTrackingDocument,
+  '\n  mutation ApproveRecommendation($id: UUID!) {\n    approveRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.ApproveRecommendationDocument,
+  '\n  mutation RejectRecommendation($id: UUID!) {\n    rejectRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.RejectRecommendationDocument,
+  '\n  mutation OverrideRecommendation(\n    $id: UUID!\n    $input: OverrideRecommendationInput!\n  ) {\n    overrideRecommendation(id: $id, input: $input) {\n      ...AiRecommendationItem\n    }\n  }\n':
+    types.OverrideRecommendationDocument,
   '\n  subscription AiRecommendationUpdated($projectId: UUID!) {\n    aiRecommendationUpdated(projectId: $projectId) {\n      recommendationId\n      projectId\n      approvalStatus\n      recommendation {\n        ...AiRecommendationItem\n      }\n    }\n  }\n':
     types.AiRecommendationUpdatedDocument,
   '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n':
@@ -388,6 +421,72 @@ export function graphql(source: string): unknown;
 export function graphql(
   source: '\n  fragment AiRecommendationItem on AiRecommendation {\n    id\n    type\n    text\n    confidenceScore\n    provider\n    approvalStatus\n    resolutionStatus\n    metadata\n    projectId\n    taskId\n    sprintId\n    createdAt\n    updatedAt\n    requestedBy {\n      id\n      name\n    }\n    approvedBy {\n      id\n      name\n    }\n  }\n',
 ): (typeof documents)['\n  fragment AiRecommendationItem on AiRecommendation {\n    id\n    type\n    text\n    confidenceScore\n    provider\n    approvalStatus\n    resolutionStatus\n    metadata\n    projectId\n    taskId\n    sprintId\n    createdAt\n    updatedAt\n    requestedBy {\n      id\n      name\n    }\n    approvedBy {\n      id\n      name\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectAiRecommendations(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $type: AiRecommendationType\n    $approvalStatus: AiApprovalStatus\n  ) {\n    project(id: $projectId) {\n      id\n      aiRecommendations(\n        first: $first\n        after: $after\n        type: $type\n        approvalStatus: $approvalStatus\n      ) {\n        edges {\n          cursor\n          node {\n            ...AiRecommendationItem\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectAiRecommendations(\n    $projectId: UUID!\n    $first: Int\n    $after: String\n    $type: AiRecommendationType\n    $approvalStatus: AiApprovalStatus\n  ) {\n    project(id: $projectId) {\n      id\n      aiRecommendations(\n        first: $first\n        after: $after\n        type: $type\n        approvalStatus: $approvalStatus\n      ) {\n        edges {\n          cursor\n          node {\n            ...AiRecommendationItem\n          }\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n        totalCount\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query AiRecommendation($id: UUID!) {\n    aiRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  query AiRecommendation($id: UUID!) {\n    aiRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query AssignmentContext($taskId: UUID!) {\n    assignmentContext(taskId: $taskId) {\n      taskId\n      candidates {\n        skills\n        expertise\n        workload\n        availability\n        activeTaskCount\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query AssignmentContext($taskId: UUID!) {\n    assignmentContext(taskId: $taskId) {\n      taskId\n      candidates {\n        skills\n        expertise\n        workload\n        availability\n        activeTaskCount\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query AiAppliedTask($id: UUID!) {\n    task(id: $id) {\n      id\n      storyPoints\n      assigneeId\n      assignee {\n        id\n        name\n        avatarUrl\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query AiAppliedTask($id: UUID!) {\n    task(id: $id) {\n      id\n      storyPoints\n      assigneeId\n      assignee {\n        id\n        name\n        avatarUrl\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RequestStoryPointEstimate($taskId: UUID!) {\n    requestStoryPointEstimate(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation RequestStoryPointEstimate($taskId: UUID!) {\n    requestStoryPointEstimate(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RequestAssignmentRecommendation($taskId: UUID!) {\n    requestAssignmentRecommendation(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation RequestAssignmentRecommendation($taskId: UUID!) {\n    requestAssignmentRecommendation(taskId: $taskId) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RequestSprintHealthAnalysis($sprintId: UUID!) {\n    requestSprintHealthAnalysis(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation RequestSprintHealthAnalysis($sprintId: UUID!) {\n    requestSprintHealthAnalysis(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RequestProgressTracking($sprintId: UUID!) {\n    requestProgressTracking(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation RequestProgressTracking($sprintId: UUID!) {\n    requestProgressTracking(sprintId: $sprintId) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation ApproveRecommendation($id: UUID!) {\n    approveRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation ApproveRecommendation($id: UUID!) {\n    approveRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RejectRecommendation($id: UUID!) {\n    rejectRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation RejectRecommendation($id: UUID!) {\n    rejectRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation OverrideRecommendation(\n    $id: UUID!\n    $input: OverrideRecommendationInput!\n  ) {\n    overrideRecommendation(id: $id, input: $input) {\n      ...AiRecommendationItem\n    }\n  }\n',
+): (typeof documents)['\n  mutation OverrideRecommendation(\n    $id: UUID!\n    $input: OverrideRecommendationInput!\n  ) {\n    overrideRecommendation(id: $id, input: $input) {\n      ...AiRecommendationItem\n    }\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
