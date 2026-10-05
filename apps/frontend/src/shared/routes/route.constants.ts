@@ -45,6 +45,12 @@ export const ROUTE_PARAMS = {
   epicId: 'epicId',
 } as const;
 
+/** Query-string keys a page reads from its own address. */
+export const ROUTE_SEARCH = {
+  /** On a task: the comment a link points at. */
+  comment: 'comment',
+} as const;
+
 /** Ids a route hands to `useBreadcrumbLabel` so its crumb shows a real name. */
 export const CRUMB_IDS = {
   organization: 'organization',
@@ -106,6 +112,16 @@ export function projectTasksPath(projectId: string): string {
 
 export function taskPath(projectId: string, taskId: string): string {
   return `${projectTasksPath(projectId)}/${encodeURIComponent(taskId)}`;
+}
+
+/** A task, opened on one of its comments. */
+export function taskCommentPath(
+  projectId: string,
+  taskId: string,
+  commentId: string,
+): string {
+  const search = new URLSearchParams({ [ROUTE_SEARCH.comment]: commentId });
+  return `${taskPath(projectId, taskId)}?${search.toString()}`;
 }
 
 export function projectSprintsPath(projectId: string): string {
