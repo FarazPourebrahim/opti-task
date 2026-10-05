@@ -507,6 +507,120 @@ same Radix primitives.
 - **Right fix**: none needed.
 - **Impact**: none; the page is still loaded lazily by the router under test.
 
+## Phase 10 — Collaboration: Comments & Attachments
+
+- **What**: replies go one level deep. A reply is always filed under its
+  thread's first comment, and a reply to a reply — which the API allows and
+  another client could make — is not shown.
+- **Why**: `Comment.replies` is a plain list on each comment, so every further
+  level is another level of nesting in the query, and the API has no way to ask
+  for "all descendants".
+- **Right fix**: a flat `Comment.thread` (or paginated `replies`) on the
+  backend; or decide that one level is the product rule and have the API
+  refuse deeper ones.
+- **Impact**: none for comments written here. A deeper reply made elsewhere is
+  stored, counted nowhere on this screen, and invisible.
+
+- **What**: a thread's replies are not paginated.
+- **Why**: the API returns them as one list.
+- **Right fix**: a `replies(first:, after:)` connection.
+- **Impact**: a thread with hundreds of replies loads them all at once.
+
+- **What**: an attachment is typed in by hand — name, type, size — and there
+  is no file picker.
+- **Why**: the API stores a record and never the file (backend debt). Picking
+  a file would look like an upload that does not happen, even if only its name
+  were read.
+- **Right fix**: real storage on the backend (an upload URL, a signed download
+  URL), then an upload control and a link.
+- **Impact**: attachments are notes that a file exists. The card, the form
+  and the removal dialog each say so. `Attachment.url` is never selected, and
+  a standing test keeps it that way.
+
+- **What**: the largest size that can be recorded is 2,147,483,647 bytes
+  (about 2 GB), though the backend's own rule allows 5,000,000,000.
+- **Why**: `AddAttachmentInput.sizeBytes` is a GraphQL `Int`, which cannot
+  carry a larger number; the server's higher bound is unreachable.
+- **Right fix**: on the backend, a `Float` or a string-encoded size for the
+  input, as the output already uses `Float`.
+- **Impact**: a file larger than 2 GB cannot have its size recorded; leave the
+  size blank.
+
+- **What**: an edit changes a comment's text only; who it mentions cannot be
+  changed afterwards.
+- **Why**: `UpdateCommentInput` has `body` and nothing else.
+- **Right fix**: `mentionedUserIds` on `UpdateCommentInput`, notifying only
+  the people newly added.
+- **Impact**: to mention someone who was missed, write a reply. The edit form
+  says the mentions stay as they are.
+
+- **What**: only project members on the first loaded page can be mentioned.
+- **Why**: the same scoped-membership rule as every other picker (Phase 7).
+  The API would accept any user id — it checks only that the user exists.
+- **Right fix**: the membership search described under Phase 7.
+- **Impact**: as Phase 7.
+
+- **What**: a new comment is shown at the end of the list even when later
+  pages have not been loaded, so it can sit below comments it does not
+  directly follow.
+- **Why**: the person who wrote it should see it at once. It is added without
+  a cursor, so loading the next page drops it and brings it back in its true
+  place with its own page.
+- **Right fix**: none needed.
+- **Impact**: between posting and loading more, the count reads "Showing 21
+  of 45" with the new comment last. With more than one page still to load,
+  it leaves the screen until its page arrives.
+
+- **What**: someone else's comment does not appear until the thread is next
+  fetched.
+- **Why**: nothing listens for it yet.
+- **Right fix**: Phase 11's `commentAdded` subscription, through
+  `appendToConnection` / `appendToList`, which already skip a comment that is
+  listed.
+- **Impact**: two people on the same task see each other's comments after a
+  reload.
+
+- **What**: the linked comment is shown read-only in a panel above the
+  thread, and — when it is on a loaded page — a second time in the thread.
+  The page does not scroll to it.
+- **Why**: a link can name a reply, or a comment on a page not yet loaded, so
+  it is fetched by id rather than looked for in the list. Scrolling cannot be
+  tested without layout and was left out rather than guessed at.
+- **Right fix**: once seen in a browser, either keep the panel or highlight
+  and scroll to the comment in place when it is loaded.
+- **Impact**: a duplicate on screen until the panel is dismissed.
+
+- **What**: "Copy link" needs clipboard access.
+- **Why**: `navigator.clipboard` exists only on a secure origin (HTTPS or
+  localhost) and can be refused.
+- **Right fix**: none needed; the failure is reported in a toast.
+- **Impact**: on a plain-HTTP deployment the button reports that it could not
+  copy.
+
+- **What**: each comment carries its actions as a row of small buttons — up
+  to six (reply, resolve, edit, record a file, copy link, delete).
+- **Why**: a menu would hide them behind another click, and nothing has been
+  seen in a browser to judge which reads better.
+- **Right fix**: after a visual pass, move the less-used ones into a
+  `DropdownMenu` if the row is cluttered.
+- **Impact**: possibly a busy thread on a narrow screen. The row wraps.
+
+- **What**: a new comment re-reads the whole task to pick up its entry in the
+  audit trail.
+- **Why**: as in Phase 8 — the mutation returns the comment, not the activity
+  it wrote.
+- **Right fix**: Phase 11's `taskUpdated` subscription.
+- **Impact**: one extra request per comment, and a paged-out activity list
+  returns to its first page.
+
+- **What**: `Task.commentCount` is not used; the count shown is the
+  connection's `totalCount`.
+- **Why**: both count top-level comments, and the connection is already
+  loaded.
+- **Right fix**: none needed. A count that included replies would be worth
+  showing on the task card, and needs a backend field.
+- **Impact**: none.
+
 ## Amendment A1 — Avero migration
 
 - **What**: Avero's filled primary button is white text on the amber brand
