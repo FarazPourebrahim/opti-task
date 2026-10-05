@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
 import { DEFAULT_PAGE_SIZE } from '@contracts';
 import type { SprintState } from '@contracts';
@@ -13,6 +13,7 @@ import {
   DeleteSprintMutation,
   ProjectSprintsQuery,
   RemoveTaskFromSprintMutation,
+  SprintFiguresQuery,
   SprintQuery,
   SprintTaskCandidatesQuery,
   UpdateSprintMutation,
@@ -24,6 +25,7 @@ import type {
   SprintTaskFragment,
 } from '@/shared/graphql/generated/graphql';
 import { useLoadMore } from '@/shared/hooks/useLoadMore';
+import { useRealtimeEvent } from '@/shared/hooks/useRealtime';
 import { ApiError } from '@/shared/lib/apiError';
 import { removeFromConnection } from '@/shared/utils/cache.utils';
 
@@ -90,11 +92,37 @@ export function useCreateSprint(projectId: string) {
 }
 
 export function useSprint(sprintId: string) {
+  const client = useApolloClient();
   const { data, loading, error, refetch, fetchMore } = useQuery(SprintQuery, {
     variables: { id: sprintId, tasksFirst: SPRINT_TASKS_PAGE_SIZE },
   });
 
   const sprint = data?.sprint ?? null;
+  const projectId = sprint?.projectId;
+
+  /*
+   * The figures are the server's to work out, so a change made elsewhere is
+   * answered by reading them again. Them alone, which leaves the pages of
+   * tasks already on screen where they are. A failure here is not shown: the
+   * figures on screen are simply as old as the last successful read.
+   */
+  const refreshFigures = useCallback(() => {
+    client
+      .query({
+        query: SprintFiguresQuery,
+        variables: { id: sprintId },
+        fetchPolicy: 'network-only',
+      })
+      .catch(() => undefined);
+  }, [client, sprintId]);
+
+  // Any task in the project may be in this sprint, or have just left it.
+  useRealtimeEvent('taskUpdated', (event) => {
+    if (event.projectId === projectId) refreshFigures();
+  });
+  useRealtimeEvent('sprintUpdated', (event) => {
+    if (event.sprintId === sprintId) refreshFigures();
+  });
 
   const tasks = useMemo(
     () => sprint?.tasks.edges.map((edge) => edge.node) ?? [],

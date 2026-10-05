@@ -18,6 +18,7 @@ import { useAttachmentActions } from '@/modules/comment/hooks/useAttachments';
 import type { AttachmentData } from '@/modules/comment/hooks/useAttachments';
 import {
   useCommentActions,
+  useCommentRealtime,
   useTaskComments,
 } from '@/modules/comment/hooks/useComments';
 import type {
@@ -90,6 +91,8 @@ export function TaskComments({
   } = useCommentActions(taskId);
   const { addCommentAttachment, isAddingToComment, removeAttachment } =
     useAttachmentActions(taskId);
+
+  useCommentRealtime(taskId, viewer?.id);
 
   const [openForm, setOpenForm] = useState<OpenForm | null>(null);
   const [pendingDelete, setPendingDelete] = useState<CommentData | null>(null);

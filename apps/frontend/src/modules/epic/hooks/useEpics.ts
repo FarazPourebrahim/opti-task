@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
 import { DEFAULT_PAGE_SIZE } from '@contracts';
 import { EPIC_TASKS_PAGE_SIZE } from '@/modules/epic/constants/epic.constants';
@@ -7,6 +7,7 @@ import {
   CreateMilestoneMutation,
   DeleteEpicMutation,
   DeleteMilestoneMutation,
+  EpicProgressQuery,
   EpicQuery,
   ProjectEpicsQuery,
   RefreshEpicProgressMutation,
@@ -21,6 +22,7 @@ import type {
   EpicSummaryFragment,
 } from '@/shared/graphql/generated/graphql';
 import { useLoadMore } from '@/shared/hooks/useLoadMore';
+import { useRealtimeEvent } from '@/shared/hooks/useRealtime';
 import { ApiError } from '@/shared/lib/apiError';
 import { removeFromConnection } from '@/shared/utils/cache.utils';
 
@@ -85,11 +87,30 @@ export function useCreateEpic(projectId: string) {
 }
 
 export function useEpic(epicId: string) {
+  const client = useApolloClient();
   const { data, loading, error, refetch, fetchMore } = useQuery(EpicQuery, {
     variables: { id: epicId, tasksFirst: EPIC_TASKS_PAGE_SIZE },
   });
 
   const epic = data?.epic ?? null;
+  const projectId = epic?.projectId;
+
+  /*
+   * Progress is worked out by the server from the epic's tasks, so when a
+   * task in the project changes it is read again. Progress alone, which
+   * leaves the task list on screen where it is.
+   */
+  useRealtimeEvent('taskUpdated', (event) => {
+    if (event.projectId !== projectId) return;
+
+    client
+      .query({
+        query: EpicProgressQuery,
+        variables: { id: epicId },
+        fetchPolicy: 'network-only',
+      })
+      .catch(() => undefined);
+  });
 
   const tasks = useMemo(
     () => epic?.tasks.edges.map((edge) => edge.node) ?? [],
