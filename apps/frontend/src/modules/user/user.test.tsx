@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { RequestHandler } from 'msw';
 import type { ErrorCode } from '@contracts';
 import { routes } from '@/App';
+import { myAnalyticsScenario } from '@/modules/analytics/analytics.fixtures';
 import {
   expertiseSchema,
   profileSchema,
@@ -67,7 +68,8 @@ function mutationFails(name: string, code: ErrorCode) {
 beforeEach(() => {
   resetRefreshState();
   clearAccessToken();
-  server.use(...signedIn());
+  // The profile carries the analytics card, which reads on sight.
+  server.use(...signedIn(), ...myAnalyticsScenario());
 });
 
 describe('profile details', () => {

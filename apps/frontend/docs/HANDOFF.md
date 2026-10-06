@@ -10,25 +10,24 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 ## Start here
 
 1. `git status` and `git branch --show-current`. The work tree should be clean
-   on `frontend/F12`, which is pushed and **not merged**.
-2. `pnpm --filter optitask-frontend run verify` should exit 0 with 629 tests
-   in 25 files. If it does not, something changed since this was written.
-3. Ask the owner whether to merge `frontend/F12` into `frontend/main` and
-   start Phase 13. Do not merge without that. In the last two sessions the
-   owner answered each phase report with "go ahead" or a bare "continue", and
-   each was taken to mean exactly one merge plus the next phase — never more
-   than that.
-4. Phase 13 (analytics) is small: one page and a panel. Phase 14 builds nothing
-   new and is mostly blocked on decisions and on things only a browser and a
-   running backend can show — see "What Phase 14 needs" below before starting
-   it.
+   on `frontend/F13`, which is pushed and **not merged**.
+2. `pnpm --filter optitask-frontend run verify` should exit 0 with 667 tests
+   in 26 files. If it does not, something changed since this was written.
+3. Ask the owner whether to merge `frontend/F13` into `frontend/main` and
+   start Phase 14. Do not merge without that. The owner has answered each
+   phase report with "go ahead" or a bare "continue", and each was taken to
+   mean exactly one merge plus the next phase — never more than that.
+4. Phase 14 builds nothing new and is mostly blocked on decisions and on
+   things only a browser and a running backend can show — see "What Phase 14
+   needs" below before starting it. The owner was told on 2026-10-06 that the
+   browser pass is the recommended next step after Phase 13.
 
 ---
 
 ## Where things stand
 
-**Progress: 95%** — Phases 0–12 and Amendment A1 are complete. Phase 13
-(Analytics) is next, then Phase 14 (hardening and release).
+**Progress: 98%** — Phases 0–13 and Amendment A1 are complete. Phase 14
+(hardening and release) is all that is left.
 
 | Phase | What exists |
 |---|---|
@@ -43,18 +42,19 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 | 10 | Comments on a task (threads, one level of replies, mentions, edit, resolve, delete, link to a comment) and attachment records on tasks and comments |
 | 11 | Notification bell and page; the socket (status, backoff, re-auth, catch-up); all five subscriptions reconciling the cache |
 | 12 | AI: the project's recommendation queue, request panels on a task and a sprint, approve (with a preview), reject, override, the assignment candidates table |
+| 13 | Analytics: the project's Analytics tab (headline figures, tasks by status and priority, story points per sprint, individual workloads) and a person's figures on their profile, with the save of one's own |
 
 Verified at handoff: `pnpm --filter optitask-frontend run verify` exits 0
-(typecheck, lint, query-depth check, **629 tests in 25 files**) and
+(typecheck, lint, query-depth check, **667 tests in 26 files**) and
 `run build` succeeds.
 
 **Never verified:** nothing has been seen in a browser, and nothing has run
 against the real backend. Every response in the tests is a mock shaped from the
 SDL. The socket has only ever met a stand-in server (`shared/tests/realtime.ts`).
-Twelve phases of UI are unseen — a visual pass at 360px and desktop width is
+Thirteen phases of UI are unseen — a visual pass at 360px and desktop width is
 overdue. The owner was offered one on 2026-10-05 and chose to go on to Phase
-10 first. Card dragging, the burndown chart and the row of buttons on each
-comment are what tests can say least about.
+10 first. Card dragging, the two charts (burndown, story points per sprint) and the
+row of buttons on each comment are what tests can say least about.
 
 ---
 
@@ -62,11 +62,11 @@ comment are what tests can say least about.
 
 | Branch | State |
 |---|---|
-| `frontend/F12` | Phase 12. Pushed. **Not merged** — waiting for the owner's go-ahead. |
-| `frontend/main` | Phases 0–11 + A1. Pushed, in sync with origin. |
+| `frontend/F13` | Phase 13. Pushed. **Not merged** — waiting for the owner's go-ahead. |
+| `frontend/main` | Phases 0–12 + A1. Pushed, in sync with origin. |
 | `main` | **Local is 2 commits ahead of `origin/main`** (the merge of the partner's amber `colors.md`). `git push origin main` is **rejected by a repository rule** — do not work around it; the owner must push or open a PR. |
 | `ai/main` | The AI team's branch. Leave it alone. |
-| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `averoui-migration` | Merged; kept locally. |
+| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `F12`, `averoui-migration` | Merged; kept locally. |
 
 Workflow the owner has confirmed, phase by phase:
 
@@ -146,6 +146,8 @@ Still undecided, and worth raising:
 | Most changes are not announced over the socket (task created or deleted, labels, comments edited or deleted, epics…) | Backend | Only five kinds of change publish an event; see known-debt, Phase 11 |
 | A recommendation cannot be listed by task or sprint, and does not name its task, sprint or suggested person | Backend | So a task shows only this visit's suggestions; see known-debt, Phase 12 |
 | A decision changes a task without returning it or announcing it | Backend | The client re-reads the task's two fields after each applied decision |
+| Nothing says whether the viewer may see another person's analytics | Backend | So those figures are asked for on demand, and a refusal is explained; see known-debt, Phase 13 |
+| A team lead is refused project analytics, against `rbac.md`; saving statistics works for the owner alone | Backend | The UI follows the server in both; see known-debt, Phase 13 |
 | A socket cannot authenticate from the session cookies | Backend | So a reload costs a token refresh; two tabs loading at once may trip reuse detection — untested |
 | `main` push rejected | Repo owner | See Git state |
 
@@ -182,7 +184,7 @@ src/
 
 Modules: `auth`, `user`, `organization`, `project`, `team`, `task`, `sprint`,
 `epic`, `comment` (comments **and** attachments), `notification`, `ai`,
-`shell`, `home`. Still to come: `analytics` (Phase 13).
+`analytics`, `shell`, `home`.
 
 Where a feature shows up outside its own module:
 
@@ -192,6 +194,7 @@ Where a feature shows up outside its own module:
 | Project frame (`Project.page.tsx`) | the three project subscriptions: `task`, `sprint`, `ai` |
 | Task page | `comment` (Comments, Attachments cards), `ai` (AI suggestions card) |
 | Sprint page | `ai` (AI insights card) |
+| Own profile, another person's profile | `analytics` (Analytics card) |
 
 ### Patterns to follow (each exists; copy it)
 
@@ -200,7 +203,7 @@ Where a feature shows up outside its own module:
   resolves the viewer's roles, and hands both to its tabs through
   `<Outlet context>` + a typed `use<Feature>Context()` hook. A new project
   screen is a new tab in `Project.page.tsx` and a nested route in `App.tsx`
-  (the AI tab is the latest example; Analytics is the one still to add). The
+  (the Analytics tab is the latest example, and one shown only to some roles). The
   tab list is asserted in `project.test.tsx`, which must be updated with it.
 - **Capability hints**: `can(roles, 'task:update')` from
   `shared/lib/capabilities.ts`, or `<RequireCapability>`. Hints only hide;
@@ -322,30 +325,37 @@ Where a feature shows up outside its own module:
 
 ---
 
-## What is next — Phase 13
+## Notes from Phase 13 worth keeping
 
-Tracker and exit criteria are in `CLIENT_PLAN.md`: project analytics (totals,
-distribution by status and priority, story points per sprint, individual
-workloads) and user analytics, with `recomputeUserStatistics`.
-
-Things already in place that Phase 13 leans on:
-
-- `@averoui/charts` is installed: `LineChart`, `AreaChart`, `ChartCard` and
-  `ChartDataTable`, no bar or pie chart. See the Avero notes above and
-  `modules/sprint/components/SprintBurndown.tsx` for a chart with its empty
-  states. A distribution is best shown as a table with a `Progress` bar per
-  row, as `SprintWorkload.tsx` does.
-- `ProjectAnalytics` and `UserAnalytics` are keyed in the cache by
-  `projectId` / `userId` (`apollo.client.ts`).
-- `can(roles, 'analytics:view')` is in `capabilities.ts`: owners, org and
-  project admins and team leads. Plain members and viewers are refused.
-- `userAnalytics` is open to the user themselves and to org admins.
-- `formatDuration` (`modules/task/utils/task.utils.ts`) writes seconds as a
-  duration; `avgCompletionSeconds` can be null.
-- A chart page should be preloaded in `beforeAll` in its test file (see
-  `sprint.test.tsx`).
-- `useRealtimeEvent('taskUpdated', …)` is there if the page should follow
-  work as it moves; re-read the analytics query, which has no paged list.
+- **Where things live**: `modules/analytics`. `ProjectAnalytics.page.tsx` is
+  the project's Analytics tab; `MyAnalytics` is the card on the viewer's own
+  profile (live beside saved, with the save); `PersonAnalytics` is the card on
+  someone else's, which asks only when its button is pressed.
+  `UserAnalyticsTable` draws both.
+- **Who may see what** (read from the backend source, not from `rbac.md`):
+  `projectAnalytics` needs `analytics:view` at project scope, where a team
+  role is not resolved — so a team lead who is a plain project member is
+  refused, and the tab is hidden from them. `userAnalytics` is for the person
+  and for owners and admins of an organisation they belong to.
+  `recomputeUserStatistics` is in effect for the person alone.
+- **Every profile test needs the analytics handlers**: the viewer's own
+  profile reads `UserAnalytics` and `MyStatistics` on sight. Spread
+  `myAnalyticsScenario()` from `analytics.fixtures.ts` (as `user.test.tsx`
+  does in `beforeEach`). Someone else's profile asks for nothing until
+  "Show analytics" is pressed.
+- **Both analytics queries are `cache-and-network`**: the figures change with
+  every task, so a revisit shows the cached ones and reads again behind them.
+  A test that counts requests sees one per visit.
+- **Following other people's work**: `useProjectAnalytics` listens with
+  `useRealtimeEvent` and refetches. A test drives it by calling
+  `announceRealtimeEvent` inside `act(...)`; no socket is needed.
+- **A distribution lists every status and priority**, the empty ones as zero
+  (`toStatusDistribution`); the API sends only those that hold a task. With
+  no task at all the card shows an empty state instead of seven zeros.
+- **A table cell that holds an avatar** reads as the initials plus the name
+  ("TTTerry Teammate"). Assert the link or the other cells.
+- **The analytics test file preloads the page** in `beforeAll`, as the sprint
+  one does, because it brings the charting library.
 
 ---
 
@@ -371,8 +381,8 @@ and some of it is blocked on someone else. Sort it this way before starting:
   validated, ids from the URL and from notification metadata are checked
   before use, the custom header backs up `SameSite`. Still to do: a CSP, a
   grep of the built bundle for secrets, dependency audit.
-- F14.4 bundle analysis. Known heavy spot: the sprint page's chunk is mostly
-  Recharts (known-debt, Phase 9); Phase 13 adds more charts.
+- F14.4 bundle analysis. Known heavy spot: Recharts (known-debt, Phase 9), now
+  wanted by two pages — a sprint and the project's Analytics tab.
 - The `health` query is the one row of Appendix A still open: it needs a use
   (a status line, or the deployment doc's smoke check) or a written ➖.
 

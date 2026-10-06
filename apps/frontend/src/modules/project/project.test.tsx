@@ -250,6 +250,7 @@ describe('project frame', () => {
         'Sprints',
         'Epics',
         'AI',
+        'Analytics',
         'Members',
         'Teams',
         'Settings',
