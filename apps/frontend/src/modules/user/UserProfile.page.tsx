@@ -9,6 +9,9 @@ import {
 } from '@averoui/react';
 import { GraduationCap, Sparkles, UsersRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { MyAnalytics } from '@/modules/analytics/components/MyAnalytics';
+import { PersonAnalytics } from '@/modules/analytics/components/PersonAnalytics';
+import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useUserProfile } from '@/modules/user/hooks/useProfile';
 import { toConfidencePercent } from '@/modules/user/schemas/user.schema';
 import { ErrorState, PageSkeleton } from '@/shared/components';
@@ -18,11 +21,12 @@ import { useEscalateRouteError } from '@/shared/hooks/useEscalateRouteError';
 import { CRUMB_IDS, ROUTE_PARAMS } from '@/shared/routes/route.constants';
 
 /**
- * Another person's profile, read-only: who they are and what they are good at.
- * Their statistics and analytics belong to Phase 13.
+ * Another person's profile, read-only: who they are, what they are good at,
+ * and — for those the server allows — their delivery figures.
  */
 export function UserProfilePage() {
   const { t } = useTranslation();
+  const { user: viewer } = useAuth();
   const userId = useEntityIdParam(ROUTE_PARAMS.userId);
   const { profile, isLoading, error, refetch } = useUserProfile(userId);
 
@@ -149,6 +153,12 @@ export function UserProfilePage() {
           </ul>
         )}
       </Card>
+
+      {profile.id === viewer?.id ? (
+        <MyAnalytics userId={profile.id} />
+      ) : (
+        <PersonAnalytics userId={profile.id} name={profile.name} />
+      )}
     </div>
   );
 }

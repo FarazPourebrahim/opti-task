@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle } from '@averoui/react';
 import { useTranslation } from 'react-i18next';
+import { MyAnalytics } from '@/modules/analytics/components/MyAnalytics';
 import { ExpertiseEditor } from '@/modules/user/components/ExpertiseEditor';
 import { ProfileForm } from '@/modules/user/components/ProfileForm';
 import { SkillsEditor } from '@/modules/user/components/SkillsEditor';
@@ -53,6 +54,8 @@ export function ProfilePage() {
             </CardHeader>
             <ExpertiseEditor expertise={profile.expertise} />
           </Card>
+
+          <MyAnalytics userId={profile.id} />
         </>
       )}
     </div>
