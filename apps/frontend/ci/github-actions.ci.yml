@@ -1,0 +1,107 @@
+# OptiTask frontend CI — copy to .github/workflows/frontend.yml at the
+# repository root to switch it on. It sits beside the backend's template
+# (apps/backend/ci/github-actions.ci.yml) and does not replace it.
+#
+# Two jobs:
+#   frontend      typecheck → lint → query depth → codegen drift → unit tests
+#                 (with coverage floors) → build → build check
+#   frontend-e2e  the browser suite against the production build and a real
+#                 backend with its own PostgreSQL
+#
+# This is a pnpm workspace: dependencies install once at the root, which is
+# what links @contracts into each app, and every script runs through --filter.
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, dev, 'frontend/**']
+  pull_request:
+
+env:
+  VITE_API_URL: http://localhost:4000/graphql
+  VITE_WS_URL: ws://localhost:4000/graphql
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter optitask-frontend run typecheck
+      - run: pnpm --filter optitask-frontend run lint
+      - run: pnpm --filter optitask-frontend run depth:check
+      # Fails when an operation changed and the generated types were not
+      # regenerated and committed with it.
+      - run: pnpm --filter optitask-frontend run codegen:check
+      - run: pnpm --filter optitask-frontend run test:coverage
+      - run: pnpm --filter optitask-frontend run build
+      # The only guard on the Tailwind @source paths: without Avero's classes
+      # in the stylesheet every component renders unstyled, and no other step
+      # would notice.
+      - run: pnpm --filter optitask-frontend run build:check
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    needs: frontend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: optitask
+          POSTGRES_PASSWORD: optitask
+          POSTGRES_DB: optitask_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U optitask"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://optitask:optitask@localhost:5432/optitask_e2e
+      JWT_ACCESS_SECRET: ci-access-secret
+      JWT_REFRESH_SECRET: ci-refresh-secret
+      CORS_ORIGINS: http://localhost:5173
+      NODE_ENV: development
+      # Playwright's own Chromium; a runner has no installed Chrome to borrow.
+      E2E_BROWSER_CHANNEL: ''
+      CI: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter optitask-backend run migrate
+      - run: pnpm --filter optitask-frontend exec playwright install --with-deps chromium
+      # Builds the client, serves it with the deployment's security headers,
+      # starts the backend, and runs every browser test against the two.
+      - run: pnpm --filter optitask-frontend run e2e:build
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-results
+          path: apps/frontend/e2e/.results
+          retention-days: 7
