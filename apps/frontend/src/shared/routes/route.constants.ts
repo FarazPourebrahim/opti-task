@@ -33,6 +33,7 @@ export const ROUTES = {
   projectEpics: '/projects/:projectId/epics',
   epic: '/projects/:projectId/epics/:epicId',
   projectAi: '/projects/:projectId/ai',
+  projectAnalytics: '/projects/:projectId/analytics',
   notifications: '/notifications',
 } as const;
 
@@ -144,6 +145,10 @@ export function epicPath(projectId: string, epicId: string): string {
 
 export function projectAiPath(projectId: string): string {
   return `${projectPath(projectId)}/ai`;
+}
+
+export function projectAnalyticsPath(projectId: string): string {
+  return `${projectPath(projectId)}/analytics`;
 }
 
 export function userPath(userId: string): string {

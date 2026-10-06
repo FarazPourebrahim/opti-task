@@ -132,7 +132,8 @@
     "epics": "Epics",
     "epic": "Epic",
     "notifications": "Notifications",
-    "ai": "AI"
+    "ai": "AI",
+    "analytics": "Analytics"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -419,7 +420,8 @@
       "tasks": "Tasks",
       "sprints": "Sprints",
       "epics": "Epics",
-      "ai": "AI"
+      "ai": "AI",
+      "analytics": "Analytics"
     },
     "lifecycleTitle": "Lifecycle",
     "peopleTitle": "People",
@@ -1054,6 +1056,78 @@
       "filenameTooLong": "Use 255 characters or fewer.",
       "contentTypeTooLong": "Use 255 characters or fewer.",
       "sizeInvalid": "Enter a whole number of bytes, up to 2,147,483,647."
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Worked out from the project as it stands now, each time this page is read.",
+    "loadFailed": "The analytics could not be loaded",
+    "percent": "{{value}}%",
+    "pointsPerSprint": "{{value}} points per sprint",
+    "kpis": {
+      "title": "Project figures",
+      "totalTasks": "Tasks",
+      "completedTasks": "Tasks done",
+      "totalPoints": "Story points",
+      "completedPoints": "Story points done",
+      "velocity": "Team velocity",
+      "velocityHint": "Average story points done in a completed sprint.",
+      "completionRate": "Completion",
+      "completionHint": "By story points; by task count while no task has an estimate."
+    },
+    "distribution": {
+      "byStatus": "Tasks by status",
+      "byPriority": "Tasks by priority",
+      "status": "Status",
+      "priority": "Priority",
+      "tasks": "Tasks",
+      "share": "Share",
+      "shareOf": "{{label}}: {{count}} of {{total}} tasks",
+      "empty": "This project has no tasks to count yet."
+    },
+    "trends": {
+      "title": "Story points per sprint",
+      "label": "Story points per sprint, committed against completed",
+      "committed": "Committed",
+      "completed": "Completed",
+      "empty": "This project has no sprints to chart yet.",
+      "summary_one": "Across {{count}} sprint, {{completed}} of {{committed}} committed story points were completed.",
+      "summary_other": "Across {{count}} sprints, {{completed}} of {{committed}} committed story points were completed."
+    },
+    "workloads": {
+      "title": "Individual workloads",
+      "empty": "No task in this project is assigned to anyone yet.",
+      "assignee": "Assignee",
+      "activeTasks": "Open tasks",
+      "activePoints": "Open points",
+      "load": "Load",
+      "loadOf": "{{name}}: {{points}} open points",
+      "completedTasks": "Tasks done"
+    },
+    "user": {
+      "title": "Analytics",
+      "selfSubtitle": "Your delivery figures, worked out from your task history.",
+      "otherSubtitle": "Delivery figures, worked out from their task history.",
+      "loadFailed": "The analytics could not be loaded",
+      "figure": "Figure",
+      "value": "Value",
+      "live": "Live",
+      "saved": "Saved",
+      "completedTasks": "Tasks completed",
+      "historicalPoints": "Story points delivered",
+      "avgCompletion": "Average time to complete a task",
+      "noAvgCompletion": "No completed task to measure yet",
+      "velocity": "Velocity",
+      "noVelocity": "No completed task in a sprint yet",
+      "activeAssignments": "Open assignments",
+      "notKept": "Not kept",
+      "nothingSaved": "Nothing saved",
+      "savedExplanation": "The live figures are worked out each time you open this page. The saved ones are a copy kept on your profile, and change only when you save them — so the two can differ.",
+      "save": "Save the live figures",
+      "savedToast": "Your figures were saved",
+      "show": "Show analytics",
+      "forbiddenTitle": "These figures are not yours to see",
+      "forbiddenBody": "Only {{name}} and the administrators of an organisation they belong to can see them."
     }
   }
 }

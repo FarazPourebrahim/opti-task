@@ -23,6 +23,7 @@ import {
   ROUTE_PARAMS,
   organizationPath,
   projectAiPath,
+  projectAnalyticsPath,
   projectBoardPath,
   projectEpicsPath,
   projectMembersPath,
@@ -53,8 +54,7 @@ function Tab({ to, labelKey, end = false }: TabProps) {
 
 /**
  * The frame around one project: its header and tabs, with the current tab's
- * page rendered inside. Analytics and AI tabs join as their phases land — a
- * tab is added with the screen behind it, never before.
+ * page rendered inside.
  */
 export function ProjectPage() {
   const { t } = useTranslation();
@@ -154,6 +154,13 @@ export function ProjectPage() {
         />
         <Tab to={projectEpicsPath(project.id)} labelKey="project.tabs.epics" />
         <Tab to={projectAiPath(project.id)} labelKey="project.tabs.ai" />
+        {/* A hint only: the server refuses the figures to anyone else. */}
+        {can(roles, 'analytics:view') ? (
+          <Tab
+            to={projectAnalyticsPath(project.id)}
+            labelKey="project.tabs.analytics"
+          />
+        ) : null}
         <Tab
           to={projectMembersPath(project.id)}
           labelKey="project.tabs.members"

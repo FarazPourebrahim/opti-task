@@ -112,6 +112,10 @@ const AiRecommendationsPage = lazy(async () => ({
   default: (await import('@/modules/ai/AiRecommendations.page'))
     .AiRecommendationsPage,
 }));
+const ProjectAnalyticsPage = lazy(async () => ({
+  default: (await import('@/modules/analytics/ProjectAnalytics.page'))
+    .ProjectAnalyticsPage,
+}));
 const NotificationsPage = lazy(async () => ({
   default: (await import('@/modules/notification/Notifications.page'))
     .NotificationsPage,
@@ -288,6 +292,13 @@ export const routes: RouteObject[] = [
                         path: ROUTES.projectAi,
                         element: <AiRecommendationsPage />,
                         handle: { crumb: 'nav.ai' } satisfies RouteHandle,
+                      },
+                      {
+                        path: ROUTES.projectAnalytics,
+                        element: <ProjectAnalyticsPage />,
+                        handle: {
+                          crumb: 'nav.analytics',
+                        } satisfies RouteHandle,
                       },
                       {
                         path: ROUTES.projectMembers,
