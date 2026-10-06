@@ -38,13 +38,74 @@ amendment to this file, not an in-flight improvisation.
 | # | Decision | Choice | Why |
 |---|---|---|---|
 | D1 | Framework | **React 19 + TypeScript (strict) on Vite** | SPA fork (Fork A) of the working agreement. No Next.js, no Server Components. |
-| D2 | Styling | **CSS Modules + design tokens** | Per the Module.CSS section: nesting mirrors JSX 1:1, camelCase classes, tokens only. No Tailwind, no CSS-in-JS. |
+| D2 | Styling | **Tailwind CSS v4 + Avero design tokens** *(amended — A1)* | Avero ships no precompiled stylesheet, so Tailwind must scan its compiled output. Feature layout is written in Tailwind utilities against the same theme tokens. No CSS Modules, no CSS-in-JS. |
 | D3 | Data layer | **Apollo Client** | Backend is Apollo Server v4, GraphQL-only. Normalized cache plus a built-in `graphql-ws` link for the 5 subscriptions. |
 | D4 | Auth transport | **HTTP-only cookies for HTTP; in-memory access token for the WebSocket only** | Cookies satisfy the rule that tokens never touch JS-readable storage; `graphql-ws` needs `connectionParams`, so the token lives in a module-scoped variable — never `localStorage`/`sessionStorage`. |
-| D5 | Component layer | **Radix Primitives, styled entirely by our own `.module.css`** | Focus traps, keyboard nav and ARIA correct by construction; Radix imposes zero visual opinion, so the premium look is 100% ours. |
+| D5 | Component layer | **Avero (`@averoui/react`)** *(amended — A1)* | Radix-based, so focus traps, keyboard nav and ARIA stay correct by construction. Primitives are imported straight from the package; `shared/components` holds only what Avero lacks. |
 | D6 | Scope | **Full parity** — every query, mutation and subscription reachable from the UI | The backend is 100% complete; nothing should be stranded. Coverage is proven by the matrix in Appendix A. |
 | D7 | Typing | **GraphQL Code Generator (`client-preset`)** against `apps/backend/docs/api/schema.graphql` | One canonical type per contract; no hand-written response types, no casts on server data. |
 | D8 | i18n | **`react-i18next`, `en` locale, from Phase 1** | The working agreement demands full localization or none. `ApiError` carries i18n keys, not messages — load-bearing, not polish. |
+| D9 | Theme | **Light only** *(added — A1)* | Avero ships a light theme and has no dark variants in its components. Dark mode returns only if Avero gains it upstream. |
+| D10 | Brand color | **Amber** *(added — A1)* — `apps/frontend/colors.md` | Set once as `--color-primary` / `--color-primary-hover` in `global.css`; Avero derives its tints from them. |
+
+---
+
+## Amendment A1 — Avero replaces the in-house component layer (2026-10-04)
+
+After a revision the team chose **Avero** (`@averoui/react`,
+<https://avero-docs.vercel.app>) as the component library, as a **full
+replacement**: the Radix-plus-CSS-Modules primitives from Phase 2 and the token
+layer from Phase 1 are gone, not wrapped. This amends D2 and D5 and adds D9 and
+D10. Phases 1 and 2 below are kept as a record of what was built and are marked
+superseded.
+
+### Tracker
+
+| ID | Task | Status |
+|---|---|:--:|
+| A1.1 | Swap dependencies: add `@averoui/react`, `@averoui/tokens`, `tailwindcss` v4, `@tailwindcss/vite`; remove every `@radix-ui/*` package, `cmdk` and `react-day-picker` | ✅ |
+| A1.2 | `global.css` — Tailwind + Avero `theme.css` / `base.css` / `utilities.css`, `@source` pointing at Avero's `dist`, fonts kept on Inter / JetBrains Mono | ✅ |
+| A1.3 | Brand tokens: amber primary from `colors.md`; warning moved to orange so it cannot be mistaken for the brand | ✅ |
+| A1.4 | `AveroProvider locale="en-US"` and Avero's `ToastProvider` in `AppProviders` | ✅ |
+| A1.5 | Remove the 20 in-house primitives, the six token stylesheets, the theme context, the pre-paint theme script and both dev galleries | ✅ |
+| A1.6 | Rebuild the auth screens (login, register, forgot password, accept invitation, sessions, change password) on Avero + Tailwind | ✅ |
+| A1.7 | `shared/components`: `FormField` (the one field composition every form uses) and `ErrorState` (Avero has none); `ErrorBoundary` kept | ✅ |
+| A1.8 | Tests for the new shared components; obsolete primitive, token and theme suites removed | ✅ |
+| A1.9 | This plan and `known-debt.md` reconciled | ✅ |
+
+### Verified
+
+- `typecheck`, `lint`, the query-depth check and `test` are green (97 tests,
+  10 files). The count dropped because the suites for the deleted primitives,
+  tokens and theme went with them; Avero's primitives are covered by its own
+  suite.
+- `build` succeeds and the compiled stylesheet contains Avero's classes
+  (`bg-primary-hover`, `rounded-3xl`) and the amber `--color-primary` — so
+  `@source` is doing its job. Without it the components render unstyled.
+- **Bundle, new Phase 14 baseline**: JS ≈ 187 kB gzip, CSS ≈ 21.8 kB gzip
+  (was ≈ 118 kB / 6.9 kB). Fonts unchanged.
+
+### Not verified
+
+- Nothing has been looked at in a browser. The auth screens are not routed
+  until Phase 5, so there is no screen to open yet; the first visual pass
+  belongs to F5.2.
+- ~~Avero's `DatePicker` has not been checked against the API's requirement
+  for full RFC-3339 values.~~ Checked in Phase 8: it reports `YYYY-MM-DD`, which
+  `dateInputToApi` turns into a full instant. Asserted end to end in the create
+  task test.
+
+### Open items — need a change in Avero itself
+
+1. **White text on the amber primary button.** Avero hard-codes `text-white`
+   on `bg-primary`. Against this amber that is about 2:1 (about 3:1 on hover),
+   far below the 4.5:1 the Global DoD requires. The agreed fix is upstream: a
+   `--color-primary-foreground` token that the filled variants read.
+2. **Warning tones are hard-coded amber.** `--color-warning` only drives the
+   `warning` Button variant. `Alert`, `Toast` and `Badge` use Tailwind's
+   `amber-*` palette directly, so a warning alert still reads as the brand
+   color. They should read the warning tokens.
+3. **No dark theme** (D9).
 
 ---
 
@@ -118,18 +179,18 @@ apps/frontend/
     │   ├── ai/                  # AiRecommendations.page.tsx, approval flow
     │   └── analytics/           # ProjectAnalytics.page.tsx, UserAnalytics
     └── shared/
-        ├── components/          # Radix-backed primitives (Phase 2)
-        ├── hooks/               # useDebounce, useMediaQuery, useTheme…
+        ├── components/          # only what Avero lacks (FormField, ErrorState, ErrorBoundary…)
+        ├── hooks/               # useDebounce, useMediaQuery…
         ├── services/            # apollo.client.ts, realtime.client.ts, session.store.ts
         ├── lib/                 # apiError.ts, capabilities.ts
         ├── graphql/generated/   # codegen output (committed)
         ├── types/               # app-internal shared types
         ├── utils/               # formatDate.ts, cursor helpers…
         ├── constants/           # api.constants.ts, ui.constants.ts
-        ├── context/             # auth.context.tsx, theme.context.tsx, toast.context.tsx
+        ├── context/             # AppProviders.tsx, apollo.context.tsx
         ├── i18n/                # config + en.json
         ├── routes/              # route path constants + helpers
-        ├── styles/              # global.css + token files
+        ├── styles/              # global.css — Tailwind + Avero tokens + brand overrides
         └── tests/               # cross-feature tests, MSW server, render helper
 ```
 
@@ -138,7 +199,7 @@ apps/frontend/
 ```
 modules/<feature>/
 ├── <Feature>.page.tsx
-├── components/          # PascalCase.tsx + PascalCase.module.css
+├── components/          # PascalCase.tsx, styled with Tailwind utilities
 ├── hooks/               # use<Thing>.ts
 ├── graphql/             # <domain>.operations.ts
 ├── schemas/             # <feature>.schema.ts (zod, form input only)
@@ -178,10 +239,10 @@ line is not done, regardless of whether the feature "works".
 - [ ] Nothing feature-specific in `shared/`. Nothing app-specific in `packages/contracts`.
 
 ### UI quality
-- [ ] Every `.module.css` file's nesting mirrors its component's JSX tree 1:1 and
-      in the same order.
-- [ ] Zero raw colors, font sizes, radii, shadows or durations in component CSS —
-      `var(--token)` only.
+- [ ] Primitives come from `@averoui/react`. Nothing in `shared/components`
+      duplicates a component Avero already provides.
+- [ ] Styling is Tailwind utilities against theme tokens. No arbitrary color
+      values (`text-[#…]`, `bg-[rgb(…)]`) and no inline `style` colors.
 - [ ] **Every** list/query that can return zero items renders a dedicated
       `EmptyState` (icon or illustration + message + next action where one exists).
       "No results for this filter" and "nothing here yet" are distinct states.
@@ -198,7 +259,7 @@ line is not done, regardless of whether the feature "works".
 - [ ] `axe` reports **0 violations** on the touched screens.
 - [ ] Correct semantic landmarks and labels; icon-only buttons have accessible names.
 - [ ] Respects `prefers-reduced-motion`.
-- [ ] Renders correctly in **both** light and dark themes.
+- [ ] Renders correctly in the light theme — the only one (D9).
 
 ### Responsiveness
 - [ ] Usable from 360px to 1920px. No horizontal body scroll at any width.
@@ -235,18 +296,21 @@ line is not done, regardless of whether the feature "works".
 | 2 | Shared Component Library | 24% | ✅ |
 | 3 | GraphQL Data Layer & Codegen | 32% | ✅ |
 | 4 | Auth & Session | 40% | ✅ |
-| 5 | App Shell, Routing & Guards | 47% | ⬜ |
-| 6 | Organization & Members | 54% | ⬜ |
-| 7 | Project & Team | 61% | ⬜ |
-| 8 | Task — Board, List & Detail | 72% | ⬜ |
-| 9 | Sprint & Epic | 79% | ⬜ |
-| 10 | Collaboration — Comments & Attachments | 85% | ⬜ |
-| 11 | Notifications & Realtime | 90% | ⬜ |
-| 12 | AI Recommendations & Approval | 95% | ⬜ |
-| 13 | Analytics | 98% | ⬜ |
-| 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
+| A1 | Avero Migration (amendment) | 40% | ✅ |
+| 5 | App Shell, Routing & Guards | 47% | ✅ |
+| 6 | Organization & Members | 54% | ✅ |
+| 7 | Project & Team | 61% | ✅ |
+| 8 | Task — Board, List & Detail | 72% | ✅ |
+| 9 | Sprint & Epic | 79% | ✅ |
+| 10 | Collaboration — Comments & Attachments | 85% | ✅ |
+| 11 | Notifications & Realtime | 90% | ✅ |
+| 12 | AI Recommendations & Approval | 95% | ✅ |
+| 13 | Analytics | 98% | ✅ |
+| 14 | Hardening, A11y, Perf & Release | 100% | 🚧 |
 
-**Current overall progress: 40%** (Phases 0–4 complete).
+**Current overall progress: 99%** (Phases 0–13 and Amendment A1 complete;
+Phase 14 is done as far as it can be without the owner — see its exit
+criteria).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -301,6 +365,10 @@ workspace that renders a blank shell and resolves `@contracts` at runtime.
 ---
 
 # Phase 1 — Design System & Theming — 6 → 14%
+
+> **Superseded by Amendment A1.** The token stylesheets, both themes, the theme
+> context and the token gallery described here were removed; tokens now come
+> from `@averoui/tokens`. i18n (F1.11) and `AppProviders` (F1.13) remain.
 
 **Goal:** The complete token layer and both themes, before a single feature
 component exists. This is where "clean and premium" is decided.
@@ -364,6 +432,10 @@ variable UI typeface plus a mono face for IDs, cursors and code.
 ---
 
 # Phase 2 — Shared Component Library — 14 → 24%
+
+> **Superseded by Amendment A1.** These primitives were removed in favour of
+> `@averoui/react`. The happy-dom test environment (F2.0) and `ErrorBoundary`
+> (F2.7) remain.
 
 **Goal:** Every primitive a feature will need, accessible by construction and
 styled only with Phase 1 tokens. Features must never invent a primitive.
@@ -527,30 +599,57 @@ feature ever thinks about transport.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F5.1 | React Router v7 data router; all paths as constants in `shared/routes/` — no string literals in `App.tsx` | ⬜ |
-| F5.2 | `AppLayout` — sidebar (org + project switcher, nav), topbar (search, notification bell, theme toggle, user menu), content region | ⬜ |
-| F5.3 | `ProtectedRoute` (auth) + `RequireCapability` (hint-only hide) | ⬜ |
-| F5.4 | `shared/lib/capabilities.ts` — derive capability hints from the user's role using the `@contracts` vocabulary; documented as a hint, never authority | ⬜ |
-| F5.5 | Route-level code splitting + Suspense skeletons per route | ⬜ |
-| F5.6 | Error boundary per route + `NotFound.page.tsx` + `Forbidden.page.tsx` | ⬜ |
-| F5.7 | Breadcrumbs derived from the route tree (org → project → sprint/task) | ⬜ |
-| F5.8 | Responsive shell: sidebar collapses to a drawer under 900px | ⬜ |
-| F5.9 | Command palette (⌘K) for cross-entity navigation | ⬜ |
+| F5.1 | React Router v7 data router; all paths as constants in `shared/routes/` — no string literals in `App.tsx` | ✅ |
+| F5.2 | `AppLayout` — sidebar (nav), topbar (breadcrumbs, search, user menu), content region. Built from Avero's `SidebarNav`, `Drawer`, `DropdownMenu` and `Avatar`; `DashboardShell` was not used (see known-debt). Phase 6 added the Organisations destination to the sidebar; a project switcher lands with F7.2 and the notification bell with F11.1 — each needs queries those phases own | ✅ |
+| F5.3 | `ProtectedRoute` + `GuestRoute` (auth) + `RequireCapability` (hint-only hide) | ✅ |
+| F5.4 | `shared/lib/capabilities.ts` — derive capability hints from the user's role using the `@contracts` vocabulary; documented as a hint, never authority | ✅ |
+| F5.5 | Route-level code splitting + Suspense skeletons per route | ✅ |
+| F5.6 | Error boundary per route + `NotFound.page.tsx` + `Forbidden.page.tsx` | ✅ |
+| F5.7 | Breadcrumbs derived from the route tree, via a `crumb` translation key in each route `handle` | ✅ |
+| F5.8 | Responsive shell: sidebar collapses to a drawer below Tailwind's `lg` breakpoint (1024px, not the 900px first planned — one breakpoint shared with the auth layout) | ✅ |
+| F5.9 | Command palette (⌘K / Ctrl+K): every sidebar destination plus sign-out. Entity search joins as each feature brings its queries | ✅ |
+| F5.10 | Session expiry reaches the UI: a failed refresh settles the auth context on `unauthenticated`, so the guard redirects | ✅ |
+| F5.11 | Auth screens navigate through the router instead of callbacks; `/account/sessions` and `/account/security` routed; signed-in `Home.page.tsx` | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] `App.tsx` contains **zero** data fetching and zero business logic — verified by reading it.
-- [ ] Every route path is a constant; `grep` finds no hard-coded route string in a component.
-- [ ] Visiting a protected route unauthenticated redirects to login **and returns
-      to the intended route** after login.
-- [ ] A `FORBIDDEN` from any query renders `Forbidden.page.tsx`, not a crash or a
-      blank screen.
-- [ ] An unknown path renders `NotFound.page.tsx`.
-- [ ] A thrown render error is caught by the boundary and offers a retry.
-- [ ] Each route lazy-loads: the network panel shows a separate chunk per route.
-- [ ] The shell is fully keyboard-navigable, including a working skip-to-content link.
-- [ ] At 360px the sidebar becomes a drawer with a correct focus trap.
-- [ ] `axe` → 0 violations on the shell in both themes.
+- [x] `App.tsx` contains **zero** data fetching and zero business logic: it is
+      lazy page imports, the route tree and the router instance.
+- [x] Every route path is a constant; `grep` finds no hard-coded route string in
+      a component.
+- [x] Visiting a protected route unauthenticated redirects to login **and returns
+      to the intended route** after login (asserted end to end through the real
+      route tree). The return target is validated, not trusted: an absolute or
+      protocol-relative URL falls back to home. A deliberate sign-out does **not**
+      carry the page over, so the next person to sign in does not land on the
+      previous user's screen.
+- [x] A failed refresh mid-session redirects to login (asserted). Phase 3 and 4
+      deferred this redirect to here.
+- [x] A `FORBIDDEN` from a query renders `Forbidden.page.tsx` — when the page
+      passes its error to `useEscalateRouteError`. That is a convention each page
+      must follow, not something enforced; see known-debt.
+- [x] An unknown path renders `NotFound.page.tsx` inside the shell. A signed-out
+      visitor is sent to sign in first, which avoids revealing which paths exist.
+- [x] A thrown render error is caught by the boundary, the error's own message is
+      **not** shown, and retry re-renders the route (asserted).
+- [x] Each route lazy-loads: the production build emits a separate chunk per
+      page, and the shell (`AppLayout`, with the command palette) is its own
+      27.7 kB-gzip chunk that a signed-out visitor never downloads. Verified in
+      the build output, not the network panel.
+- [~] Keyboard: the skip link is the first tab stop and targets `main`; the
+      drawer, account menu and command palette are driven by keyboard in tests.
+      A full keyboard walkthrough in a real browser has **not** been done.
+- [~] The drawer traps focus, closes on `Esc` and returns focus to its trigger
+      (asserted). That the sidebar actually gives way to it at 360px is
+      **unverified**: the test DOM performs no layout.
+- [x] `axe` → 0 violations on the shell, with the `region` rule **on**. Color
+      contrast is not covered — axe cannot compute it without layout.
+
+> **Not verified by me:** nothing in this phase has been seen in a browser.
+> Run `pnpm run backend-dev` and `pnpm run frontend-dev`, sign in, and look at
+> the shell at a phone width and a desktop width before Phase 6 builds on it.
+> This is the first screen where the amber brand and the Avero setup are
+> actually visible.
 
 ---
 
@@ -562,28 +661,47 @@ feature ever thinks about transport.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F6.1 | `Organizations.page.tsx` — `myOrganizations` paginated, create-org flow | ⬜ |
-| F6.2 | `OrganizationDetail.page.tsx` — overview, settings, logo, update, delete (with `ConfirmDialog`) | ⬜ |
-| F6.3 | Members table — `updateMemberRole`, `removeMember`; owner shown as immutable | ⬜ |
-| F6.4 | Invitations — `organizationInvitations` list, `inviteToOrganization`, `revokeInvitation`, status chips (`PENDING`/`ACCEPTED`/`REVOKED`/`EXPIRED`) | ⬜ |
-| F6.5 | `Profile.page.tsx` — `updateProfile`, avatar, seniority | ⬜ |
-| F6.6 | Skills + expertise editors — `addSkill`, `removeSkill`, `addExpertise` (tag + confidence), `removeExpertise` | ⬜ |
-| F6.7 | Org projects list via `Organization.projects(status)` | ⬜ |
+| F6.1 | `Organizations.page.tsx` — `myOrganizations` paginated, create-org flow | ✅ |
+| F6.2 | `Organization.page.tsx` — the frame (header + tabs) around four routed tabs; settings tab with update and delete (with `ConfirmDialog`). The logo is a URL field: nothing can be uploaded | ✅ |
+| F6.3 | Members table — `updateMemberRole`, `removeMember`; owner shown as immutable | ✅ |
+| F6.4 | Invitations — `organizationInvitations` list, `inviteToOrganization`, `revokeInvitation`, status chips (`PENDING`/`ACCEPTED`/`REVOKED`/`EXPIRED`). The screen states that invitations are **not delivered**: the API sends no email and never returns the link (see known-debt) | ✅ |
+| F6.5 | `Profile.page.tsx` — `updateProfile`, avatar (URL), seniority | ✅ |
+| F6.6 | Skills + expertise editors — `addSkill`, `removeSkill`, `addExpertise` (tag + confidence), `removeExpertise` | ✅ |
+| F6.7 | Org projects list via `Organization.projects(status)` — read-only; rows become links in Phase 7 | ✅ |
+| F6.8 | `UserProfile.page.tsx` — the `user` query: another person's skills, expertise and teams, read-only, linked from the members table | ✅ |
+| F6.9 | Breadcrumbs named from data (`crumbId` + `useBreadcrumbLabel`), so the trail reads "Organisations › Acme Inc. › Members" | ✅ |
+| F6.10 | Shared pieces every later list and form will reuse: `LoadMore` + `useLoadMore`, `SelectField`, `useErrorToast`, `useEntityIdParam` | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Every one of the 11 org/user mutations in Appendix A is reachable from the UI.
-- [ ] An org with no members, no projects and no invitations renders three
-      **distinct** empty states.
-- [ ] Role changes reflect immediately via cache update, with no full refetch.
-- [ ] Destructive actions (delete org, remove member, revoke invitation) require
-      `ConfirmDialog` and name the target explicitly.
-- [ ] A non-admin does not see manage actions **and** a forced attempt still fails
-      gracefully with a toast (proves the hint is not the guard).
-- [ ] Expertise `confidenceScore` input is bounded and validated client-side.
-- [ ] Pagination works past one page; `first` never exceeds 100.
-- [ ] Tests: success, `BAD_USER_INPUT` (invalid invite email), `FORBIDDEN`
-      (member tries to invite), network failure.
+- [x] Every profile and organisation mutation in Appendix A is reachable from the
+      UI (12, plus `acceptInvitation` from Phase 4).
+- [x] No members, no projects and no invitations each render their own empty
+      state, and "no projects in this status" is a fourth, distinct from "no
+      projects yet". (The no-members state exists but cannot occur: the owner
+      is always a member.)
+- [x] A role change updates the table from the mutation result — asserted by
+      counting requests: the organisation is fetched exactly once.
+- [x] Delete organisation, remove member and revoke invitation each require a
+      `ConfirmDialog` that names the target; each test asserts nothing is sent
+      before the confirmation.
+- [x] A plain member sees no manage controls and no admin tabs. A refusal on a
+      control that *was* shown (the hint said yes, the server said no) produces
+      a toast and leaves the data as it was. Opening an admin tab by URL renders
+      the Forbidden screen.
+- [x] Expertise confidence is collected as a whole percentage (0–100), validated
+      before any request, and sent as the 0–1 fraction the API stores.
+- [x] Pagination past one page is asserted on the organisation list: the second
+      page appends, the cursor is sent back untouched, and no request asks for
+      more than 100. Members and projects page through the same `useLoadMore`
+      hook but are not separately asserted.
+- [x] Tests cover success, `BAD_USER_INPUT`, `FORBIDDEN`, `CONFLICT` and a
+      network failure, and assert that the server's own error text never reaches
+      the screen. 83 new tests; the suite is 244 tests in 15 files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing here has run against the real backend — every response in the tests
+> is a mock shaped from the SDL.
 
 ---
 
@@ -596,30 +714,42 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F7.1 | `Projects.page.tsx` — list + create; status filter | ⬜ |
-| F7.2 | `ProjectDetail` shell — tabbed: Board · Backlog · Sprints · Epics · Teams · Analytics · AI · Settings | ⬜ |
-| F7.3 | Project status control — a state-machine-aware UI offering only legal transitions (`PLANNING → ACTIVE/ARCHIVED`, `ACTIVE → COMPLETED/ARCHIVED`, `COMPLETED → ACTIVE/ARCHIVED`, `ARCHIVED` terminal) | ⬜ |
-| F7.4 | Project members — add, update role (`ADMIN`/`MEMBER`/`VIEWER`), remove | ⬜ |
-| F7.5 | `configureWorkflow` — raw JSON editor, clearly labelled as unvalidated scaffolding | ⬜ |
-| F7.6 | Teams — create, update, delete, list per project | ⬜ |
-| F7.7 | Team members — add/update/remove with `role`, `responsibilities`, `availability`, `workload` | ⬜ |
-| F7.8 | Reusable `MemberPicker` sourced from project/team membership — **never** the global `users` query | ⬜ |
+| F7.1 | Project list + create; status filter. The list is the organisation's Projects tab (`OrganizationProjects.page.tsx`, built in F6.7), which gained the create dialog and links into each project — the API has no "my projects" query to build a separate page on | ✅ |
+| F7.2 | `Project.page.tsx` — the frame (header + tabs) around routed tabs: Overview · Members · Teams · Settings today. Board, Backlog, Sprints, Epics, Analytics and AI are added **with** their phases, never as dead tabs | ✅ |
+| F7.3 | Project status control — a state-machine-aware UI offering only legal transitions (`PLANNING → ACTIVE/ARCHIVED`, `ACTIVE → COMPLETED/ARCHIVED`, `COMPLETED → ACTIVE/ARCHIVED`, `ARCHIVED` terminal) | ✅ |
+| F7.4 | Project members — add, update role (`ADMIN`/`MEMBER`/`VIEWER`), remove | ✅ |
+| F7.5 | `configureWorkflow` — raw JSON editor, clearly labelled as unvalidated scaffolding | ✅ |
+| F7.6 | Teams — create, update, delete, list per project | ✅ |
+| F7.7 | Team members — add/update/remove with `role`, `responsibilities`, `availability`, `workload` | ✅ |
+| F7.8 | Reusable `MemberPicker` (Avero `Combobox`, searchable by name or email) fed from a scoped membership — organisation members for a project, project members for a team — **never** the global `users` query | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] The status control **never offers an illegal transition**; a table test
-      covers all four states against all four targets.
-- [ ] `ARCHIVED` presents no transition affordance at all.
-- [ ] A rejected transition (server disagrees) surfaces a `BAD_USER_INPUT` toast
-      without corrupting the cached status.
-- [ ] `grep -rn "usersQuery\|useUsers" apps/frontend/src/modules` shows the global
-      user directory is not used by any picker.
-- [ ] Empty states for: no projects, no teams, no project members, no team members.
-- [ ] Availability and workload are visible on team member rows (they are the AI
-      inputs and must be inspectable).
-- [ ] The workflow JSON editor validates that the input is parseable JSON before
-      submit, and states plainly that the shape is not validated server-side.
-- [ ] Tests: all four categories per module.
+- [x] The status control **never offers an illegal transition**: a table test
+      covers all four states against all four targets, and the rendered buttons
+      are asserted for each non-terminal state.
+- [x] `ARCHIVED` presents no transition affordance at all — it says the project
+      cannot be reopened.
+- [x] A rejected transition surfaces a toast and leaves the cached status alone.
+      Status changes are deliberately **not** optimistic, so there is nothing to
+      roll back. The toast is specific ("not allowed from the current status")
+      rather than the generic validation text, which points at a form.
+- [x] The global user directory is not used by any picker — a standing test
+      reads every `*.operations.ts` and fails if one selects `users(`, which is
+      stricter than the grep first planned.
+- [x] Empty states for: no projects, no teams, no project members, no team
+      members; plus "no one left to add" on both pickers.
+- [x] Availability and workload are columns on every team member row, visible to
+      anyone who can read the team.
+- [x] The workflow editor refuses anything that is not a JSON **object** (invalid
+      JSON, arrays, strings, numbers, `null`) before submit, and says in a
+      notice that the server stores it without checking its shape.
+- [x] Tests cover success, `BAD_USER_INPUT`, `FORBIDDEN`, `CONFLICT` and a network
+      failure in both modules. 105 new tests; the suite is 349 tests in 17 files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing has run against the real backend — every response in the tests is a
+> mock shaped from the SDL.
 
 ---
 
@@ -631,49 +761,69 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F8.1 | `task.operations.ts` — fragments first; every task field/relation as reusable fragments, depth kept under 12 | ⬜ |
-| F8.2 | `Board.page.tsx` — 7 status columns, virtualized, horizontal scroll container | ⬜ |
-| F8.3 | Drag-and-drop between columns → `changeTaskStatus`, with **keyboard-accessible** move as a first-class path | ⬜ |
-| F8.4 | Status state machine in the client: offer only legal transitions (`BACKLOG ↔ TODO ↔ IN_PROGRESS ↔ IN_REVIEW ↔ TESTING → DONE`, `BLOCKED` from active states, `DONE → IN_PROGRESS` reopen) | ⬜ |
-| F8.5 | `TaskList.page.tsx` — table view with `TaskFilter` (status, priority, assignee, sprint, epic, label), `sortField`, `sortDirection`, cursor pagination | ⬜ |
-| F8.6 | `TaskCard` — priority indicator, story points, assignee avatar, labels, due date, blocked flag | ⬜ |
-| F8.7 | `TaskDetail.page.tsx` — full record; inline edit for title/description/priority/dueDate | ⬜ |
-| F8.8 | Assignment — `assignTask` including unassign (null), sourced from project members | ⬜ |
-| F8.9 | Story points — `setTaskStoryPoints`, including clearing to null | ⬜ |
-| F8.10 | Sprint move — `moveTaskToSprint` (and unassign from sprint) | ⬜ |
-| F8.11 | Dependencies — `addTaskDependency` / `removeTaskDependency`; surface the server's cycle rejection clearly | ⬜ |
-| F8.12 | Time tracking — `logTaskTime` (additive seconds), displayed as human duration | ⬜ |
-| F8.13 | Watchers — `watchTask` / `unwatchTask` with a watch toggle | ⬜ |
-| F8.14 | Labels — `addTaskLabel` / `removeTaskLabel` | ⬜ |
-| F8.15 | Activity timeline — `Task.activities` paginated, one presentation per `ActivityType` | ⬜ |
-| F8.16 | `createTask` modal + `deleteTask` with confirmation | ⬜ |
+| F8.1 | `task.operations.ts` — fragments first; every task field/relation as reusable fragments, depth kept under 12 (deepest path is 6) | ✅ |
+| F8.2 | `Board.page.tsx` — 7 status columns, each with its own count and its own next page, in a horizontal scroll container. A column of more than 30 cards is windowed with `@tanstack/react-virtual` and scrolls on its own; a shorter one renders whole | ✅ |
+| F8.3 | Moving a card → `changeTaskStatus`. Three ways, one state machine (`useBoardMove`): drag with a mouse or a touch (`@dnd-kit/core`), the keyboard (pick up, arrow keys choose a column, drop, Escape cancels), or a tap on the column. Every step is announced through one live region | ✅ |
+| F8.4 | Status state machine in the client, mirroring the backend table: only legal transitions are offered, on the board and on the detail page | ✅ |
+| F8.5 | `TaskList.page.tsx` — table view with `TaskFilter` (status, priority, assignee, sprint, epic, label), `sortField`, `sortDirection`, cursor pagination | ✅ |
+| F8.6 | `TaskCard` — priority, story points, assignee avatar, labels, due date (overdue marked), blocked flag | ✅ |
+| F8.7 | `TaskDetail.page.tsx` — full record; title/description/priority/dueDate edited in place | ✅ |
+| F8.8 | Assignment — `assignTask` including unassign (null), sourced from project members | ✅ |
+| F8.9 | Story points — `setTaskStoryPoints`, including clearing to null | ✅ |
+| F8.10 | Sprint move — `moveTaskToSprint` (and out of a sprint) | ✅ |
+| F8.11 | Dependencies — `addTaskDependency` / `removeTaskDependency`; the server's cycle rejection gets its own message | ✅ |
+| F8.12 | Time tracking — `logTaskTime` (additive seconds), entered as hours and minutes, displayed as a duration | ✅ |
+| F8.13 | Watchers — `watchTask` / `unwatchTask` with a watch toggle | ✅ |
+| F8.14 | Labels — `addTaskLabel` / `removeTaskLabel` | ✅ |
+| F8.15 | Activity timeline — `Task.activities` paginated, one sentence per `ActivityType`, ids resolved to names | ✅ |
+| F8.16 | `createTask` dialog (board and list) + `deleteTask` with confirmation | ✅ |
+| F8.17 | Read queries for the project's sprints and epics, so a task's `sprintId` / `epicId` can be named and picked. Phase 9 builds its screens on the same fields | ✅ |
+| F8.18 | `dateInputToApi` / `apiToDateInput` / `formatCalendarDate` — the Avero `DatePicker` reports `YYYY-MM-DD`; every date sent is a full RFC-3339 instant | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] All 16 task mutations from Appendix A are reachable.
-- [ ] Drag-and-drop has a **fully equivalent keyboard path** (grab, move, drop),
-      tested — not a mouse-only feature.
-- [ ] An illegal transition is never offered by the UI; a server rejection rolls
-      the optimistic update back cleanly.
-- [ ] Optimistic updates are used for status, assignment and story points; every
-      one has a tested rollback path.
-- [ ] Filtering by each of the 6 `TaskFilter` fields works, and combinations do
-      not corrupt the cache (distinct `keyArgs`).
-- [ ] Changing a filter shows previous results while loading — the list never
-      blanks (`keepPreviousData` equivalent).
-- [ ] Three distinct empty states: no tasks in the project, no tasks matching the
-      current filter, no tasks in this column.
-- [ ] A cycle-creating dependency shows a specific, comprehensible error — not a
-      generic failure toast.
-- [ ] `sprintId`/`epicId` render as **names**, resolved from cached project sprint
-      and epic lists (the API returns IDs only).
-- [ ] `loggedSeconds` renders as a duration (`3h 20m`), never a raw number.
-- [ ] The board is usable at 360px (one column visible, horizontally scrollable)
-      and does not scroll the page body sideways.
-- [ ] A board of 200+ tasks scrolls at 60fps — measured in a profile, not assumed.
-- [ ] `axe` → 0 violations on board, list and detail.
-- [ ] Tests: lifecycle, cycle rejection, illegal transition, unassign, filter
-      combinations, `FORBIDDEN` on a viewer, network failure.
+- [x] All 14 task mutations from Appendix A are reachable, and the `task` query.
+      (The plan said 16; the SDL has 14.)
+- [x] Moving a card has a **complete keyboard path** (grab, move, drop), tested:
+      focus follows the card into its new column and every step is announced.
+      A card can also be dragged with a mouse or a touch, tested by laying the
+      columns out for the drag library to measure; nothing is mouse-only.
+- [x] An illegal transition is never offered: only the legal columns become
+      targets (asserted column by column), and a table test covers all 7 × 7
+      pairs. A server rejection rolls the card back and says why (asserted for
+      `BAD_USER_INPUT` and `FORBIDDEN`).
+- [x] Optimistic updates for status, assignment and story points; each has a
+      tested rollback.
+- [x] Filtering by each of the 6 `TaskFilter` fields works; combinations are sent
+      together and each is its own cached list (`keyArgs`).
+- [x] Changing a filter keeps the previous rows on screen while the new ones
+      load (asserted with a held request).
+- [x] Three distinct empty states: no tasks in the project, none matching the
+      filter, none in this column.
+- [x] A cycle-creating dependency shows a specific message, not the generic
+      validation text.
+- [x] `sprintId`/`epicId` render as **names**, resolved from the project's sprint
+      and epic lists; an id that is not listed is described, never printed.
+- [x] `loggedSeconds` renders as a duration (`3h 20m`), never a raw number.
+- [~] The board scrolls sideways inside its own container. That it is usable at
+      360px is **unverified**: the test DOM performs no layout.
+- [~] A board of 200+ tasks at 60fps — **not measured**: it needs a browser.
+      A long column is windowed (asserted: 40 cards loaded, fewer rendered), so
+      the DOM no longer grows with each "load more".
+- [x] `axe` → 0 violations on board, list and detail (the component-level audit;
+      contrast is not covered).
+- [x] Tests: lifecycle, cycle rejection, illegal transition, unassign, filter
+      combinations, `FORBIDDEN` on a viewer, network failure. 79 new tests; the
+      suite is 428 tests in 18 files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing has run against the real backend — every response in the tests is a
+> mock shaped from the SDL.
+
+> Dragging in particular is unseen. The tests drive it with synthetic mouse
+> events over stubbed column rectangles; how it feels — the 8px start
+> threshold, the 250ms touch hold, auto-scroll at the board's edges — can only
+> be judged in a browser.
 
 ---
 
@@ -685,31 +835,48 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F9.1 | `Sprints.page.tsx` — list per project, create, update, delete | ⬜ |
-| F9.2 | Sprint state control honoring the machine (`PLANNED → ACTIVE/CANCELLED`, `ACTIVE → COMPLETED/CANCELLED`, both terminal) | ⬜ |
-| F9.3 | `SprintDetail.page.tsx` — goal, dates, capacity, task list, add/remove tasks | ⬜ |
-| F9.4 | Metrics panel — total/completed/remaining points, task counts, completion rate, velocity, capacity, **over-capacity warning** | ⬜ |
-| F9.5 | Burndown chart — ideal vs actual; explicit empty state when start/end dates are unset | ⬜ |
-| F9.6 | Workload distribution chart per assignee | ⬜ |
-| F9.7 | `Epics.page.tsx` + `EpicDetail` — CRUD, live progress bar, child tasks, `refreshEpicProgress` | ⬜ |
-| F9.8 | Milestones — `createMilestone`, `deleteMilestone`, list; no update exists (backend gap — surface honestly) | ⬜ |
+| F9.1 | `Sprints.page.tsx` — list per project (paginated), create; update and delete live on the sprint's own page | ✅ |
+| F9.2 | Sprint state control honoring the machine (`PLANNED → ACTIVE/CANCELLED`, `ACTIVE → COMPLETED/CANCELLED`, both terminal) | ✅ |
+| F9.3 | `SprintDetail.page.tsx` — goal, dates, capacity, task list (paginated), add/remove tasks | ✅ |
+| F9.4 | Metrics panel — total/completed/remaining points, task counts, completion rate, velocity, capacity, **over-capacity warning** | ✅ |
+| F9.5 | Burndown chart (`@averoui/charts` `LineChart`) — ideal vs actual; explicit empty state when start/end dates are unset | ✅ |
+| F9.6 | Workload distribution per assignee — a table with a comparison bar per row, not a chart: Avero ships line and area charts only (see known-debt) | ✅ |
+| F9.7 | `Epics.page.tsx` + `EpicDetail.page.tsx` — CRUD, live progress bar, child tasks, `refreshEpicProgress` | ✅ |
+| F9.8 | Milestones — `createMilestone`, `deleteMilestone`, listed on their epic; no update exists (backend gap — said in the interface) | ✅ |
+| F9.9 | Sprints and Epics tabs on the project frame; routes, breadcrumbs named from data; `Sprint.tasks` paginated in the cache | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Sprint state control offers only legal transitions; terminal states offer none.
-- [ ] Over-capacity is visually unmistakable and uses the `danger`/`warning` tokens.
-- [ ] A sprint **without** start/end dates renders a specific "burndown needs
-      dates" empty state — not an empty chart frame and not a spinner.
-- [ ] Charts are keyboard/screen-reader accessible: every series is also available
-      as a data table.
-- [ ] Charts render correctly in both themes (no hard-coded series colors).
-- [ ] Epic progress bar matches the computed `progress` value; `refreshEpicProgress`
-      updates the persisted value and the UI explains the difference between the
-      live and stored figure.
-- [ ] Empty states: no sprints, empty sprint, no epics, epic with no tasks, no milestones.
-- [ ] Milestone UI does not present an edit affordance that does not exist.
-- [ ] Tests: metric rendering against fixtures, empty sprint, over-capacity,
-      illegal transition, `FORBIDDEN`.
+- [x] Sprint state control offers only legal transitions; terminal states offer
+      none and say why. A table test covers all 4 × 4 pairs, and the rendered
+      buttons are asserted for each state.
+- [x] Over-capacity is unmistakable: a `danger` alert that says by how many
+      points, and the capacity bar turns `danger`. It is said in words, never
+      by color alone.
+- [x] A sprint **without** start/end dates renders a specific "burndown needs
+      dates" empty state — not an empty chart frame and not a spinner. A dated
+      sprint with no points yet gets a different one.
+- [x] The burndown's series are also a data table (asserted cell by cell). It is
+      visible to assistive technology only — see known-debt.
+- [x] Chart series colors come from Avero's chart tokens; none is written here.
+- [x] Epic progress bar matches the computed `progress` value, and
+      `refreshEpicProgress` is offered as "Save progress" beside a sentence
+      explaining that the figure shown is always live and saving does not
+      change it. The stored figure itself cannot be shown: the API does not
+      expose it (see known-debt).
+- [x] Empty states: no sprints, empty sprint, no workload, no epics, epic with
+      no tasks, no milestones.
+- [x] Milestone UI presents no edit affordance, and says a milestone cannot be
+      edited (only to someone who can create or delete one).
+- [x] Tests: figures against fixtures, empty sprint, over-capacity, illegal
+      transition, `BAD_USER_INPUT`, `FORBIDDEN`, network failure, pagination,
+      `axe` on all four screens. 84 new tests; the suite is 512 tests in 20
+      files.
+
+> **Not verified by me:** none of these screens has been seen in a browser, and
+> nothing has run against the real backend. The burndown in particular has
+> never been drawn: the test DOM has no size, so Recharts renders nothing there
+> and only the chart's data table is asserted.
 
 ---
 
@@ -721,29 +888,52 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F10.1 | Comment thread — `Task.comments` paginated, nested replies via `parentCommentId` | ⬜ |
-| F10.2 | Composer — `createComment`, submit on ⌘/Ctrl+Enter | ⬜ |
-| F10.3 | Mention picker — resolves **project members** to `mentionedUserIds` (the API takes explicit IDs; it does not parse `@handle`) | ⬜ |
-| F10.4 | Edit (`editComment`, shows an `edited` marker), `resolveComment` toggle, `deleteComment` with confirm | ⬜ |
-| F10.5 | Attachments — `addTaskAttachment`, `addCommentAttachment`, `removeAttachment` as **metadata records** | ⬜ |
-| F10.6 | Attachment UI states the storage limitation plainly; no fake upload progress, no dead download button | ⬜ |
+| F10.1 | Comment thread — `Task.comments` paginated (top-level comments, oldest first), replies nested one level via `parentCommentId` | ✅ |
+| F10.2 | Composer — `createComment`, submit on ⌘/Ctrl+Enter | ✅ |
+| F10.3 | Mention picker — resolves **project members** to `mentionedUserIds` (the API takes explicit IDs; it does not parse `@handle`) | ✅ |
+| F10.4 | Edit (`editComment`, shows an `edited` marker), `resolveComment` toggle, `deleteComment` with confirm | ✅ |
+| F10.5 | Attachments — `addTaskAttachment`, `addCommentAttachment`, `removeAttachment` as **metadata records** | ✅ |
+| F10.6 | Attachment UI states the storage limitation plainly; no fake upload progress, no dead download button | ✅ |
+| F10.7 | Link to a comment — "Copy link" on every comment, and the `comment` query shows the linked one above the thread (`?comment=<id>`). Added so the query is reachable (D6); Phase 11's mention notifications will point here | ✅ |
+| F10.8 | Shared cache helpers for lists a mutation adds to or removes from: `appendToConnection`, `appendToList`, `removeFromList` | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Mentions are sent as validated `mentionedUserIds`; the composer never
-      guesses a user from free text.
-- [ ] The mention picker is keyboard-driven and sourced from project membership.
-- [ ] An edited comment shows the `edited` marker; a resolved thread is visually distinct.
-- [ ] Author-only vs admin permissions are reflected in the UI, and a `FORBIDDEN`
-      on edit/delete is handled gracefully.
-- [ ] Comment bodies are rendered as **plain text** (or sanitized markdown behind a
-      `// BOUNDARY:` note) — no unsanitized HTML path exists.
-- [ ] The attachment UI never implies a file was stored or can be downloaded.
-      The known-debt limitation is stated in the interface itself.
-- [ ] Empty states: no comments yet, no attachments.
-- [ ] Optimistic comment insert with a tested rollback.
-- [ ] Tests: post, edit, resolve, delete, mention resolution, `FORBIDDEN` on
-      another user's comment, network failure.
+- [x] Mentions are sent as validated `mentionedUserIds`; the composer never
+      guesses a user from free text. Asserted: a comment whose text says
+      `@Terry Teammate` with Pat picked sends Pat's id alone.
+- [x] The mention picker is keyboard-driven (type to filter, Enter to pick —
+      tested without the mouse) and sourced from project membership. The viewer
+      is not offered to themselves.
+- [x] An edited comment shows the `edited` marker; a resolved thread carries a
+      "Resolved" badge and muted text. Said in words, never by color alone.
+- [x] Author-only vs admin permissions are reflected in the UI: a member is
+      offered edit, resolve and delete on their own comment and none on anyone
+      else's; an admin is offered them on every comment. A `FORBIDDEN` on edit,
+      resolve, delete and attachment removal is each handled and tested.
+- [x] Comment bodies are rendered as **plain text** — a body of HTML is shown
+      literally (asserted). No `dangerouslySetInnerHTML` exists.
+- [x] The attachment UI never implies a file was stored or can be downloaded.
+      A file name is text, not a link; there is no file picker (asserted);
+      `Attachment.url` is never selected (a standing test reads the operations
+      file); and the limitation is stated on the card, in the form and in the
+      removal dialog.
+- [x] Empty states: no comments yet (worded differently for someone who can
+      start the discussion), no attachment records.
+- [x] Optimistic comment insert with a tested rollback: the comment is on
+      screen, marked "Sending…" and without actions, before the held response
+      is released; on `FORBIDDEN`, `BAD_USER_INPUT` and a network failure it is
+      taken back and the typed text returns to the field. Resolving a thread is
+      optimistic too, with its own rollback test.
+- [x] Tests: post, edit, resolve, delete, mention resolution, `FORBIDDEN` on
+      another user's comment, network failure, pagination, linked comment,
+      attachment records, `axe`. 43 new tests; the suite is 555 tests in 21
+      files.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend. Each comment carries up to six small
+> buttons in a row; whether that reads as clutter, and whether a resolved
+> thread is distinct enough, can only be judged by eye.
 
 ---
 
@@ -755,37 +945,78 @@ AI assignment engine consumes.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F11.1 | Notification bell — `unreadNotificationCount`, popover feed | ⬜ |
-| F11.2 | `Notifications.page.tsx` — paginated, `unreadOnly` filter, per-type presentation for all 6 `NotificationType`s | ⬜ |
-| F11.3 | `markNotificationRead`, `markAllNotificationsRead` (returns a count → toast) | ⬜ |
-| F11.4 | `realtime.client.ts` — `graphql-ws` link authenticated via `connectionParams` from the in-memory token; reconnect with backoff; re-auth after refresh | ⬜ |
-| F11.5 | `notificationReceived` → increments the badge and prepends to the feed | ⬜ |
-| F11.6 | `taskUpdated(projectId)` → updates board/list/detail cache in place | ⬜ |
-| F11.7 | `commentAdded(taskId)` → appends to the open thread | ⬜ |
-| F11.8 | `sprintUpdated(projectId)` → refreshes sprint state and metrics | ⬜ |
-| F11.9 | `aiRecommendationUpdated(projectId)` → updates the AI queue | ⬜ |
-| F11.10 | Connection status indicator (live / reconnecting / offline) | ⬜ |
+| F11.1 | Notification bell — `unreadNotificationCount` in the top bar, a popover with the newest five, fetched only once opened | ✅ |
+| F11.2 | `Notifications.page.tsx` — paginated, `unreadOnly` filter, per-type presentation for all 6 `NotificationType`s; a notification links to its task or comment when the record says where | ✅ |
+| F11.3 | `markNotificationRead`, `markAllNotificationsRead` (returns a count → toast) | ✅ |
+| F11.4 | `realtime.client.ts` — `graphql-ws` link authenticated via `connectionParams` from the in-memory token; reconnect with capped backoff; re-auth after refresh. After a reload there is no token in memory, so one refresh obtains it | ✅ |
+| F11.5 | `notificationReceived` → increments the badge, prepends to the feed, and announces the notification in a toast | ✅ |
+| F11.6 | `taskUpdated(projectId)` → updates board/list/detail cache in place; the open task re-reads its audit trail | ✅ |
+| F11.7 | `commentAdded(taskId)` → appends to the open thread, or under the comment it replies to | ✅ |
+| F11.8 | `sprintUpdated(projectId)` → sprint state in place; the sprint page re-reads its figures alone, on this and on any task change in the project. An epic re-reads its progress the same way | ✅ |
+| F11.9 | `aiRecommendationUpdated(projectId)` → updates a recommendation the client holds. The queue itself is Phase 12, which adds new ones to its lists from the same hook | ✅ |
+| F11.10 | Connection status indicator in the top bar (live / reconnecting / offline), in words | ✅ |
+| F11.11 | Catch-up: when the socket returns after a gap, every query on screen is re-read | ✅ |
+| F11.12 | A fake socket server for tests (`shared/tests/realtime.ts`): the real `graphql-ws` client, link and reconcilers run against it | ✅ |
+
+### Write source of truth, per subscription
+
+Every write is a mutation. A subscription never originates a change; it brings
+this client's cache up to date with one made elsewhere, and writes only what
+the client already holds.
+
+| Subscription | Written by | What the event reconciles | Held open by |
+|---|---|---|---|
+| `notificationReceived` | the server (assignment, mention) | writes the notification, first in each cached feed, unread count +1 | the bell — every signed-in screen |
+| `taskUpdated` | task mutations | replaces the cached task; passes the event on so the open task re-reads its audit trail and a sprint or epic re-reads its figures | the project frame |
+| `commentAdded` | `createComment` | writes the comment and files it at the end of the thread or under its parent | the task's comment thread |
+| `sprintUpdated` | `changeSprintState` | replaces the cached sprint's summary; passes the event on so the sprint page re-reads its figures | the project frame |
+| `aiRecommendationUpdated` | AI decision mutations | replaces the cached recommendation | the project frame |
 
 ### Exit criteria (DoD)
 
-- [ ] **Write source of truth is explicit and singular**: mutations own writes;
-      subscriptions only reconcile the cache. Documented per subscription. No
-      state has two write paths.
-- [ ] The socket authenticates via `connectionParams`, and the token comes from
-      the in-memory store — never from storage.
-- [ ] After a token refresh the socket re-authenticates without dropping subscriptions.
-- [ ] On logout the socket closes immediately and does not reconnect.
-- [ ] Reconnect uses capped exponential backoff and does not hammer the server —
-      asserted with a fake-timer test.
-- [ ] An event for an entity not currently cached does **not** create a partial
-      cache entry.
-- [ ] A duplicate event (mutation result and subscription event for the same
-      change) produces exactly one visual update, not a flicker.
-- [ ] The connection indicator tells the truth in all three states.
-- [ ] The app is fully usable with the socket **down** — realtime is an
-      enhancement, never a dependency. Verified by blocking the WS.
-- [ ] Two browser windows: a change in one appears in the other without a reload.
-- [ ] Empty state for an empty notification feed; distinct state for "no unread".
+- [x] **Write source of truth is explicit and singular**: the table above, and a
+      comment on each subscription hook. Subscriptions run with `no-cache`, so
+      nothing reaches the cache except through a reconciler.
+- [x] The socket authenticates via `connectionParams`, and the token comes from
+      the in-memory store — asserted, with `localStorage` and `sessionStorage`
+      asserted empty.
+- [x] After a token refresh the socket re-authenticates without dropping
+      subscriptions: a new connection carries the new token, the subscription
+      is re-sent, and an event still reaches its subscriber (asserted). A
+      subscription refused as `UNAUTHENTICATED` renews the session once and
+      resubscribes.
+- [x] On logout the socket closes immediately and does not reconnect (asserted
+      at the transport and through the account menu).
+- [x] Reconnect uses capped exponential backoff — 1s doubling to a 30s cap, plus
+      jitter — and does not hammer the server: with fake timers, an unreachable
+      server sees six attempts in a minute.
+- [x] An event for an entity not currently cached does **not** create a cache
+      entry: asserted for a task and for an AI recommendation by reading the
+      cache's keys.
+- [x] A duplicate event produces exactly one update: a repeated notification, a
+      repeated comment, a status change whose echo arrives before the
+      mutation's answer, and the viewer's own comment whose echo arrives while
+      it is still being sent (asserted: never two on screen).
+- [x] The connection indicator tells the truth in all three states (asserted:
+      Live, Reconnecting…, Offline). It says so in words, not by color alone.
+- [x] The app is fully usable with the socket **down**: with the fake server
+      refusing every connection, a task page loads and a status change is sent
+      and shown (asserted). Not verified by blocking a real WebSocket.
+- [~] Two browser windows: a change in one appears in the other without a
+      reload. **Not verified** — it needs two real browsers and the running
+      backend. The tests stand a fake socket in for the second window.
+- [x] Empty state for an empty notification feed; distinct state for "no unread".
+- [x] Tests: 46 new (11 transport, 19 notifications, 16 cross-feature); the
+      suite is 601 tests in 24 files. `axe` on the notifications page and the
+      bell's popover, which found and fixed an unnamed dialog.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend or a real WebSocket. The socket layer is
+> tested against a stand-in that speaks the `graphql-ws` protocol; whether the
+> real server behaves the same on a dropped line, an expired token and a
+> refused subscription is the first thing to check when the two are run
+> together. The top bar now carries a status badge, the search button, the
+> bell and the avatar: whether that fits at 360px is unseen.
 
 > **Note:** the backend pubsub is in-process (known-debt). Events are delivered
 > only by the instance that published them, so cross-instance realtime is a
@@ -802,40 +1033,61 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F12.1 | `AiRecommendations.page.tsx` — `Project.aiRecommendations`, filtered by `type` and `approvalStatus` | ⬜ |
-| F12.2 | Request actions on a task — `requestStoryPointEstimate`, `requestAssignmentRecommendation` | ⬜ |
-| F12.3 | Request actions on a sprint — `requestSprintHealthAnalysis`, `requestProgressTracking` | ⬜ |
-| F12.4 | `RecommendationCard` — text, type, **confidence score**, provider, timestamp, requester, both status fields | ⬜ |
-| F12.5 | Decision controls — `approveRecommendation`, `rejectRecommendation`, `overrideRecommendation` (storyPoints / assigneeId) | ⬜ |
-| F12.6 | `AssignmentContext` panel — candidate table: skills, expertise, workload, availability, active and completed task counts | ⬜ |
-| F12.7 | Approval preview — state exactly what approving will change before it is applied | ⬜ |
-| F12.8 | `SERVICE_UNAVAILABLE` handling — provider failure is explained as a provider problem, with retry; nothing was persisted | ⬜ |
-| F12.9 | `CONFLICT` handling — re-approving an already-resolved recommendation | ⬜ |
+| F12.1 | `AiRecommendations.page.tsx` — an AI tab on the project: `Project.aiRecommendations`, paginated, filtered by `type` and `approvalStatus` | ✅ |
+| F12.2 | Request actions on a task — `requestStoryPointEstimate`, `requestAssignmentRecommendation`, in an "AI suggestions" card on the task page | ✅ |
+| F12.3 | Request actions on a sprint — `requestSprintHealthAnalysis`, `requestProgressTracking`, in an "AI insights" card on the sprint page | ✅ |
+| F12.4 | `RecommendationCard` — text, type, **confidence score**, provider, timestamp, requester, decider, both status fields, what it proposes in a sentence, and a link to its task or sprint | ✅ |
+| F12.5 | Decision controls — `approveRecommendation`, `rejectRecommendation`, `overrideRecommendation` (storyPoints / assigneeId) | ✅ |
+| F12.6 | `AssignmentContext` panel — candidate table: skills, expertise, workload, availability, active and completed task counts; fetched only when opened | ✅ |
+| F12.7 | Approval preview — a dialog states exactly what approving will change before it is applied; the override form says the same of the value being typed | ✅ |
+| F12.8 | `SERVICE_UNAVAILABLE` handling — provider failure is explained as a provider problem, with retry; nothing was persisted | ✅ |
+| F12.9 | `CONFLICT` handling — a decision that arrives after someone else's says so and re-reads the recommendation (`aiRecommendation`) to show how it now stands | ✅ |
+| F12.10 | An applied decision reaches the task: the mutation returns the recommendation only, so the task's estimate and assignee are re-read and every screen showing it follows | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Confidence score is **always** shown alongside any suggestion — a suggestion
-      can never be presented as fact.
-- [ ] The provider name and timestamp are visible on every recommendation.
-- [ ] Approving shows a preview of the concrete change (e.g. "sets story points to
-      5", "assigns to Dana") **before** it is applied.
-- [ ] `approvalStatus` (`PENDING`/`APPROVED`/`REJECTED`/`OVERRIDDEN`) and
-      `resolutionStatus` (`OPEN`/`RESOLVED`/`DISMISSED`) are both surfaced and
-      visually distinguishable — they are different axes and must not be conflated.
-- [ ] A user with `ai:request` but not `ai:approve` sees request actions and
-      **no** decision controls; a forced attempt still fails gracefully.
-- [ ] Sprint health and progress recommendations are presented as informational —
-      the UI does not imply approving them changes data.
-- [ ] `SERVICE_UNAVAILABLE` produces a specific, non-alarming message with retry
-      and makes clear nothing was saved.
-- [ ] Re-approving a resolved recommendation surfaces the `CONFLICT` clearly and
-      refreshes to the current state.
-- [ ] The AI request button shows a pending state for the full provider timeout
-      (default 8s) without appearing frozen.
-- [ ] Empty states: no recommendations, none matching the filter, no candidates in
-      the assignment context.
-- [ ] Tests: request → persist → approve, reject, override, `FORBIDDEN` on approve,
-      `SERVICE_UNAVAILABLE`, `CONFLICT`.
+- [x] Confidence score is **always** shown alongside any suggestion. When the
+      provider reports none the card says "Not reported"; it is never left
+      blank (asserted).
+- [x] The provider name and timestamp are visible on every recommendation, with
+      who asked for it and, once decided, who decided.
+- [x] Approving shows a preview of the concrete change **before** it is applied:
+      "sets this task's estimate to 5 story points", "assigns this task to
+      Terry Teammate, and notifies them". Asserted that nothing is sent until
+      the dialog is confirmed. A suggestion that names nobody, or carries no
+      number, says what approving it would do (unassign, clear the estimate).
+- [x] `approvalStatus` and `resolutionStatus` are both surfaced, each under its
+      own label ("Decision", "Outcome") with its own set of tones.
+- [x] A user with `ai:request` but not `ai:approve` sees request actions and
+      **no** decision controls (asserted for a project member). A refused
+      attempt — the hint said yes, the server said no — produces a toast and
+      leaves the suggestion pending.
+- [x] Sprint health and progress recommendations are presented as informational:
+      the card says "For information only", the approval dialog says "It
+      changes nothing in the project", there is no override, and no task is
+      re-read (asserted by the absence of a handler).
+- [x] `SERVICE_UNAVAILABLE` produces a specific, non-alarming message with retry
+      and makes clear nothing was saved. The server's own wording never reaches
+      the screen.
+- [x] Re-deciding a resolved recommendation surfaces the `CONFLICT` clearly and
+      refreshes to the current state, including who decided.
+- [x] The AI request button shows a pending state for the whole wait, and says
+      in words that it can take several seconds; the other request on the
+      panel waits its turn (asserted with a held response). The backend can
+      take up to twice the provider timeout — 16s by default — because it
+      retries once.
+- [x] Empty states: no recommendations, none matching the filter, no candidates
+      in the assignment context.
+- [x] Tests: request → persist → approve, reject, override, `FORBIDDEN` on
+      approve and on request, `SERVICE_UNAVAILABLE`, `CONFLICT`, a decision
+      heard over the socket, pagination, network failure, `axe`. 28 new tests;
+      the suite is 629 tests in 25 files. `axe` found a skipped heading level
+      on the queue; the card now takes its level from where it is shown.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend. The provider behind the API is a
+> deterministic stub, so every suggestion here is a heuristic; the screens are
+> written for a real one.
 
 ---
 
@@ -847,29 +1099,54 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F13.1 | `ProjectAnalytics.page.tsx` — KPI row: total/completed tasks, total/completed story points, completion rate, team velocity | ⬜ |
-| F13.2 | Task distribution by status and by priority | ⬜ |
-| F13.3 | Story point trends per sprint (committed vs completed) | ⬜ |
-| F13.4 | Individual workloads table — active tasks, active points, completed | ⬜ |
-| F13.5 | User analytics — completed tasks, historical points, avg completion time, velocity, active assignments | ⬜ |
-| F13.6 | `recomputeUserStatistics` action, explaining live vs persisted figures | ⬜ |
+| F13.1 | `ProjectAnalytics.page.tsx` — an Analytics tab on the project, offered to those with `analytics:view`: total/completed tasks, total/completed story points, completion rate, team velocity | ✅ |
+| F13.2 | Task distribution by status and by priority — two tables with a comparison bar per row; every status and priority is listed, an empty one as zero | ✅ |
+| F13.3 | Story point trends per sprint (committed vs completed) — `@averoui/charts` `LineChart`, with the totals in a sentence underneath | ✅ |
+| F13.4 | Individual workloads table — open tasks, open points, completed; each person links to their profile | ✅ |
+| F13.5 | User analytics — completed tasks, historical points, avg completion time, velocity, active assignments. A card on the viewer's own profile; on someone else's, asked for on demand | ✅ |
+| F13.6 | `recomputeUserStatistics` — "Save the live figures" on the viewer's own card, with the live and the saved figures side by side and a sentence on why they can differ | ✅ |
+| F13.7 | The project's figures are re-read when a task or a sprint in it changes (`taskUpdated`, `sprintUpdated`), and whenever the tab is opened | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] A brand-new project renders **zeroed/empty shapes**, never `NaN`, `—` with no
-      explanation, or a broken chart.
-- [ ] Every chart has an accessible data-table equivalent and a text summary.
-- [ ] Chart series colors come from the semantic token families; both themes verified.
-- [ ] `completionRate` and `teamVelocity` render with defined precision and units.
-- [ ] `avgCompletionSeconds` renders as a human duration; a `null` renders as an
-      explained absence, not a blank cell.
-- [ ] `userAnalytics` is visible for self; another user's is attempted only where
-      permitted and `FORBIDDEN` is handled.
-- [ ] The UI explains that `user.statistics` is a cache and `userAnalytics` is live
-      (per known-debt) so a mismatch is not read as a bug.
-- [ ] Charts have their own `overflow-x: auto` container and never widen the page.
-- [ ] Tests: zeroed project, populated fixtures reconcile with rendered figures,
-      `FORBIDDEN`, network failure.
+- [x] A brand-new project renders **zeroed/empty shapes**: zeros in the
+      headline figures, 0%, and an empty state each for the distributions, the
+      trend and the workloads. Asserted that no `NaN`, `undefined` or
+      `Infinity` reaches the screen.
+- [x] The one chart has a data-table equivalent (asserted cell by cell) and a
+      text summary ("Across 2 sprints, 25 of 40 committed story points were
+      completed."). The table is visible to assistive technology only — see
+      known-debt, Phase 9.
+- [x] Chart series colors come from Avero's chart tokens; none is written here.
+      (They are the chart palette, not the semantic families — as in Phase 9.)
+- [x] `completionRate` renders as a whole percentage, with a line saying what it
+      is a rate of; `teamVelocity` and a person's velocity render to one decimal
+      at most, as "points per sprint".
+- [x] `avgCompletionSeconds` renders as a human duration in its two largest
+      units ("2d 3h"); a `null` reads "No completed task to measure yet". No
+      cell is ever blank (asserted).
+- [~] `userAnalytics` is shown for self on sight. Another user's is asked for
+      only when the viewer presses "Show analytics", and a `FORBIDDEN` is
+      explained in place, naming who may see the figures. It cannot be limited
+      to "where permitted": the API does not say whether the viewer administers
+      an organisation that person belongs to (see known-debt).
+- [x] The viewer's own card shows the live and the saved figures in two columns
+      and says the saved ones change only when saved, so a mismatch is not read
+      as a bug.
+- [x] The chart has its own `overflow-x: auto` container, and so does each
+      table. That nothing widens the page at 360px is **unverified**: the test
+      DOM performs no layout.
+- [x] Tests: zeroed project, populated fixtures reconcile with rendered figures,
+      `FORBIDDEN` (the page, the save, another person's figures),
+      `BAD_USER_INPUT` on the save, network failure with retry on all three
+      surfaces, a re-read on a realtime event, `axe` on the analytics tab and
+      the profile. 38 new tests; the suite is 667 tests in 26 files.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend. The trend chart has never been drawn — the
+> test DOM has no size, so only its data table is asserted. Whether five
+> headline figures, two side-by-side tables and a five-column workload table
+> sit well at 360px is unseen.
 
 ---
 
@@ -881,34 +1158,91 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F14.1 | Full `axe` sweep across every route in both themes | ⬜ |
-| F14.2 | Keyboard-only walkthrough of every primary flow | ⬜ |
-| F14.3 | Screen-reader pass on auth, board, task detail and the AI approval flow | ⬜ |
-| F14.4 | Bundle analysis; route chunks; font and icon loading strategy | ⬜ |
-| F14.5 | Lighthouse on the production build | ⬜ |
-| F14.6 | Coverage thresholds enforced in `vitest.config.ts` and in CI | ⬜ |
-| F14.7 | E2E suite in `shared/tests/` — register → org → project → sprint → task → comment → AI approve → analytics | ⬜ |
-| F14.8 | Security review against `apps/backend/docs/SECURITY.md` (client-relevant sections) | ⬜ |
-| F14.9 | `apps/frontend/docs/known-debt.md` reconciled; `apps/frontend/README.md` written | ⬜ |
-| F14.10 | CI: typecheck → lint → codegen-drift → test → build | ⬜ |
-| F14.11 | Deployment doc: static build output, env vars, SPA fallback routing, CORS origin registration | ⬜ |
+| F14.1 | Full `axe` sweep across every route — 26 signed-in and 3 signed-out screens, at 1280px and 360px, in a real browser with every rule on (`e2e/sweep.e2e.ts`) | ✅ |
+| F14.2 | Keyboard-only walkthrough — sign-in, the skip link, the command palette, a dialog's focus trap, creating an organisation, moving a card. Not every primary flow | 🚧 |
+| F14.3 | Screen-reader pass on auth, board, task detail and the AI approval flow — needs a person with a screen reader | ⛔ |
+| F14.4 | Bundle analysis; the charting library now loads apart from the pages that show a chart; fonts are files, none inlined | ✅ |
+| F14.5 | Lighthouse on the production build (sign-in screen) | ✅ |
+| F14.6 | Coverage floors enforced in `vite.config.ts`; the CI template runs them | ✅ |
+| F14.7 | E2E suite against the real backend — 23 tests in `apps/frontend/e2e/` (Playwright): the journey, the board, realtime, the session, the keyboard, every screen | ✅ |
+| F14.8 | Security review against `apps/backend/docs/SECURITY.md` (client-relevant sections) | ✅ |
+| F14.9 | `apps/frontend/docs/known-debt.md` reconciled; `apps/frontend/README.md` written | ✅ |
+| F14.10 | CI: typecheck → lint → query depth → codegen drift → tests with coverage → build → build check, and a browser job — as a template in `apps/frontend/ci/`, never run | ✅ |
+| F14.11 | Deployment doc: build, env vars, SPA fallback, caching, source maps, CORS origin, a verified CSP (`apps/frontend/docs/deployment.md`) | ✅ |
+| F14.12 | Found by the first look in a browser, and fixed: screen-reader-only labels inside scrollers widened the page on six screens; two grids did not shrink on a phone; the breadcrumb trail collided with the top bar at 360px | ✅ |
+
+### What the browser showed
+
+The first run of the client against the real backend, in a real browser
+(2026-10-06). Every request the screens and the tested flows made was accepted
+by the real server, so the mocks shaped from the SDL had been right where
+they were checked. Most mutations are not performed by the browser suite and
+have still only met mocks.
+
+| Checked | Result |
+|---|---|
+| Every screen loads with no refused request and nothing thrown | Yes, all 26, both widths |
+| No page scrolls sideways | Not at first — six did. Fixed (F14.12); now asserted on every screen |
+| The burndown and the trend chart draw | Yes |
+| A card dragged with a real mouse lands, and persists | Yes; released over a forbidden column it goes nowhere |
+| The socket connects to the real server and authenticates | Yes — "Live" within a second or two |
+| Another person's status change, comment and mention arrive unprompted | Yes |
+| Two people on one board see each other's moves | Yes |
+| The app works with every WebSocket refused | Yes, and the badge says so |
+| Two tabs loading at once keep the session (refresh-token reuse) | Yes, three rounds running |
+| The cookies are `HttpOnly`, `SameSite=Lax`; no token in storage | Yes |
+| The production build works under a strict Content-Security-Policy | Yes, after fonts stopped being inlined as `data:` URIs |
+
+Still unseen: a touch drag on a real phone (the 250ms hold), scrolling a
+200-card board, and anything a screen reader says.
+
+### Measured
+
+- **Lighthouse**, production build, sign-in screen, mobile settings (simulated
+  slow 4G): Performance **91**, Accessibility **96**, Best Practices **100**.
+  Desktop settings: 100 / 96 / 100. The four points of accessibility are the
+  white-on-amber button (R11).
+- **JavaScript, gzipped**: the sign-in screen loads about **165 kB**; a
+  signed-in screen about **245–275 kB** (the board is the heaviest); the
+  charting library is a further **105 kB**, fetched only when a chart is on
+  screen. CSS is **22 kB**.
+- **Coverage** (generated code left out): statements 97.4%, branches 87.9%,
+  functions 93.3%. Floors: 95 / 85 / 90.
+- **Accessibility audit**: no violation of any rule except color contrast and
+  one unfocusable scroller — all in Avero's palette or markup, listed in
+  known-debt, Phase 14.
 
 ### Exit criteria (DoD)
 
-- [ ] `axe` → **0 violations** on every route, both themes.
-- [ ] Every primary flow completable with keyboard only, start to finish.
-- [ ] Lighthouse on the production build: **Performance ≥ 90, Accessibility 100,
-      Best Practices ≥ 95**.
-- [ ] Initial JS payload budget agreed and met; the number is recorded here.
-- [ ] Coverage thresholds met and enforced in CI (fails the build below them).
-- [ ] The E2E suite passes against a **real running backend**, not mocks.
-- [ ] No `console.log`, `debugger`, `.only()`, `.skip()`, or commented-out code.
-- [ ] `grep` confirms: no token in storage, no secret in the bundle, no
-      `dangerouslySetInnerHTML` without a sanitizer.
-- [ ] CSP defined and documented for the deployment host.
-- [ ] Production build smoke-tested as a **deployed artifact**, not via `dev`.
-- [ ] SPA deep-link refresh works (server rewrites unknown paths to `index.html`).
-- [ ] Every row in Appendix A is ✅ or has a written justification for ➖.
+- [~] `axe` → 0 violations on every route. **Not met, and not ours to meet
+      alone**: every remaining violation is one of six color pairs Avero
+      paints, or its table container (known-debt, Phase 14). The sweep names
+      them and fails on anything else.
+- [~] Every primary flow completable with keyboard only. Tested: sign-in,
+      skip link, command palette, a dialog, creating an organisation, moving
+      a card. Not walked: the task page's forms, comments, the AI approval.
+- [~] Lighthouse on the production build: Performance ≥ 90 (**91**),
+      Best Practices ≥ 95 (**100**), Accessibility 100 (**96** — R11).
+- [~] Initial JS payload: the numbers are recorded above. A budget has not
+      been **agreed**; 180 kB signed-out and 300 kB for a signed-in screen
+      would hold today's build with room.
+- [x] Coverage floors enforced: `test:coverage` fails below them, and the CI
+      template runs it.
+- [x] The E2E suite passes against a **real running backend**, not mocks — 23
+      tests, on the dev server and on the production build.
+- [x] No `console.log`, `debugger`, `.only()` or `.skip()`: lint bans the
+      first, a grep found none of the rest, and Playwright refuses `.only`
+      under CI.
+- [x] No token in storage (asserted in a real browser), no secret in the
+      bundle (`build:check`), no `dangerouslySetInnerHTML` anywhere.
+- [x] CSP defined, documented, and **enforced while the whole suite ran**
+      against the production build.
+- [~] Production build smoke-tested: served by `vite preview` with the
+      deployment's headers, on this machine. It has not been deployed to a
+      host.
+- [x] SPA deep-link refresh works on the preview server; the rewrite a real
+      host needs is in the deployment doc.
+- [x] Every row in Appendix A is ✅ or has a written justification for ➖.
 - [ ] Every phase above shows ✅ and this table reads 100%.
 
 ---
@@ -926,7 +1260,9 @@ must make the "AI suggests, a human decides" contract visible at every step.
 | R7 | `@contracts` is not a valid Node specifier | Imports type-check but fail at runtime | Both mappings added in F0.2/F0.3 and verified in all four contexts (F0 exit criteria) |
 | R8 | Apollo Server v4 is EOL (2026-01-26) | Security exposure on the server | Backend concern; the client's Apollo version is independent. Track the v5 upgrade |
 | R9 | Board performance with large projects | Jank on the primary screen | Virtualize from the start (F8.2); profile at 200+ tasks (F8 exit criterion) |
-| R10 | Design-system drift once features start | The premium look decays feature by feature | Phases 1–2 complete **before** any feature; the "no raw values" grep is a standing CI check |
+| R10 | Design-system drift once features start | The look decays feature by feature | Primitives only from Avero; feature styling only through theme tokens (Global DoD). The old "no raw values" CSS test went with the CSS Modules — a lint rule against arbitrary color values is the replacement to add |
+| R11 | Avero's filled primary button is white-on-amber (≈ 2:1) | Every primary action fails WCAG contrast | Upstream fix in Avero (`--color-primary-foreground`); tracked in Amendment A1. Blocks the Phase 14 accessibility sign-off. The browser audit found five more pairs below 4.5:1 in Avero's palette — empty-state text worst, at 1.4:1 (known-debt, Phase 14) |
+| R12 | Avero is a young, single-maintainer library | A gap or bug blocks a feature | It is maintained in-house, so gaps are fixed upstream rather than worked around locally; record each one in known-debt |
 
 ---
 
@@ -939,53 +1275,53 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 
 | Operation | Phase | Status |
 |---|---|:--:|
-| `health` | 14 | ⬜ |
-| `me` | 4 | ⬜ |
-| `sessions` | 4 | ⬜ |
-| `user` | 6 | ⬜ |
+| `health` | ➖ | ➖ a liveness probe for operators. A client learns the same from any request it makes, and the release checklist uses `GET /readyz`, which also checks the database |
+| `me` | 4 | ✅ |
+| `sessions` | 4 | ✅ |
+| `user` | 6 | ✅ |
 | `users` | ➖ | ➖ unscoped (known-debt) — deliberately unused; pickers use scoped membership |
-| `organization` | 6 | ⬜ |
-| `myOrganizations` | 6 | ⬜ |
-| `organizationInvitations` | 6 | ⬜ |
-| `project` | 7 | ⬜ |
-| `team` | 7 | ⬜ |
-| `task` | 8 | ⬜ |
-| `sprint` | 9 | ⬜ |
-| `epic` | 9 | ⬜ |
-| `comment` | 10 | ⬜ |
-| `myNotifications` | 11 | ⬜ |
-| `unreadNotificationCount` | 11 | ⬜ |
-| `aiRecommendation` | 12 | ⬜ |
-| `assignmentContext` | 12 | ⬜ |
-| `projectAnalytics` | 13 | ⬜ |
-| `userAnalytics` | 13 | ⬜ |
+| `organization` | 6 | ✅ |
+| `myOrganizations` | 6 | ✅ |
+| `organizationInvitations` | 6 | ✅ |
+| `project` | 7 | ✅ |
+| `team` | 7 | ✅ |
+| `task` | 8 | ✅ |
+| `sprint` | 9 | ✅ |
+| `epic` | 9 | ✅ |
+| `comment` | 10 | ✅ |
+| `myNotifications` | 11 | ✅ |
+| `unreadNotificationCount` | 11 | ✅ |
+| `aiRecommendation` | 12 | ✅ |
+| `assignmentContext` | 12 | ✅ |
+| `projectAnalytics` | 13 | ✅ |
+| `userAnalytics` | 13 | ✅ |
 
 ### Mutations (75)
 
 | Group | Operations | Phase | Status |
 |---|---|---|:--:|
-| Auth | `register` `login` `refreshToken` `logout` `changePassword` `requestPasswordReset` `revokeSession` | 4 | ⬜ |
-| Profile | `updateProfile` `addSkill` `removeSkill` `addExpertise` `removeExpertise` | 6 | ⬜ |
-| Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ⬜ |
-| Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ⬜ |
-| Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ⬜ |
-| Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ⬜ |
-| Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ⬜ |
-| Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ⬜ |
-| Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ⬜ |
-| Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ⬜ |
-| AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ⬜ |
-| Analytics | `recomputeUserStatistics` | 13 | ⬜ |
+| Auth | `register` `login` `refreshToken` `logout` `changePassword` `requestPasswordReset` `revokeSession` | 4 | ✅ — `requestPasswordReset` is wired but deliberately has no screen (backend stub, see known-debt) |
+| Profile | `updateProfile` `addSkill` `removeSkill` `addExpertise` `removeExpertise` | 6 | ✅ |
+| Organization | `createOrganization` `updateOrganization` `deleteOrganization` `inviteToOrganization` `acceptInvitation` `revokeInvitation` `updateMemberRole` `removeMember` | 6 | ✅ — `updateOrganization.settings` (free-form JSON) is not surfaced; nothing reads it yet |
+| Project | `createProject` `updateProject` `changeProjectStatus` `deleteProject` `configureWorkflow` `addProjectMember` `updateProjectMemberRole` `removeProjectMember` | 7 | ✅ |
+| Team | `createTeam` `updateTeam` `deleteTeam` `addTeamMember` `updateTeamMember` `removeTeamMember` | 7 | ✅ |
+| Task | `createTask` `updateTask` `changeTaskStatus` `assignTask` `setTaskStoryPoints` `moveTaskToSprint` `deleteTask` `logTaskTime` `addTaskDependency` `removeTaskDependency` `watchTask` `unwatchTask` `addTaskLabel` `removeTaskLabel` | 8 | ✅ |
+| Sprint | `createSprint` `updateSprint` `changeSprintState` `deleteSprint` `addTaskToSprint` `removeTaskFromSprint` | 9 | ✅ |
+| Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ✅ — a milestone is always created on an epic: one without an epic cannot be listed by any query |
+| Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ✅ — attachments are records only; `Attachment.url` is deliberately never selected (known-debt) |
+| Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ✅ |
+| AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ✅ — an override always names a value; unassigning through one is not offered (known-debt) |
+| Analytics | `recomputeUserStatistics` | 13 | ✅ — offered for the viewer's own statistics only; the server refuses it for anyone else (known-debt) |
 
 ### Subscriptions (5)
 
 | Operation | Phase | Status |
 |---|---|:--:|
-| `taskUpdated` | 11 | ⬜ |
-| `commentAdded` | 11 | ⬜ |
-| `sprintUpdated` | 11 | ⬜ |
-| `notificationReceived` | 11 | ⬜ |
-| `aiRecommendationUpdated` | 11 | ⬜ |
+| `taskUpdated` | 11 | ✅ |
+| `commentAdded` | 11 | ✅ |
+| `sprintUpdated` | 11 | ✅ |
+| `notificationReceived` | 11 | ✅ |
+| `aiRecommendationUpdated` | 11 | ✅ |
 
 ---
 

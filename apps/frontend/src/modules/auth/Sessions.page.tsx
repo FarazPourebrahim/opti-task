@@ -1,28 +1,32 @@
-import { Laptop, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useSessions } from '@/modules/auth/hooks/useSessions';
 import {
   Badge,
   Button,
   Card,
-  CardHeader,
   ConfirmDialog,
   EmptyState,
-  ErrorState,
-  SkeletonList,
+  SkeletonText,
   useToast,
-} from '@/shared/components';
+} from '@averoui/react';
+import { Laptop, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSessions } from '@/modules/auth/hooks/useSessions';
+import { ErrorState, PageHeader } from '@/shared/components';
+import { useEscalateRouteError } from '@/shared/hooks/useEscalateRouteError';
 import { formatRelativeTime } from '@/shared/utils/date.utils';
-import styles from './Sessions.page.module.css';
 
 export function SessionsPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { sessions, isLoading, error, isRevoking, revokeSession, refetch } =
-    useSessions();
+  const { sessions, isLoading, error, revokeSession, refetch } = useSessions();
   const [pendingRevoke, setPendingRevoke] = useState<string | null>(null);
 
+  useEscalateRouteError(error);
+
+  /*
+   * Never rejects: ConfirmDialog keeps itself open (and its confirm button
+   * busy) until this settles, and a failure is reported through the toast.
+   */
   async function handleRevoke() {
     if (!pendingRevoke) return;
 
@@ -41,37 +45,47 @@ export function SessionsPage() {
   const otherSessions = sessions.filter((session) => !session.current);
 
   return (
-    <div className={styles.sessionsPage}>
-      <Card>
-        <CardHeader
-          title={t('auth.sessions.title')}
-          description={t('auth.sessions.subtitle')}
-        />
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={t('auth.sessions.title')}
+        description={t('auth.sessions.subtitle')}
+      />
 
+      <Card>
         {isLoading ? (
-          <SkeletonList count={3} label={t('common.loading')} />
+          // Skeletons are hidden from assistive technology, so the region
+          // announces the loading state once on their behalf.
+          <div role="status" aria-busy aria-label={t('common.loading')}>
+            <SkeletonText lines={3} />
+          </div>
         ) : error ? (
           <ErrorState
             title={t('auth.sessions.loadFailed')}
             description={t(error.messageKey as never)}
-            {...(error.requestId ? { requestId: error.requestId } : {})}
+            requestId={error.requestId}
             onRetry={() => void refetch()}
           />
         ) : (
-          <ul className={styles.sessionList}>
+          <ul className="divide-border-subtle flex flex-col divide-y">
             {sessions.map((session) => (
-              <li key={session.id} className={styles.sessionRow}>
-                <span className={styles.sessionIcon} aria-hidden>
+              <li
+                key={session.id}
+                className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"
+              >
+                <span
+                  aria-hidden
+                  className="bg-surface-muted text-text-subtle inline-flex size-10 shrink-0 items-center justify-center rounded-full [&>svg]:size-5"
+                >
                   {session.current ? <ShieldCheck /> : <Laptop />}
                 </span>
-                <div className={styles.sessionDetails}>
-                  <p className={styles.sessionDevice}>
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <p className="text-text-strong flex flex-wrap items-center gap-2 text-sm wrap-anywhere">
                     {session.userAgent ?? t('auth.sessions.unknownDevice')}
                     {session.current ? (
                       <Badge tone="success">{t('auth.sessions.current')}</Badge>
                     ) : null}
                   </p>
-                  <p className={styles.sessionMeta}>
+                  <p className="text-text-subtle text-xs wrap-anywhere">
                     {t('auth.sessions.signedInAt', {
                       when: formatRelativeTime(session.createdAt),
                     })}
@@ -92,11 +106,9 @@ export function SessionsPage() {
 
             {otherSessions.length === 0 ? (
               <li>
-                <EmptyState
-                  icon={<Laptop />}
-                  title={t('auth.sessions.empty')}
-                  size="sm"
-                />
+                <EmptyState variant="circle" icon={<Laptop />}>
+                  {t('auth.sessions.empty')}
+                </EmptyState>
               </li>
             ) : null}
           </ul>
@@ -111,9 +123,9 @@ export function SessionsPage() {
         title={t('auth.sessions.revokeConfirmTitle')}
         description={t('auth.sessions.revokeConfirmBody')}
         confirmLabel={t('auth.sessions.revoke')}
-        isPending={isRevoking}
-        destructive
-        onConfirm={() => void handleRevoke()}
+        cancelLabel={t('common.cancel')}
+        tone="danger"
+        onConfirm={handleRevoke}
       />
     </div>
   );

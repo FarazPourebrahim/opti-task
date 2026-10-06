@@ -1,69 +1,69 @@
 /*
  * The single stylesheet entry point, imported once at the app root.
  *
- * Import order matters: the reset and every token file must land before any
- * rule that consumes them. Nothing component-level or page-level belongs in
- * this file — it sets document defaults only.
+ * Styling is Tailwind CSS v4 plus the Avero token layer. Nothing component- or
+ * page-level belongs in this file: it wires the layers together and sets the
+ * handful of brand tokens that differ from Avero's defaults.
  */
 
 /* Self-hosted variable fonts (no CDN). */
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
-/* Reset first. */
-@import './resets.css';
+@import 'tailwindcss';
 
-/* Then tokens, colors before shadows (which consume --color-focus-ring). */
-@import './colors.css';
-@import './typography.css';
-@import './measures.css';
-@import './shadows.css';
-@import './animations.css';
+@import '@averoui/tokens/theme.css';
+@import '@averoui/tokens/base.css';
+@import '@averoui/tokens/utilities.css';
 
-html {
-  -webkit-text-size-adjust: 100%;
-  font-family: var(--font-family-sans);
-  font-size: 100%;
-}
+/*
+ * Tailwind only scans this app's own source, so it never sees the class names
+ * inside Avero's compiled JavaScript. Without this line the components render
+ * with structure but no styling.
+ */
+@source '../../../node_modules/@averoui/react/dist';
+@source '../../../node_modules/@averoui/charts/dist';
 
-body {
-  background-color: var(--color-surface-300);
-  color: var(--color-text-400);
-  font-size: var(--fs-400);
-  font-weight: var(--fw-300);
-  letter-spacing: var(--ls-300);
-  line-height: var(--lh-500);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  /*
+   * Avero's default stack leads with Lahzeh, a Persian face this app does not
+   * ship. Inter and JetBrains Mono are the self-hosted faces imported above.
+   */
+  --font-sans:
+    'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', sans-serif;
+  --font-code:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular,
+    Menlo, Consolas, monospace;
+
+  /*
+   * Brand: amber, as chosen in apps/frontend/colors.md. Avero derives its soft
+   * and border tints from --color-primary, so these two lines rebrand every
+   * accent.
+   */
+  --color-primary: oklch(76.9% 0.188 70.08);
+  --color-primary-hover: oklch(66.6% 0.179 58.318);
+  /* The lighter step from colors.md. Avero has no slot for it; ours to use. */
+  --color-primary-lighter: oklch(82.8% 0.189 84.429);
+
+  /*
+   * Avero's warning is amber too, which would make a warning indistinguishable
+   * from a brand accent. Orange keeps the "caution" reading and stays clear of
+   * both the amber brand and the red used for danger.
+   */
+  --color-warning: oklch(64.6% 0.222 41.116);
+  --color-warning-hover: oklch(55.3% 0.195 38.402);
 }
 
 /*
- * One focus style for the whole app. `:focus-visible` so a pointer click does
- * not paint a ring, while keyboard navigation always does.
+ * A horizontal scroller has to be the containing block of what is inside it.
+ * A screen-reader-only label is positioned absolutely; in a scroller that is
+ * not itself positioned it escapes the clipping, sits where the scrolled-out
+ * content would be, and widens the whole page. Avero's table container is one
+ * such scroller. In `base`, so a positioning utility on the same element wins.
  */
-:focus-visible {
-  outline: var(--bw-300) solid var(--color-focus-ring);
-  outline-offset: var(--bw-300);
-}
-
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
-::selection {
-  background-color: var(--color-primary);
-  color: var(--color-primary-opposite);
-}
-
-/* Scrollbars, themed rather than left to the OS default. */
-* {
-  scrollbar-color: var(--color-border-400) transparent;
-  scrollbar-width: thin;
-}
-
-code,
-kbd,
-pre,
-samp {
-  font-family: var(--font-family-mono);
+@layer base {
+  .overflow-x-auto {
+    position: relative;
+  }
 }

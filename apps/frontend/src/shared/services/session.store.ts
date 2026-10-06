@@ -41,3 +41,22 @@ export function onAccessTokenChange(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+type SessionExpiredListener = () => void;
+const sessionExpiredListeners = new Set<SessionExpiredListener>();
+
+/**
+ * Announces that the session could not be renewed.
+ *
+ * The link chain discovers this; the auth context is what has to react to it.
+ * The link sits below React and the context above it, so the signal travels
+ * through here rather than through a prop that neither side owns.
+ */
+export function notifySessionExpired(): void {
+  for (const listener of sessionExpiredListeners) listener();
+}
+
+export function onSessionExpired(listener: SessionExpiredListener): () => void {
+  sessionExpiredListeners.add(listener);
+  return () => sessionExpiredListeners.delete(listener);
+}

@@ -1,29 +1,16 @@
+import { Button, Input } from '@averoui/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FormEvent } from 'react';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-import { FormError } from '@/modules/auth/components/FormError';
+import { FormError } from '@/shared/components/FormError';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import {
-  loginSchema,
-  toFieldErrors,
-} from '@/modules/auth/schemas/auth.schema';
-import { Button, Field, Input } from '@/shared/components';
+import { loginSchema, toFieldErrors } from '@/modules/auth/schemas/auth.schema';
+import { AppLink, FormField } from '@/shared/components';
 import { ApiError } from '@/shared/lib/apiError';
-import styles from './Auth.page.module.css';
+import { ROUTES } from '@/shared/routes/route.constants';
 
-type LoginPageProps = {
-  /** Phase 5 supplies real navigation; until then the caller decides. */
-  onSignedIn?: () => void;
-  onGoToRegister?: () => void;
-  onGoToForgotPassword?: () => void;
-};
-
-export function LoginPage({
-  onSignedIn,
-  onGoToRegister,
-  onGoToForgotPassword,
-}: LoginPageProps) {
+export function LoginPage() {
   const { t } = useTranslation();
   const { login } = useAuth();
 
@@ -46,8 +33,9 @@ export function LoginPage({
     setIsPending(true);
 
     try {
+      // Nothing to navigate to here: the guest guard sees the session and
+      // sends the user on to wherever they were headed.
       await login(parsed.data);
-      onSignedIn?.();
     } catch (error) {
       setFormError(messageFor(error));
     } finally {
@@ -77,37 +65,30 @@ export function LoginPage({
       footer={
         <>
           <span>{t('auth.noAccount')}</span>
-          <button
-            type="button"
-            className={styles.linkButton}
-            onClick={onGoToRegister}
-          >
-            {t('auth.createAccount')}
-          </button>
+          <AppLink to={ROUTES.register}>{t('auth.createAccount')}</AppLink>
         </>
       }
     >
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <FormError message={formError} />
 
-        <Field
+        <FormField
           label={t('auth.email')}
-          error={fieldErrors['email'] ? t(fieldErrors['email'] as never) : undefined}
+          error={
+            fieldErrors['email'] ? t(fieldErrors['email'] as never) : undefined
+          }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Field
+        <FormField
           label={t('auth.password')}
           error={
             fieldErrors['password']
@@ -115,30 +96,23 @@ export function LoginPage({
               : undefined
           }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Button type="submit" isLoading={isPending} fullWidth size="lg">
+        <Button type="submit" loading={isPending} block size="lg">
           {isPending ? t('auth.signingIn') : t('auth.signIn')}
         </Button>
 
-        <button
-          type="button"
-          className={styles.linkButton}
-          onClick={onGoToForgotPassword}
-        >
+        <AppLink to={ROUTES.forgotPassword} className="self-center text-sm">
           {t('auth.forgotPassword')}
-        </button>
+        </AppLink>
       </form>
     </AuthLayout>
   );

@@ -1,23 +1,19 @@
+import { Button, Input } from '@averoui/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FormEvent } from 'react';
 import { AuthLayout } from '@/modules/auth/components/AuthLayout';
-import { FormError } from '@/modules/auth/components/FormError';
+import { FormError } from '@/shared/components/FormError';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import {
   registerSchema,
   toFieldErrors,
 } from '@/modules/auth/schemas/auth.schema';
-import { Button, Field, Input } from '@/shared/components';
+import { AppLink, FormField } from '@/shared/components';
 import { ApiError } from '@/shared/lib/apiError';
-import styles from './Auth.page.module.css';
+import { ROUTES } from '@/shared/routes/route.constants';
 
-type RegisterPageProps = {
-  onSignedIn?: () => void;
-  onGoToLogin?: () => void;
-};
-
-export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
+export function RegisterPage() {
   const { t } = useTranslation();
   const { register } = useAuth();
 
@@ -41,8 +37,8 @@ export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
     setIsPending(true);
 
     try {
+      // The guest guard moves the new user into the app once the session exists.
       await register(parsed.data);
-      onSignedIn?.();
     } catch (error) {
       setFormError(messageFor(error));
     } finally {
@@ -69,53 +65,45 @@ export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
       footer={
         <>
           <span>{t('auth.haveAccount')}</span>
-          <button
-            type="button"
-            className={styles.linkButton}
-            onClick={onGoToLogin}
-          >
-            {t('auth.signIn')}
-          </button>
+          <AppLink to={ROUTES.login}>{t('auth.signIn')}</AppLink>
         </>
       }
     >
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <FormError message={formError} />
 
-        <Field
+        <FormField
           label={t('auth.name')}
-          error={fieldErrors['name'] ? t(fieldErrors['name'] as never) : undefined}
+          error={
+            fieldErrors['name'] ? t(fieldErrors['name'] as never) : undefined
+          }
         >
-          {(props) => (
-            <Input
-              {...props}
-              name="name"
-              autoComplete="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            name="name"
+            autoComplete="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Field
+        <FormField
           label={t('auth.email')}
-          error={fieldErrors['email'] ? t(fieldErrors['email'] as never) : undefined}
+          error={
+            fieldErrors['email'] ? t(fieldErrors['email'] as never) : undefined
+          }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            type="email"
+            name="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Field
+        <FormField
           label={t('auth.password')}
           hint={t('auth.passwordHint')}
           error={
@@ -124,20 +112,17 @@ export function RegisterPage({ onSignedIn, onGoToLogin }: RegisterPageProps) {
               : undefined
           }
         >
-          {(props) => (
-            <Input
-              {...props}
-              type="password"
-              name="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={isPending}
-            />
-          )}
-        </Field>
+          <Input
+            type="password"
+            name="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            disabled={isPending}
+          />
+        </FormField>
 
-        <Button type="submit" isLoading={isPending} fullWidth size="lg">
+        <Button type="submit" loading={isPending} block size="lg">
           {isPending ? t('auth.creatingAccount') : t('auth.createAccount')}
         </Button>
       </form>

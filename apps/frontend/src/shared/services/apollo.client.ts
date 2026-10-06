@@ -3,12 +3,11 @@ import {
   ApolloLink,
   HttpLink,
   InMemoryCache,
+  Observable,
 } from '@apollo/client';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { SetContextLink } from '@apollo/client/link/context';
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { relayStylePagination } from '@apollo/client/utilities';
-import { createClient } from 'graphql-ws';
 import { catchError, from, map, mergeMap, throwError } from 'rxjs';
 import { env } from '@/shared/config';
 import { ApiError, toApiError } from '@/shared/lib/apiError';
@@ -17,10 +16,11 @@ import {
   CLIENT_HEADER_VALUE,
   refreshSession,
 } from '@/shared/services/auth.gateway';
+import { createRealtimeLink } from '@/shared/services/realtime.client';
+import type { RealtimeLinkOptions } from '@/shared/services/realtime.client';
 import {
   clearAccessToken,
-  getAccessToken,
-  onAccessTokenChange,
+  notifySessionExpired,
 } from '@/shared/services/session.store';
 
 /** Marks an operation that has already been retried, so a retry cannot loop. */
@@ -76,7 +76,9 @@ const errorNormalizationLink = new ApolloLink((operation, forward) =>
       return result;
     }),
     catchError((error: unknown) =>
-      throwError(() => toApiError(error, { requestId: readRequestId(operation) })),
+      throwError(() =>
+        toApiError(error, { requestId: readRequestId(operation) }),
+      ),
     ),
   ),
 );
@@ -127,30 +129,20 @@ function createHttpLink(): ApolloLink {
 }
 
 /**
- * The subscription transport.
- *
- * Authenticates through `connectionParams`, which is re-evaluated on every
- * connect — so a token refreshed mid-session is picked up by the next attempt.
- * A token change terminates the socket so that reconnect happens immediately
- * rather than at the next network blip.
+ * Where a subscription goes when the socket is switched off: nowhere. It never
+ * emits and never fails, so a screen that subscribes behaves exactly as it does
+ * with the socket down — which is the promise realtime makes.
  */
-function createWsLink(): ApolloLink {
-  const wsClient = createClient({
-    url: env.VITE_WS_URL,
-    lazy: true,
-    retryAttempts: Infinity,
-    connectionParams: () => {
-      const token = getAccessToken();
-      return token ? { authorization: `Bearer ${token}` } : {};
-    },
-  });
+const inertSubscriptionLink = new ApolloLink(
+  () => new Observable<ApolloLink.Result>(() => undefined),
+);
 
-  onAccessTokenChange(() => {
-    // Reconnects with the new credentials; a null token closes the socket.
-    void wsClient.terminate();
-  });
-
-  return new GraphQLWsLink(wsClient);
+function isSubscription({ query }: ApolloLink.Operation): boolean {
+  const definition = query.definitions[0];
+  return (
+    definition?.kind === 'OperationDefinition' &&
+    definition.operation === 'subscription'
+  );
 }
 
 /**
@@ -181,11 +173,7 @@ function createCache(): InMemoryCache {
       Project: {
         fields: {
           members: relayStylePagination(),
-          tasks: relayStylePagination([
-            'filter',
-            'sortField',
-            'sortDirection',
-          ]),
+          tasks: relayStylePagination(['filter', 'sortField', 'sortDirection']),
           sprints: relayStylePagination(),
           epics: relayStylePagination(),
           aiRecommendations: relayStylePagination(['type', 'approvalStatus']),
@@ -195,6 +183,11 @@ function createCache(): InMemoryCache {
         fields: {
           comments: relayStylePagination(),
           activities: relayStylePagination(),
+        },
+      },
+      Sprint: {
+        fields: {
+          tasks: relayStylePagination(),
         },
       },
       Epic: {
@@ -217,12 +210,14 @@ export type CreateApolloClientOptions = {
   onSessionExpired?: SessionExpiredHandler;
   /** Disables the socket, e.g. under test. */
   enableSubscriptions?: boolean;
+  /** Passed to the socket link: a stand-in socket and retry timing for tests. */
+  realtime?: Pick<RealtimeLinkOptions, 'webSocketImpl' | 'retryDelay'>;
 };
 
 export function createApolloClient(
   options: CreateApolloClientOptions = {},
 ): ApolloClient {
-  const { onSessionExpired, enableSubscriptions = true } = options;
+  const { onSessionExpired, enableSubscriptions = true, realtime } = options;
 
   // The handler needs the client, and the client needs the link that calls the
   // handler. A deferred reference is what breaks that cycle.
@@ -232,23 +227,20 @@ export function createApolloClient(
     clearAccessToken();
     // Nothing cached belongs to a signed-out user.
     void client?.clearStore();
+    notifySessionExpired();
     onSessionExpired?.();
   };
 
-  const terminalLink =
+  const subscriptionLink =
     enableSubscriptions && typeof window !== 'undefined'
-      ? ApolloLink.split(
-          ({ query }) => {
-            const definition = query.definitions[0];
-            return (
-              definition?.kind === 'OperationDefinition' &&
-              definition.operation === 'subscription'
-            );
-          },
-          createWsLink(),
-          createHttpLink(),
-        )
-      : createHttpLink();
+      ? createRealtimeLink({ url: env.VITE_WS_URL, ...realtime })
+      : inertSubscriptionLink;
+
+  const terminalLink = ApolloLink.split(
+    isSubscription,
+    subscriptionLink,
+    createHttpLink(),
+  );
 
   client = new ApolloClient({
     /*

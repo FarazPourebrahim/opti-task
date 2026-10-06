@@ -1,8 +1,10 @@
 import { render } from '@testing-library/react';
+import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import type { ApolloClient } from '@apollo/client';
 import type { ReactElement } from 'react';
 import type { RenderOptions, RenderResult } from '@testing-library/react';
+import type { RouteObject } from 'react-router';
 import { AppProviders } from '@/shared/context/AppProviders';
 import { createApolloClient } from '@/shared/services/apollo.client';
 
@@ -21,13 +23,22 @@ export type RenderWithProvidersResult = RenderResult & {
 export type RenderWithProvidersOptions = Omit<RenderOptions, 'wrapper'> & {
   apolloClient?: ApolloClient;
   onSessionExpired?: () => void;
+  /** The location the component under test is rendered at. */
+  route?: string;
 };
 
-export function renderWithProviders(
-  ui: ReactElement,
-  options: RenderWithProvidersOptions = {},
-): RenderWithProvidersResult {
-  const { apolloClient, onSessionExpired, ...renderOptions } = options;
+type Harness = {
+  client: ApolloClient;
+  user: ReturnType<typeof userEvent.setup>;
+};
+
+function createHarness(
+  options: Pick<
+    RenderWithProvidersOptions,
+    'apolloClient' | 'onSessionExpired'
+  >,
+): Harness {
+  const { apolloClient, onSessionExpired } = options;
 
   /*
    * A fresh client per render unless one is supplied: a cache shared between
@@ -60,14 +71,75 @@ export function renderWithProviders(
     delay: null,
   });
 
+  return { client, user };
+}
+
+/**
+ * Renders one component. It sits inside a router, since almost everything
+ * renders a link — but not a data router, so anything that reads the route
+ * tree (breadcrumbs, route errors) is tested through `renderRoutes` instead.
+ */
+export function renderWithProviders(
+  ui: ReactElement,
+  options: RenderWithProvidersOptions = {},
+): RenderWithProvidersResult {
+  const {
+    apolloClient,
+    onSessionExpired,
+    route = '/',
+    ...renderOptions
+  } = options;
+  const { client, user } = createHarness({
+    ...(apolloClient ? { apolloClient } : {}),
+    ...(onSessionExpired ? { onSessionExpired } : {}),
+  });
+
   const result = render(ui, {
+    wrapper: ({ children }) => (
+      <AppProviders apolloClient={client}>
+        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+      </AppProviders>
+    ),
+    ...renderOptions,
+  });
+
+  return { ...result, user, apolloClient: client };
+}
+
+export type RenderRoutesResult = RenderWithProvidersResult & {
+  router: ReturnType<typeof createMemoryRouter>;
+};
+
+/**
+ * Renders a route tree at a location, through the same data router the app
+ * uses. Pass the app's own `routes` to exercise guards, layouts and redirects
+ * exactly as a user meets them.
+ */
+export function renderRoutes(
+  routes: RouteObject[],
+  options: Omit<RenderWithProvidersOptions, 'wrapper'> = {},
+): RenderRoutesResult {
+  const {
+    apolloClient,
+    onSessionExpired,
+    route = '/',
+    ...renderOptions
+  } = options;
+  const { client, user } = createHarness({
+    ...(apolloClient ? { apolloClient } : {}),
+    ...(onSessionExpired ? { onSessionExpired } : {}),
+  });
+
+  const router = createMemoryRouter(routes, { initialEntries: [route] });
+
+  const result = render(<RouterProvider router={router} />, {
     wrapper: ({ children }) => (
       <AppProviders apolloClient={client}>{children}</AppProviders>
     ),
     ...renderOptions,
   });
 
-  return { ...result, user, apolloClient: client };
+  return { ...result, user, apolloClient: client, router };
 }
 
 export * from '@testing-library/react';

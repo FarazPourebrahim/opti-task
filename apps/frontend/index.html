@@ -3,39 +3,68 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0c0f1a" />
+    <meta name="theme-color" content="#f4f4f4" />
     <title>OptiTask</title>
+    <meta
+      name="description"
+      content="OptiTask — AI-assisted Agile task management for software teams."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- The first thing the app does is ask the API who is signed in. The
+         credentials mode has to match the request's, or the connection is not
+         reused. -->
+    <link
+      rel="preconnect"
+      href="%VITE_API_URL%"
+      crossorigin="use-credentials"
+    />
+    <style>
+      .boot-placeholder {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: var(--color-primary);
+      }
+      .boot-placeholder svg {
+        animation: boot-spin 0.8s linear infinite;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-placeholder svg {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <!--
-      Applies the theme before first paint. This MUST be inline and blocking:
-      waiting for the module bundle would paint the default theme first and
-      then swap, which is the flash it exists to prevent.
-
-      It deliberately mirrors a few lines of src/shared/lib/theme.ts. That
-      duplication is the price of running before any module loads — keep the
-      storage key and the class names in sync with that file.
-    -->
-    <script>
-      (function () {
-        try {
-          var stored = window.localStorage.getItem('optitask-theme');
-          var preference =
-            stored === 'light' || stored === 'dark' || stored === 'system'
-              ? stored
-              : 'system';
-          var system = window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light';
-          document.body.classList.add(
-            preference === 'system' ? system : preference,
-          );
-        } catch (error) {
-          document.body.classList.add('light');
-        }
-      })();
-    </script>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Drawn from the HTML alone, so the window is not blank while the
+           script loads; the app replaces it when it mounts. Decorative: the
+           app announces its own loading states. -->
+      <div class="boot-placeholder" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none">
+          <circle
+            cx="12"
+            cy="12"
+            r="9"
+            stroke="currentColor"
+            stroke-width="3"
+            opacity="0.25"
+          />
+          <path
+            d="M21 12a9 9 0 0 0-9-9"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
