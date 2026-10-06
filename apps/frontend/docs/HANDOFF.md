@@ -7,6 +7,24 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 
 ---
 
+## Start here
+
+1. `git status` and `git branch --show-current`. The work tree should be clean
+   on `frontend/F12`, which is pushed and **not merged**.
+2. `pnpm --filter optitask-frontend run verify` should exit 0 with 629 tests
+   in 25 files. If it does not, something changed since this was written.
+3. Ask the owner whether to merge `frontend/F12` into `frontend/main` and
+   start Phase 13. Do not merge without that. In the last two sessions the
+   owner answered each phase report with "go ahead" or a bare "continue", and
+   each was taken to mean exactly one merge plus the next phase — never more
+   than that.
+4. Phase 13 (analytics) is small: one page and a panel. Phase 14 builds nothing
+   new and is mostly blocked on decisions and on things only a browser and a
+   running backend can show — see "What Phase 14 needs" below before starting
+   it.
+
+---
+
 ## Where things stand
 
 **Progress: 95%** — Phases 0–12 and Amendment A1 are complete. Phase 13
@@ -84,11 +102,26 @@ These came from the owner and are binding. All are recorded in `CLIENT_PLAN.md`
   amber, or some sort of blue, whichever is better". Orange was chosen because
   blue is Avero's info tone. One line in `global.css` if they want otherwise.
 
+- **The browser pass was skipped, by choice.** Offered on 2026-10-05 before
+  Phase 10 ("skip 1 and go ahead"). It was not offered again; it is now the
+  largest open risk and belongs at the front of Phase 14 at the latest.
+- **A link to a comment** (`?comment=<id>`, "Copy link") was added in Phase 10
+  without being asked for, so the `comment` query is reachable (D6). The owner
+  was told and did not object. It is recorded as F10.7.
+
 Still undecided, and worth raising:
 
-- Whether to look at the app in a browser before more is built on it.
+- When to look at the app in a browser and run it against the real backend.
 - Deployment topology (same registrable domain or not) — decides whether the
   `SameSite=Lax` cookies work in production (risk R2).
+- Whether the backend gaps in the table below are fixed before release, or
+  shipped as the UI now discloses them.
+- Whether to switch CI on (`apps/backend/ci/github-actions.ci.yml` is a
+  template; there is no `.github/workflows`).
+- Integration: `origin/main` is ahead of `origin/dev`, which is not the shape
+  the README describes (work lands on `dev`, releases merge `dev` → `main`).
+  `frontend/main` has never been merged into `dev`. The owner decides how the
+  frontend reaches `dev`.
 
 ---
 
@@ -133,23 +166,42 @@ src/
 │   └── <feature>.test.tsx
 └── shared/
     ├── components/   ONLY what Avero lacks (see index.ts)
-    ├── hooks/        useLoadMore, useErrorToast, useEscalateRouteError, useEntityIdParam
+    ├── hooks/        useLoadMore, useErrorToast, useEscalateRouteError,
+    │                 useEntityIdParam, useRealtime (subscribe, listen, status, catch-up)
     ├── context/      AppProviders, apollo, breadcrumb
+    ├── constants/    realtime.constants (backoff, offline threshold)
     ├── lib/          apiError, capabilities
-    ├── routes/       route.constants.ts (ROUTES, path helpers, CRUMB_IDS), route.types.ts
-    ├── services/     apollo.client, auth.gateway, session.store
-    ├── utils/        date, form, id, cache
+    ├── routes/       route.constants.ts (ROUTES, ROUTE_SEARCH, path helpers, CRUMB_IDS)
+    ├── services/     apollo.client, auth.gateway, session.store,
+    │                 realtime.client (the socket + its status), realtime.events (in-app bus)
+    ├── utils/        date, form, id, cache (connection/list edits, isCached, writeEntity)
     ├── i18n/locales/en.json
-    └── tests/        renderWithProviders, session, graphql, setup, server
+    └── tests/        renderWithProviders, session, graphql, setup, server,
+                      realtime (fake socket server), realtime.test (cross-feature)
 ```
+
+Modules: `auth`, `user`, `organization`, `project`, `team`, `task`, `sprint`,
+`epic`, `comment` (comments **and** attachments), `notification`, `ai`,
+`shell`, `home`. Still to come: `analytics` (Phase 13).
+
+Where a feature shows up outside its own module:
+
+| On this screen | From this module |
+|---|---|
+| Top bar | `notification` (bell), `shell` (connection status) |
+| Project frame (`Project.page.tsx`) | the three project subscriptions: `task`, `sprint`, `ai` |
+| Task page | `comment` (Comments, Attachments cards), `ai` (AI suggestions card) |
+| Sprint page | `ai` (AI insights card) |
 
 ### Patterns to follow (each exists; copy it)
 
 - **A feature frame with tabs**: `modules/organization/Organization.page.tsx`
   and `modules/project/Project.page.tsx`. The frame makes the one query,
   resolves the viewer's roles, and hands both to its tabs through
-  `<Outlet context>` + a typed `use<Feature>Context()` hook. Phase 8's Board,
-  Backlog etc. become new tabs in `Project.page.tsx` and new nested routes.
+  `<Outlet context>` + a typed `use<Feature>Context()` hook. A new project
+  screen is a new tab in `Project.page.tsx` and a nested route in `App.tsx`
+  (the AI tab is the latest example; Analytics is the one still to add). The
+  tab list is asserted in `project.test.tsx`, which must be updated with it.
 - **Capability hints**: `can(roles, 'task:update')` from
   `shared/lib/capabilities.ts`, or `<RequireCapability>`. Hints only hide;
   every mutation still handles `FORBIDDEN` (toast via `useErrorToast`, or a
@@ -250,6 +302,23 @@ src/
   failure. The suite's exit code is what counts.
 - The backend's `ROADMAP.md`, `known-debt.md`, `SECURITY.md` and `ready.md` are
   **gitignored** — they exist only on this machine.
+- **Look before creating a file.** `git ls-files <module>` first: Phase 3 left
+  a `notification.operations.ts` that Phase 11 overwrote without reading. It
+  cost nothing that time; it could have.
+- **Do not write files with a shell heredoc** when the text holds quotes and
+  backticks: it failed twice with an unmatched-quote error. Use the
+  editor tools, or put a script in a file and run that.
+- **An `axe` failure is usually real.** In Phases 11 and 12 it found an
+  unnamed popover and a skipped heading level. Fix the component, not the
+  test.
+- **A page-level test sees the whole shell.** Buttons such as "Open
+  navigation" and the bell are on every screen; assert with `within(...)` a
+  row, card or dialog rather than on `screen`.
+- **A test whose handler answers a re-read must answer with the new state.**
+  Several pages re-read after a change (the task after a status move, the
+  queue after a decision). Use the fixtures' mutable `current` / `inbox` /
+  `queue` objects and change them inside the mutation handler, or the page
+  flips back.
 
 ---
 
@@ -277,6 +346,56 @@ Things already in place that Phase 13 leans on:
   `sprint.test.tsx`).
 - `useRealtimeEvent('taskUpdated', …)` is there if the page should follow
   work as it moves; re-read the analytics query, which has no paged list.
+
+---
+
+## What Phase 14 needs
+
+Phase 14 is hardening and release; it builds nothing new. Its tracker and exit
+criteria are in `CLIENT_PLAN.md`. Much of it cannot be done from tests alone,
+and some of it is blocked on someone else. Sort it this way before starting:
+
+**Can be done by an agent, now**
+
+- F14.6 coverage thresholds in `vitest.config.ts` (`test:coverage` exists).
+- F14.9 reconcile `known-debt.md`; write `apps/frontend/README.md`.
+- F14.10 a CI workflow file — as a template beside the backend's, since
+  switching CI on is the owner's call. Include the check that the compiled
+  CSS contains an Avero class (the only guard on the `@source` paths) and a
+  lint rule against arbitrary color values (risk R10).
+- F14.11 the deployment doc: static output, env vars (`VITE_API_URL`,
+  `VITE_WS_URL`), SPA fallback, registering the origin in `CORS_ORIGINS`, CSP.
+- F14.8 the security review against `apps/backend/docs/SECURITY.md`. Known
+  good so far: no token in storage (asserted), no `dangerouslySetInnerHTML`
+  anywhere, user text rendered as plain text, the post-login return target is
+  validated, ids from the URL and from notification metadata are checked
+  before use, the custom header backs up `SameSite`. Still to do: a CSP, a
+  grep of the built bundle for secrets, dependency audit.
+- F14.4 bundle analysis. Known heavy spot: the sprint page's chunk is mostly
+  Recharts (known-debt, Phase 9); Phase 13 adds more charts.
+- The `health` query is the one row of Appendix A still open: it needs a use
+  (a status line, or the deployment doc's smoke check) or a written ➖.
+
+**Needs a browser and the running backend** (a person, or an agent with a
+browser tool and a local PostgreSQL)
+
+- The first look at every screen, at 360px and at desktop width.
+- F14.1 the full-route `axe` sweep with color contrast on; F14.2 the keyboard
+  walkthrough; F14.3 the screen-reader pass; F14.5 Lighthouse.
+- F14.7 the E2E suite against the real backend, including a drag on the board
+  and a `graphql-ws` case.
+- Everything listed as "not verified" under each phase in `CLIENT_PLAN.md`:
+  the drag feel, the burndown chart, the socket against the real server, two
+  tabs loading at once (refresh-token reuse), two windows updating each other.
+
+**Blocked on someone else**
+
+- Accessibility sign-off is blocked by white-on-amber primary buttons until
+  Avero has a `--color-primary-foreground` token (risk R11). The owner
+  maintains Avero.
+- The deployment topology decision (risk R2) comes before the deployment doc
+  can be finished.
+- Pushing `main`, and how the frontend reaches `dev`, are the repo owner's.
 
 ### Notes from Phase 12 worth keeping
 
@@ -325,9 +444,37 @@ Things already in place that Phase 13 leans on:
   with zero. A notification test puts `inboxScenario(...).handlers` first.
 - **With the socket off** (`enableSubscriptions: false`, the default under
   test) a subscription goes to an inert link: it never emits and never fails.
-- **Do not write files with a shell heredoc on this machine** when the text
-  holds quotes and backticks: it failed twice with an unmatched-quote error.
-  Use the editor tools, or a script file.
+- **What is announced**: the backend publishes `taskUpdated` for a task's
+  details, status, assignee, estimate and sprint; `sprintUpdated` for a change
+  of state; `commentAdded` for a new comment; `aiRecommendationUpdated` for a
+  decision; `notificationReceived` for a new notification. Nothing else. Do
+  not expect an event for a create or a delete.
+
+### Notes from Phase 10 worth keeping
+
+- **Where things live**: `modules/comment` owns comments *and* attachments, as
+  the backend does. The task page mounts two section components,
+  `TaskComments` and `TaskAttachments`, each making its own query — so a
+  failed comment load is an error inside its card, not a failed page.
+- **Every task page test loads a discussion**: `detailScenario` in
+  `task.fixtures.ts` ends with `discussionScenario(TASK_ID)` (empty). A test
+  about comments puts its own handlers first — see `taskPage()` in
+  `comment.test.tsx`. `comment.fixtures.ts` must not import the task
+  fixtures, or the two import each other.
+- **Optimistic comment**: `createComment` writes a stand-in with an id from
+  `nextPendingCommentId()`; `isPendingComment` hides its actions. The same
+  `update` runs for the stand-in and the real comment. To test it, hold the
+  mutation's response (`gate()` in `comment.test.tsx`). While one is in
+  flight, the socket's echo of the viewer's own comment is ignored
+  (`trackOwnComment`), or it would show twice.
+- **Replies are one level**: the reply composer always sends the thread's
+  first comment as `parentCommentId`.
+- **Attachments are records, not files**: no file picker, no link, and
+  `Attachment.url` is never selected (a standing test reads the operations
+  file). Keep it that way until the backend stores files.
+- **A link to a comment**: `taskCommentPath(projectId, taskId, commentId)`;
+  `LinkedComment` reads `?comment=` and fetches it by id. A mention
+  notification already links there.
 
 ### Notes from Phases 8 and 9 worth keeping
 
