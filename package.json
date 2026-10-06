@@ -20,6 +20,7 @@
     "frontend-preview": "cd apps/frontend && pnpm run preview",
     "frontend-test": "cd apps/frontend && pnpm run test",
     "frontend-lint": "cd apps/frontend && pnpm run lint",
-    "frontend-typecheck": "cd apps/frontend && pnpm run typecheck"
+    "frontend-typecheck": "cd apps/frontend && pnpm run typecheck",
+    "frontend-e2e": "cd apps/frontend && pnpm run e2e"
   }
 }
