@@ -39,7 +39,7 @@ export function ProjectOverviewPage() {
   }
 
   return (
-    <section className="grid gap-6 lg:grid-cols-2">
+    <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle as="h2">{t('project.lifecycleTitle')}</CardTitle>

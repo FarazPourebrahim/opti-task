@@ -901,6 +901,128 @@ same Radix primitives.
   use, if a third caller appears.
 - **Impact**: two small functions to keep in step.
 
+## Phase 14 — Hardening, A11y, Perf & Release
+
+Several earlier entries said "never seen in a browser". Phase 14 ran the app
+against the real backend in a real browser, so these are now settled: the
+shell at 360px, the burndown and trend charts, dragging a card with a mouse,
+the socket against the real server, two tabs loading at once, and two windows
+updating each other. What each showed is in `CLIENT_PLAN.md`, Phase 14.
+
+- **What**: color contrast fails wherever Avero paints one of six pairs, and
+  the accessibility audit cannot pass until it stops.
+- **Why**: they are Avero's own colors, not this app's:
+
+  | Text on background | Ratio | Where |
+  |---|---|---|
+  | white on amber `#fe9a00` | 2.13:1 | filled buttons, the current tab, the current sidebar item |
+  | gray-500 on the page background `#f4f4f4` | 4.39:1 | subtle links, field hints and ghost buttons that sit on the page rather than on a card |
+  | gray-400 on white | 2.6:1 | `EmptyState`, `circle` and `text` variants |
+  | gray-300 on white | 1.47:1 | `EmptyState`, `icon` variant — close to invisible |
+  | gray-300 on `#f9fafc` | 1.4:1 | the same, inside a board column |
+  | amber-700 on the brand tint | 3.01:1 | `Chip` (a task's labels) |
+
+- **Right fix**: in Avero — a foreground token for the brand color (R11);
+  empty-state text at gray-500 or darker; a page background light enough for
+  gray-500 (gray-50 gives 4.63:1), or gray-600 for text on it. Locally, the
+  second and third could be forced in `global.css` by overriding two tokens,
+  if the owner would rather not wait.
+- **Impact**: WCAG 1.4.3 fails on every screen. `e2e/sweep.e2e.ts` lists the
+  six pairs as known and fails on any other; remove a pair from that list as
+  Avero fixes it.
+
+- **What**: on a phone, a table that scrolls sideways cannot be scrolled with
+  the keyboard.
+- **Why**: Avero's `table-container` is a scroller with no `tabindex`.
+- **Right fix**: `tabindex="0"` and a label on the container, in Avero.
+- **Impact**: a keyboard user on a narrow screen cannot reach a table's last
+  columns. Also in the sweep's known list.
+
+- **What**: `global.css` makes every `.overflow-x-auto` element
+  `position: relative`.
+- **Why**: a screen-reader-only label is absolutely positioned. Inside a
+  scroller that is not its containing block it escapes the clipping and
+  widens the whole page — which six screens did, by up to 1,400px. Avero's
+  table container is such a scroller, so the fix could not be made per
+  component.
+- **Right fix**: `relative` on Avero's `table-container`; the rule here then
+  covers only this app's own scrollers.
+- **Impact**: none known. It sits in the `base` layer, so a positioning
+  utility on the same element still wins.
+
+- **What**: a full end-to-end run takes about nine minutes, most of it
+  waiting.
+- **Why**: the API allows 300 requests a minute from one address, hard-coded,
+  and the suite would pass that several times over. `e2e/support/pace.ts`
+  counts every request and waits out the minute.
+- **Right fix**: make the limit configurable on the backend
+  (`RATE_LIMIT_MAX`) and raise it for a test database. The pacing then never
+  triggers and can stay as a guard.
+- **Impact**: slow feedback, and a CI job to match.
+
+- **What**: the end-to-end suite writes to whatever database the backend is
+  pointed at, and leaves its data there.
+- **Why**: it runs against the real API, which has no "delete user".
+- **Right fix**: a database of its own for the suite (the CI template uses
+  one), or a clean-up by email domain, as the backend's tests do.
+- **Impact**: every full local run adds some thirty accounts under
+  `@e2e.optitask.test`, and their organisations, to the developer's database.
+
+- **What**: a signed-out visitor's page load makes three requests to learn
+  it is signed out: `me`, then two refresh attempts.
+- **Why**: the Apollo link answers `UNAUTHENTICATED` with a refresh, and the
+  session bootstrap then tries one of its own.
+- **Right fix**: have the bootstrap rely on the link's refresh, or skip its
+  own when the link has just failed one.
+- **Impact**: one wasted request on every signed-out load. Harmless.
+
+- **What**: the first paint of a signed-out page waits on a chain of three
+  downloads: the entry script, then the app, then the page.
+- **Why**: `main.tsx` imports the app dynamically so a bad configuration can
+  be reported instead of leaving a blank window.
+- **Right fix**: preload the app chunk from `index.html` (a build plugin), if
+  the mobile figure matters.
+- **Impact**: largest contentful paint is 3.4s on Lighthouse's simulated slow
+  4G, 0.7s on desktop settings. A placeholder is painted from the HTML in the
+  meantime.
+
+- **What**: Lighthouse was run on the sign-in screen only, on this machine.
+- **Why**: it cannot sign in by itself, and no deployment exists to measure.
+- **Right fix**: a Lighthouse run with a signed-in session (a script that
+  sets the cookies first) against a staging deployment.
+- **Impact**: the signed-in screens, which are heavier, have no score.
+
+- **What**: the CI workflow has never run.
+- **Why**: switching CI on is the repository owner's call, so it ships as a
+  template. Every command in it has been run by hand.
+- **Right fix**: copy it to `.github/workflows/` and fix whatever the first
+  run turns up — most likely the browser job's start-up.
+- **Impact**: none until it is switched on.
+
+- **What**: no one has listened to the app with a screen reader, and the
+  keyboard tests cover six flows, not every one.
+- **Why**: a screen-reader pass needs a person; the announcements are
+  asserted as text in live regions, which is not the same as hearing them.
+- **Right fix**: a pass with NVDA and VoiceOver over sign-in, the board, a
+  task and the AI approval; keyboard tests for the task page's forms.
+- **Impact**: an awkward or repeated announcement would not be noticed.
+
+- **What**: the favicon is a placeholder — an amber square with a ring.
+- **Why**: there was none, and the missing file was an error in every
+  console. The project has no logo yet.
+- **Right fix**: the real mark, in `public/favicon.svg`.
+- **Impact**: none.
+
+- **What**: the backend's production dependencies carry eight advisories, one
+  critical (`proxy-addr`, through Express 4, IP spoofing behind a trusted
+  proxy).
+- **Why**: found by `pnpm audit --prod` during the client's security review.
+  None is in the frontend's own production tree.
+- **Right fix**: on the backend — the Apollo Server 5 and Express 5 upgrade
+  already in its known-debt removes most of them.
+- **Impact**: the backend's to weigh before release; listed here so it is not
+  lost.
+
 ## Amendment A1 — Avero migration
 
 - **What**: Avero's filled primary button is white text on the amber brand

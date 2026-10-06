@@ -16,7 +16,7 @@ export { FormField } from './FormField';
 export { LoadMore } from './LoadMore';
 export { MemberPicker } from './MemberPicker';
 export { PageHeader } from './PageHeader';
-export { PageLoader, PageSkeleton } from './PageLoader';
+export { ChartSkeleton, PageLoader, PageSkeleton } from './PageLoader';
 export { RequireCapability } from './RequireCapability';
 export { SelectField } from './SelectField';
 export type { SelectOption } from './SelectField';

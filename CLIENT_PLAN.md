@@ -306,9 +306,11 @@ line is not done, regardless of whether the feature "works".
 | 11 | Notifications & Realtime | 90% | ✅ |
 | 12 | AI Recommendations & Approval | 95% | ✅ |
 | 13 | Analytics | 98% | ✅ |
-| 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
+| 14 | Hardening, A11y, Perf & Release | 100% | 🚧 |
 
-**Current overall progress: 98%** (Phases 0–13 and Amendment A1 complete).
+**Current overall progress: 99%** (Phases 0–13 and Amendment A1 complete;
+Phase 14 is done as far as it can be without the owner — see its exit
+criteria).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -1156,34 +1158,91 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F14.1 | Full `axe` sweep across every route | ⬜ |
-| F14.2 | Keyboard-only walkthrough of every primary flow | ⬜ |
-| F14.3 | Screen-reader pass on auth, board, task detail and the AI approval flow | ⬜ |
-| F14.4 | Bundle analysis; route chunks; font and icon loading strategy | ⬜ |
-| F14.5 | Lighthouse on the production build | ⬜ |
-| F14.6 | Coverage thresholds enforced in `vitest.config.ts` and in CI | ⬜ |
-| F14.7 | E2E suite in `shared/tests/` — register → org → project → sprint → task → comment → AI approve → analytics | ⬜ |
-| F14.8 | Security review against `apps/backend/docs/SECURITY.md` (client-relevant sections) | ⬜ |
-| F14.9 | `apps/frontend/docs/known-debt.md` reconciled; `apps/frontend/README.md` written | ⬜ |
-| F14.10 | CI: typecheck → lint → codegen-drift → test → build | ⬜ |
-| F14.11 | Deployment doc: static build output, env vars, SPA fallback routing, CORS origin registration | ⬜ |
+| F14.1 | Full `axe` sweep across every route — 26 signed-in and 3 signed-out screens, at 1280px and 360px, in a real browser with every rule on (`e2e/sweep.e2e.ts`) | ✅ |
+| F14.2 | Keyboard-only walkthrough — sign-in, the skip link, the command palette, a dialog's focus trap, creating an organisation, moving a card. Not every primary flow | 🚧 |
+| F14.3 | Screen-reader pass on auth, board, task detail and the AI approval flow — needs a person with a screen reader | ⛔ |
+| F14.4 | Bundle analysis; the charting library now loads apart from the pages that show a chart; fonts are files, none inlined | ✅ |
+| F14.5 | Lighthouse on the production build (sign-in screen) | ✅ |
+| F14.6 | Coverage floors enforced in `vite.config.ts`; the CI template runs them | ✅ |
+| F14.7 | E2E suite against the real backend — 23 tests in `apps/frontend/e2e/` (Playwright): the journey, the board, realtime, the session, the keyboard, every screen | ✅ |
+| F14.8 | Security review against `apps/backend/docs/SECURITY.md` (client-relevant sections) | ✅ |
+| F14.9 | `apps/frontend/docs/known-debt.md` reconciled; `apps/frontend/README.md` written | ✅ |
+| F14.10 | CI: typecheck → lint → query depth → codegen drift → tests with coverage → build → build check, and a browser job — as a template in `apps/frontend/ci/`, never run | ✅ |
+| F14.11 | Deployment doc: build, env vars, SPA fallback, caching, source maps, CORS origin, a verified CSP (`apps/frontend/docs/deployment.md`) | ✅ |
+| F14.12 | Found by the first look in a browser, and fixed: screen-reader-only labels inside scrollers widened the page on six screens; two grids did not shrink on a phone; the breadcrumb trail collided with the top bar at 360px | ✅ |
+
+### What the browser showed
+
+The first run of the client against the real backend, in a real browser
+(2026-10-06). Every request the screens and the tested flows made was accepted
+by the real server, so the mocks shaped from the SDL had been right where
+they were checked. Most mutations are not performed by the browser suite and
+have still only met mocks.
+
+| Checked | Result |
+|---|---|
+| Every screen loads with no refused request and nothing thrown | Yes, all 26, both widths |
+| No page scrolls sideways | Not at first — six did. Fixed (F14.12); now asserted on every screen |
+| The burndown and the trend chart draw | Yes |
+| A card dragged with a real mouse lands, and persists | Yes; released over a forbidden column it goes nowhere |
+| The socket connects to the real server and authenticates | Yes — "Live" within a second or two |
+| Another person's status change, comment and mention arrive unprompted | Yes |
+| Two people on one board see each other's moves | Yes |
+| The app works with every WebSocket refused | Yes, and the badge says so |
+| Two tabs loading at once keep the session (refresh-token reuse) | Yes, three rounds running |
+| The cookies are `HttpOnly`, `SameSite=Lax`; no token in storage | Yes |
+| The production build works under a strict Content-Security-Policy | Yes, after fonts stopped being inlined as `data:` URIs |
+
+Still unseen: a touch drag on a real phone (the 250ms hold), scrolling a
+200-card board, and anything a screen reader says.
+
+### Measured
+
+- **Lighthouse**, production build, sign-in screen, mobile settings (simulated
+  slow 4G): Performance **91**, Accessibility **96**, Best Practices **100**.
+  Desktop settings: 100 / 96 / 100. The four points of accessibility are the
+  white-on-amber button (R11).
+- **JavaScript, gzipped**: the sign-in screen loads about **165 kB**; a
+  signed-in screen about **245–275 kB** (the board is the heaviest); the
+  charting library is a further **105 kB**, fetched only when a chart is on
+  screen. CSS is **22 kB**.
+- **Coverage** (generated code left out): statements 97.4%, branches 87.9%,
+  functions 93.3%. Floors: 95 / 85 / 90.
+- **Accessibility audit**: no violation of any rule except color contrast and
+  one unfocusable scroller — all in Avero's palette or markup, listed in
+  known-debt, Phase 14.
 
 ### Exit criteria (DoD)
 
-- [ ] `axe` → **0 violations** on every route.
-- [ ] Every primary flow completable with keyboard only, start to finish.
-- [ ] Lighthouse on the production build: **Performance ≥ 90, Accessibility 100,
-      Best Practices ≥ 95**.
-- [ ] Initial JS payload budget agreed and met; the number is recorded here.
-- [ ] Coverage thresholds met and enforced in CI (fails the build below them).
-- [ ] The E2E suite passes against a **real running backend**, not mocks.
-- [ ] No `console.log`, `debugger`, `.only()`, `.skip()`, or commented-out code.
-- [ ] `grep` confirms: no token in storage, no secret in the bundle, no
-      `dangerouslySetInnerHTML` without a sanitizer.
-- [ ] CSP defined and documented for the deployment host.
-- [ ] Production build smoke-tested as a **deployed artifact**, not via `dev`.
-- [ ] SPA deep-link refresh works (server rewrites unknown paths to `index.html`).
-- [ ] Every row in Appendix A is ✅ or has a written justification for ➖.
+- [~] `axe` → 0 violations on every route. **Not met, and not ours to meet
+      alone**: every remaining violation is one of six color pairs Avero
+      paints, or its table container (known-debt, Phase 14). The sweep names
+      them and fails on anything else.
+- [~] Every primary flow completable with keyboard only. Tested: sign-in,
+      skip link, command palette, a dialog, creating an organisation, moving
+      a card. Not walked: the task page's forms, comments, the AI approval.
+- [~] Lighthouse on the production build: Performance ≥ 90 (**91**),
+      Best Practices ≥ 95 (**100**), Accessibility 100 (**96** — R11).
+- [~] Initial JS payload: the numbers are recorded above. A budget has not
+      been **agreed**; 180 kB signed-out and 300 kB for a signed-in screen
+      would hold today's build with room.
+- [x] Coverage floors enforced: `test:coverage` fails below them, and the CI
+      template runs it.
+- [x] The E2E suite passes against a **real running backend**, not mocks — 23
+      tests, on the dev server and on the production build.
+- [x] No `console.log`, `debugger`, `.only()` or `.skip()`: lint bans the
+      first, a grep found none of the rest, and Playwright refuses `.only`
+      under CI.
+- [x] No token in storage (asserted in a real browser), no secret in the
+      bundle (`build:check`), no `dangerouslySetInnerHTML` anywhere.
+- [x] CSP defined, documented, and **enforced while the whole suite ran**
+      against the production build.
+- [~] Production build smoke-tested: served by `vite preview` with the
+      deployment's headers, on this machine. It has not been deployed to a
+      host.
+- [x] SPA deep-link refresh works on the preview server; the rewrite a real
+      host needs is in the deployment doc.
+- [x] Every row in Appendix A is ✅ or has a written justification for ➖.
 - [ ] Every phase above shows ✅ and this table reads 100%.
 
 ---
@@ -1202,7 +1261,7 @@ must make the "AI suggests, a human decides" contract visible at every step.
 | R8 | Apollo Server v4 is EOL (2026-01-26) | Security exposure on the server | Backend concern; the client's Apollo version is independent. Track the v5 upgrade |
 | R9 | Board performance with large projects | Jank on the primary screen | Virtualize from the start (F8.2); profile at 200+ tasks (F8 exit criterion) |
 | R10 | Design-system drift once features start | The look decays feature by feature | Primitives only from Avero; feature styling only through theme tokens (Global DoD). The old "no raw values" CSS test went with the CSS Modules — a lint rule against arbitrary color values is the replacement to add |
-| R11 | Avero's filled primary button is white-on-amber (≈ 2:1) | Every primary action fails WCAG contrast | Upstream fix in Avero (`--color-primary-foreground`); tracked in Amendment A1. Blocks the Phase 14 accessibility sign-off |
+| R11 | Avero's filled primary button is white-on-amber (≈ 2:1) | Every primary action fails WCAG contrast | Upstream fix in Avero (`--color-primary-foreground`); tracked in Amendment A1. Blocks the Phase 14 accessibility sign-off. The browser audit found five more pairs below 4.5:1 in Avero's palette — empty-state text worst, at 1.4:1 (known-debt, Phase 14) |
 | R12 | Avero is a young, single-maintainer library | A gap or bug blocks a feature | It is maintained in-house, so gaps are fixed upstream rather than worked around locally; record each one in known-debt |
 
 ---
@@ -1216,7 +1275,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 
 | Operation | Phase | Status |
 |---|---|:--:|
-| `health` | 14 | ⬜ |
+| `health` | ➖ | ➖ a liveness probe for operators. A client learns the same from any request it makes, and the release checklist uses `GET /readyz`, which also checks the database |
 | `me` | 4 | ✅ |
 | `sessions` | 4 | ✅ |
 | `user` | 6 | ✅ |
