@@ -21,9 +21,12 @@ export function Topbar({ onOpenCommandPalette }: TopbarProps) {
       <MobileNavigation />
 
       <div className="min-w-0 flex-1">
-        {/* A trail of one is just the page's own name, which its heading says. */}
+        {/* A trail of one is just the page's own name, which its heading says.
+            Below `md` the bar has no room for a trail at all. */}
         {breadcrumbs.length > 1 ? (
-          <Breadcrumbs label={t('nav.breadcrumbs')} items={breadcrumbs} />
+          <div className="hidden md:block">
+            <Breadcrumbs label={t('nav.breadcrumbs')} items={breadcrumbs} />
+          </div>
         ) : null}
       </div>
 

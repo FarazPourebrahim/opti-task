@@ -242,7 +242,7 @@ export function SprintDetailPage() {
         />
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SprintBurndown
           points={sprint.burndown}
           hasDates={Boolean(sprint.startDate && sprint.endDate)}

@@ -54,3 +54,16 @@
   --color-warning: oklch(64.6% 0.222 41.116);
   --color-warning-hover: oklch(55.3% 0.195 38.402);
 }
+
+/*
+ * A horizontal scroller has to be the containing block of what is inside it.
+ * A screen-reader-only label is positioned absolutely; in a scroller that is
+ * not itself positioned it escapes the clipping, sits where the scrolled-out
+ * content would be, and widens the whole page. Avero's table container is one
+ * such scroller. In `base`, so a positioning utility on the same element wins.
+ */
+@layer base {
+  .overflow-x-auto {
+    position: relative;
+  }
+}

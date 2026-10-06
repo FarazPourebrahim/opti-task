@@ -19,19 +19,27 @@ type BreadcrumbsProps = {
 export function Breadcrumbs({ label, items }: BreadcrumbsProps) {
   return (
     <nav aria-label={label} className="min-w-0">
-      <ol className="text-text-subtle flex flex-wrap items-center gap-1.5 text-sm">
+      <ol className="text-text-subtle flex items-center gap-1.5 overflow-hidden text-sm">
         {items.map((item, index) => {
           const isCurrent = index === items.length - 1;
 
           return (
-            <li key={item.to} className="flex items-center gap-1.5">
+            <li
+              key={item.to}
+              // The page's own name gives way first; the trail to it stays.
+              className={
+                isCurrent
+                  ? 'flex min-w-0 items-center gap-1.5'
+                  : 'flex shrink-0 items-center gap-1.5'
+              }
+            >
               {index > 0 ? (
                 <ChevronRight aria-hidden className="size-4 shrink-0" />
               ) : null}
               {isCurrent ? (
                 <span
                   aria-current="page"
-                  className="text-text-strong font-medium"
+                  className="text-text-strong truncate font-medium"
                 >
                   {item.label}
                 </span>
