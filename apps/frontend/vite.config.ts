@@ -60,7 +60,19 @@ export default defineConfig({
         'src/main.tsx', // bootstrap (DOM mount only)
         'src/**/index.ts', // re-export barrels
         'src/shared/tests/**', // the harness itself
+        'src/shared/graphql/generated/**', // codegen output, not ours to test
       ],
+      /*
+       * Floors, a little under what the suite reaches (97.4 / 87.9 / 93.3 /
+       * 97.4 when they were set, generated code left out), so a change that leaves new code untested
+       * fails the run. Raise them as coverage rises; never lower them to pass.
+       */
+      thresholds: {
+        statements: 95,
+        branches: 85,
+        functions: 90,
+        lines: 95,
+      },
     },
   },
 });
