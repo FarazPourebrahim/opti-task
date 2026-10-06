@@ -15,6 +15,15 @@ import { defineConfig } from '@playwright/test';
  */
 const channel = process.env['E2E_BROWSER_CHANNEL'] ?? 'chrome';
 
+/*
+ * `E2E_TARGET=build` runs the suite against the production build, served with
+ * the deployment's security headers, instead of the dev server.
+ */
+const serveClient =
+  process.env['E2E_TARGET'] === 'build'
+    ? 'pnpm run build && pnpm run preview'
+    : 'pnpm run dev';
+
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.e2e.ts',
@@ -41,10 +50,10 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: 'pnpm run dev',
+      command: serveClient,
       url: 'http://localhost:5173',
       reuseExistingServer: true,
-      timeout: 60_000,
+      timeout: 120_000,
     },
   ],
 });
