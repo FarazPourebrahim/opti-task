@@ -70,6 +70,7 @@ const VALID_INPUT = {
  */
 beforeAll(async () => {
   await import('@/modules/sprint/SprintDetail.page');
+  await import('@/modules/sprint/components/SprintBurndown');
 }, 60_000);
 
 beforeEach(() => {

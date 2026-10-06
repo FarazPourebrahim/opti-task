@@ -11,14 +11,13 @@ import {
   DialogTitle,
   useToast,
 } from '@averoui/react';
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { SprintState } from '@contracts';
 import { AiRequestPanel } from '@/modules/ai/components/AiRequestPanel';
 import { AI_SPRINT_REQUESTS } from '@/modules/ai/constants/ai.constants';
 import { useProjectContext } from '@/modules/project/hooks/useProjectContext';
-import { SprintBurndown } from '@/modules/sprint/components/SprintBurndown';
 import { SprintForm } from '@/modules/sprint/components/SprintForm';
 import { SprintMetricsPanel } from '@/modules/sprint/components/SprintMetricsPanel';
 import { SprintStateControl } from '@/modules/sprint/components/SprintStateControl';
@@ -31,7 +30,7 @@ import {
 } from '@/modules/sprint/hooks/useSprints';
 import type { SprintTaskRow } from '@/modules/sprint/hooks/useSprints';
 import type { SprintInput } from '@/modules/sprint/schemas/sprint.schema';
-import { ErrorState, PageSkeleton } from '@/shared/components';
+import { ChartSkeleton, ErrorState, PageSkeleton } from '@/shared/components';
 import { useBreadcrumbLabel } from '@/shared/context/breadcrumb.context';
 import { useEntityIdParam } from '@/shared/hooks/useEntityIdParam';
 import { useErrorToast } from '@/shared/hooks/useErrorToast';
@@ -44,6 +43,15 @@ import {
   projectSprintsPath,
 } from '@/shared/routes/route.constants';
 import { formatCalendarDate } from '@/shared/utils/date.utils';
+
+/*
+ * The chart brings the charting library, about 105 kB gzipped. Loaded on its
+ * own, the rest of the page does not wait for it.
+ */
+const SprintBurndown = lazy(async () => ({
+  default: (await import('@/modules/sprint/components/SprintBurndown'))
+    .SprintBurndown,
+}));
 
 /** One sprint: its plan, its figures, its burndown and the tasks in it. */
 export function SprintDetailPage() {
@@ -243,10 +251,12 @@ export function SprintDetailPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SprintBurndown
-          points={sprint.burndown}
-          hasDates={Boolean(sprint.startDate && sprint.endDate)}
-        />
+        <Suspense fallback={<ChartSkeleton />}>
+          <SprintBurndown
+            points={sprint.burndown}
+            hasDates={Boolean(sprint.startDate && sprint.endDate)}
+          />
+        </Suspense>
         <SprintWorkload rows={sprint.metrics.workloadDistribution} />
       </div>
 

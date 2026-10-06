@@ -115,6 +115,7 @@ function cellsOf(row: HTMLElement) {
  */
 beforeAll(async () => {
   await import('@/modules/analytics/ProjectAnalytics.page');
+  await import('@/modules/analytics/components/StoryPointTrends');
 }, 60_000);
 
 beforeEach(() => {

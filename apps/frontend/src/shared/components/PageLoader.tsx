@@ -1,4 +1,4 @@
-import { SkeletonText, Spinner } from '@averoui/react';
+import { Skeleton, SkeletonText, Spinner } from '@averoui/react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -30,6 +30,20 @@ export function PageSkeleton() {
     // Skeletons are hidden from assistive technology; the region speaks once.
     <div role="status" aria-busy aria-label={t('common.loading')}>
       <SkeletonText lines={4} />
+    </div>
+  );
+}
+
+/**
+ * The wait for a chart, whose library loads apart from the page it sits on.
+ * The size of a chart card, so the page does not jump when it arrives.
+ */
+export function ChartSkeleton() {
+  const { t } = useTranslation();
+
+  return (
+    <div role="status" aria-busy aria-label={t('common.loading')}>
+      <Skeleton className="h-64 w-full rounded-2xl" />
     </div>
   );
 }
