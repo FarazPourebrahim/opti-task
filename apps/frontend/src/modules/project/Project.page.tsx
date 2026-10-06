@@ -22,6 +22,7 @@ import {
   CRUMB_IDS,
   ROUTE_PARAMS,
   organizationPath,
+  projectAiPath,
   projectBoardPath,
   projectEpicsPath,
   projectMembersPath,
@@ -152,6 +153,7 @@ export function ProjectPage() {
           labelKey="project.tabs.sprints"
         />
         <Tab to={projectEpicsPath(project.id)} labelKey="project.tabs.epics" />
+        <Tab to={projectAiPath(project.id)} labelKey="project.tabs.ai" />
         <Tab
           to={projectMembersPath(project.id)}
           labelKey="project.tabs.members"

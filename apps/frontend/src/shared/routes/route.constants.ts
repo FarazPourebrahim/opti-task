@@ -32,6 +32,7 @@ export const ROUTES = {
   sprint: '/projects/:projectId/sprints/:sprintId',
   projectEpics: '/projects/:projectId/epics',
   epic: '/projects/:projectId/epics/:epicId',
+  projectAi: '/projects/:projectId/ai',
   notifications: '/notifications',
 } as const;
 
@@ -139,6 +140,10 @@ export function projectEpicsPath(projectId: string): string {
 
 export function epicPath(projectId: string, epicId: string): string {
   return `${projectEpicsPath(projectId)}/${encodeURIComponent(epicId)}`;
+}
+
+export function projectAiPath(projectId: string): string {
+  return `${projectPath(projectId)}/ai`;
 }
 
 export function userPath(userId: string): string {

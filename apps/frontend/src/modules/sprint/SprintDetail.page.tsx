@@ -1,5 +1,8 @@
 import {
   Button,
+  Card,
+  CardHeader,
+  CardTitle,
   ConfirmDialog,
   Dialog,
   DialogBody,
@@ -8,10 +11,12 @@ import {
   DialogTitle,
   useToast,
 } from '@averoui/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { SprintState } from '@contracts';
+import { AiRequestPanel } from '@/modules/ai/components/AiRequestPanel';
+import { AI_SPRINT_REQUESTS } from '@/modules/ai/constants/ai.constants';
 import { useProjectContext } from '@/modules/project/hooks/useProjectContext';
 import { SprintBurndown } from '@/modules/sprint/components/SprintBurndown';
 import { SprintForm } from '@/modules/sprint/components/SprintForm';
@@ -46,7 +51,16 @@ export function SprintDetailPage() {
   const { toast } = useToast();
   const showError = useErrorToast();
   const navigate = useNavigate();
-  const { project, roles } = useProjectContext();
+  const { project, roles, members } = useProjectContext();
+  const people = useMemo(
+    () =>
+      members.map((member) => ({
+        id: member.user.id,
+        name: member.user.name,
+        email: member.user.email,
+      })),
+    [members],
+  );
   const sprintId = useEntityIdParam(ROUTE_PARAMS.sprintId);
   const {
     sprint,
@@ -214,6 +228,19 @@ export function SprintDetailPage() {
       />
 
       <SprintMetricsPanel metrics={sprint.metrics} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle as="h3">{t('ai.sprintTitle')}</CardTitle>
+        </CardHeader>
+        <AiRequestPanel
+          projectId={project.id}
+          subjectId={sprintId}
+          kinds={AI_SPRINT_REQUESTS}
+          roles={roles}
+          members={people}
+        />
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SprintBurndown

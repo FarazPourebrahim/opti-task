@@ -108,6 +108,10 @@ const EpicsPage = lazy(async () => ({
 const EpicDetailPage = lazy(async () => ({
   default: (await import('@/modules/epic/EpicDetail.page')).EpicDetailPage,
 }));
+const AiRecommendationsPage = lazy(async () => ({
+  default: (await import('@/modules/ai/AiRecommendations.page'))
+    .AiRecommendationsPage,
+}));
 const NotificationsPage = lazy(async () => ({
   default: (await import('@/modules/notification/Notifications.page'))
     .NotificationsPage,
@@ -279,6 +283,11 @@ export const routes: RouteObject[] = [
                             } satisfies RouteHandle,
                           },
                         ],
+                      },
+                      {
+                        path: ROUTES.projectAi,
+                        element: <AiRecommendationsPage />,
+                        handle: { crumb: 'nav.ai' } satisfies RouteHandle,
                       },
                       {
                         path: ROUTES.projectMembers,

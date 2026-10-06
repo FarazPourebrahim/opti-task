@@ -304,11 +304,11 @@ line is not done, regardless of whether the feature "works".
 | 9 | Sprint & Epic | 79% | ✅ |
 | 10 | Collaboration — Comments & Attachments | 85% | ✅ |
 | 11 | Notifications & Realtime | 90% | ✅ |
-| 12 | AI Recommendations & Approval | 95% | ⬜ |
+| 12 | AI Recommendations & Approval | 95% | ✅ |
 | 13 | Analytics | 98% | ⬜ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 90%** (Phases 0–11 and Amendment A1 complete).
+**Current overall progress: 95%** (Phases 0–12 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -1031,40 +1031,61 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F12.1 | `AiRecommendations.page.tsx` — `Project.aiRecommendations`, filtered by `type` and `approvalStatus` | ⬜ |
-| F12.2 | Request actions on a task — `requestStoryPointEstimate`, `requestAssignmentRecommendation` | ⬜ |
-| F12.3 | Request actions on a sprint — `requestSprintHealthAnalysis`, `requestProgressTracking` | ⬜ |
-| F12.4 | `RecommendationCard` — text, type, **confidence score**, provider, timestamp, requester, both status fields | ⬜ |
-| F12.5 | Decision controls — `approveRecommendation`, `rejectRecommendation`, `overrideRecommendation` (storyPoints / assigneeId) | ⬜ |
-| F12.6 | `AssignmentContext` panel — candidate table: skills, expertise, workload, availability, active and completed task counts | ⬜ |
-| F12.7 | Approval preview — state exactly what approving will change before it is applied | ⬜ |
-| F12.8 | `SERVICE_UNAVAILABLE` handling — provider failure is explained as a provider problem, with retry; nothing was persisted | ⬜ |
-| F12.9 | `CONFLICT` handling — re-approving an already-resolved recommendation | ⬜ |
+| F12.1 | `AiRecommendations.page.tsx` — an AI tab on the project: `Project.aiRecommendations`, paginated, filtered by `type` and `approvalStatus` | ✅ |
+| F12.2 | Request actions on a task — `requestStoryPointEstimate`, `requestAssignmentRecommendation`, in an "AI suggestions" card on the task page | ✅ |
+| F12.3 | Request actions on a sprint — `requestSprintHealthAnalysis`, `requestProgressTracking`, in an "AI insights" card on the sprint page | ✅ |
+| F12.4 | `RecommendationCard` — text, type, **confidence score**, provider, timestamp, requester, decider, both status fields, what it proposes in a sentence, and a link to its task or sprint | ✅ |
+| F12.5 | Decision controls — `approveRecommendation`, `rejectRecommendation`, `overrideRecommendation` (storyPoints / assigneeId) | ✅ |
+| F12.6 | `AssignmentContext` panel — candidate table: skills, expertise, workload, availability, active and completed task counts; fetched only when opened | ✅ |
+| F12.7 | Approval preview — a dialog states exactly what approving will change before it is applied; the override form says the same of the value being typed | ✅ |
+| F12.8 | `SERVICE_UNAVAILABLE` handling — provider failure is explained as a provider problem, with retry; nothing was persisted | ✅ |
+| F12.9 | `CONFLICT` handling — a decision that arrives after someone else's says so and re-reads the recommendation (`aiRecommendation`) to show how it now stands | ✅ |
+| F12.10 | An applied decision reaches the task: the mutation returns the recommendation only, so the task's estimate and assignee are re-read and every screen showing it follows | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] Confidence score is **always** shown alongside any suggestion — a suggestion
-      can never be presented as fact.
-- [ ] The provider name and timestamp are visible on every recommendation.
-- [ ] Approving shows a preview of the concrete change (e.g. "sets story points to
-      5", "assigns to Dana") **before** it is applied.
-- [ ] `approvalStatus` (`PENDING`/`APPROVED`/`REJECTED`/`OVERRIDDEN`) and
-      `resolutionStatus` (`OPEN`/`RESOLVED`/`DISMISSED`) are both surfaced and
-      visually distinguishable — they are different axes and must not be conflated.
-- [ ] A user with `ai:request` but not `ai:approve` sees request actions and
-      **no** decision controls; a forced attempt still fails gracefully.
-- [ ] Sprint health and progress recommendations are presented as informational —
-      the UI does not imply approving them changes data.
-- [ ] `SERVICE_UNAVAILABLE` produces a specific, non-alarming message with retry
-      and makes clear nothing was saved.
-- [ ] Re-approving a resolved recommendation surfaces the `CONFLICT` clearly and
-      refreshes to the current state.
-- [ ] The AI request button shows a pending state for the full provider timeout
-      (default 8s) without appearing frozen.
-- [ ] Empty states: no recommendations, none matching the filter, no candidates in
-      the assignment context.
-- [ ] Tests: request → persist → approve, reject, override, `FORBIDDEN` on approve,
-      `SERVICE_UNAVAILABLE`, `CONFLICT`.
+- [x] Confidence score is **always** shown alongside any suggestion. When the
+      provider reports none the card says "Not reported"; it is never left
+      blank (asserted).
+- [x] The provider name and timestamp are visible on every recommendation, with
+      who asked for it and, once decided, who decided.
+- [x] Approving shows a preview of the concrete change **before** it is applied:
+      "sets this task's estimate to 5 story points", "assigns this task to
+      Terry Teammate, and notifies them". Asserted that nothing is sent until
+      the dialog is confirmed. A suggestion that names nobody, or carries no
+      number, says what approving it would do (unassign, clear the estimate).
+- [x] `approvalStatus` and `resolutionStatus` are both surfaced, each under its
+      own label ("Decision", "Outcome") with its own set of tones.
+- [x] A user with `ai:request` but not `ai:approve` sees request actions and
+      **no** decision controls (asserted for a project member). A refused
+      attempt — the hint said yes, the server said no — produces a toast and
+      leaves the suggestion pending.
+- [x] Sprint health and progress recommendations are presented as informational:
+      the card says "For information only", the approval dialog says "It
+      changes nothing in the project", there is no override, and no task is
+      re-read (asserted by the absence of a handler).
+- [x] `SERVICE_UNAVAILABLE` produces a specific, non-alarming message with retry
+      and makes clear nothing was saved. The server's own wording never reaches
+      the screen.
+- [x] Re-deciding a resolved recommendation surfaces the `CONFLICT` clearly and
+      refreshes to the current state, including who decided.
+- [x] The AI request button shows a pending state for the whole wait, and says
+      in words that it can take several seconds; the other request on the
+      panel waits its turn (asserted with a held response). The backend can
+      take up to twice the provider timeout — 16s by default — because it
+      retries once.
+- [x] Empty states: no recommendations, none matching the filter, no candidates
+      in the assignment context.
+- [x] Tests: request → persist → approve, reject, override, `FORBIDDEN` on
+      approve and on request, `SERVICE_UNAVAILABLE`, `CONFLICT`, a decision
+      heard over the socket, pagination, network failure, `axe`. 28 new tests;
+      the suite is 629 tests in 25 files. `axe` found a skipped heading level
+      on the queue; the card now takes its level from where it is shown.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend. The provider behind the API is a
+> deterministic stub, so every suggestion here is a heuristic; the screens are
+> written for a real one.
 
 ---
 
@@ -1186,8 +1207,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `comment` | 10 | ✅ |
 | `myNotifications` | 11 | ✅ |
 | `unreadNotificationCount` | 11 | ✅ |
-| `aiRecommendation` | 12 | ⬜ |
-| `assignmentContext` | 12 | ⬜ |
+| `aiRecommendation` | 12 | ✅ |
+| `assignmentContext` | 12 | ✅ |
 | `projectAnalytics` | 13 | ⬜ |
 | `userAnalytics` | 13 | ⬜ |
 
@@ -1205,7 +1226,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Epic | `createEpic` `updateEpic` `deleteEpic` `refreshEpicProgress` `createMilestone` `deleteMilestone` | 9 | ✅ — a milestone is always created on an epic: one without an epic cannot be listed by any query |
 | Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ✅ — attachments are records only; `Attachment.url` is deliberately never selected (known-debt) |
 | Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ✅ |
-| AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ⬜ |
+| AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ✅ — an override always names a value; unassigning through one is not offered (known-debt) |
 | Analytics | `recomputeUserStatistics` | 13 | ⬜ |
 
 ### Subscriptions (5)
@@ -1216,7 +1237,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `commentAdded` | 11 | ✅ |
 | `sprintUpdated` | 11 | ✅ |
 | `notificationReceived` | 11 | ✅ |
-| `aiRecommendationUpdated` | 11 | ✅ — wired and reconciling; its screen is Phase 12 |
+| `aiRecommendationUpdated` | 11 | ✅ |
 
 ---
 
