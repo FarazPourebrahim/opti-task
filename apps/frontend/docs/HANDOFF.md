@@ -10,24 +10,23 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 ## Start here
 
 1. `git status` and `git branch --show-current`. The work tree should be clean
-   on `frontend/F13`, which is pushed and **not merged**.
+   on `frontend/F14`, which is pushed and **not merged**.
 2. `pnpm --filter optitask-frontend run verify` should exit 0 with 667 tests
    in 26 files. If it does not, something changed since this was written.
-3. Ask the owner whether to merge `frontend/F13` into `frontend/main` and
-   start Phase 14. Do not merge without that. The owner has answered each
-   phase report with "go ahead" or a bare "continue", and each was taken to
-   mean exactly one merge plus the next phase — never more than that.
-4. Phase 14 builds nothing new and is mostly blocked on decisions and on
-   things only a browser and a running backend can show — see "What Phase 14
-   needs" below before starting it. The owner was told on 2026-10-06 that the
-   browser pass is the recommended next step after Phase 13.
+3. `pnpm --filter optitask-frontend run e2e` should pass 23 tests in about
+   nine minutes. It needs PostgreSQL and writes test accounts to the backend's
+   database — see "The end-to-end suite" below.
+4. Ask the owner whether to merge `frontend/F14` into `frontend/main`. Do not
+   merge without that.
+5. Nothing is left to build. What remains of Phase 14 is the owner's: see
+   "What is left" below.
 
 ---
 
 ## Where things stand
 
-**Progress: 98%** — Phases 0–13 and Amendment A1 are complete. Phase 14
-(hardening and release) is all that is left.
+**Progress: 99%** — Phases 0–13 and Amendment A1 are complete. Phase 14
+(hardening and release) is done except for what needs the owner.
 
 | Phase | What exists |
 |---|---|
@@ -43,18 +42,20 @@ phase tracker and Definition of Done) and `apps/frontend/docs/known-debt.md`
 | 11 | Notification bell and page; the socket (status, backoff, re-auth, catch-up); all five subscriptions reconciling the cache |
 | 12 | AI: the project's recommendation queue, request panels on a task and a sprint, approve (with a preview), reject, override, the assignment candidates table |
 | 13 | Analytics: the project's Analytics tab (headline figures, tasks by status and priority, story points per sprint, individual workloads) and a person's figures on their profile, with the save of one's own |
+| 14 | A browser suite against the real backend (23 tests), coverage floors, a build check, a verified Content-Security-Policy, the README, the deployment guide, a CI template; and the layout faults the first look in a browser found, fixed |
 
 Verified at handoff: `pnpm --filter optitask-frontend run verify` exits 0
 (typecheck, lint, query-depth check, **667 tests in 26 files**) and
 `run build` succeeds.
 
-**Never verified:** nothing has been seen in a browser, and nothing has run
-against the real backend. Every response in the tests is a mock shaped from the
-SDL. The socket has only ever met a stand-in server (`shared/tests/realtime.ts`).
-Thirteen phases of UI are unseen — a visual pass at 360px and desktop width is
-overdue. The owner was offered one on 2026-10-05 and chose to go on to Phase
-10 first. Card dragging, the two charts (burndown, story points per sprint) and the
-row of buttons on each comment are what tests can say least about.
+**Seen in a browser, against the real backend** (2026-10-06, Phase 14):
+every screen at 1280px and 360px, a real drag, the real socket, two people
+on one board, two tabs loading at once, the production build under its
+security headers. What that showed is in `CLIENT_PLAN.md`, Phase 14.
+
+**Still never verified:** a touch drag on a real phone, scrolling a board of
+200 cards, anything a screen reader says, and any real deployment. Most
+mutations are not performed by the browser suite and have only met mocks.
 
 ---
 
@@ -62,11 +63,11 @@ row of buttons on each comment are what tests can say least about.
 
 | Branch | State |
 |---|---|
-| `frontend/F13` | Phase 13. Pushed. **Not merged** — waiting for the owner's go-ahead. |
-| `frontend/main` | Phases 0–12 + A1. Pushed, in sync with origin. |
+| `frontend/F14` | Phase 14. Pushed. **Not merged** — waiting for the owner's go-ahead. |
+| `frontend/main` | Phases 0–13 + A1. Pushed, in sync with origin. |
 | `main` | **Local is 2 commits ahead of `origin/main`** (the merge of the partner's amber `colors.md`). `git push origin main` is **rejected by a repository rule** — do not work around it; the owner must push or open a PR. |
 | `ai/main` | The AI team's branch. Leave it alone. |
-| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `F12`, `averoui-migration` | Merged; kept locally. |
+| `frontend/F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `F12`, `F13`, `averoui-migration` | Merged; kept locally. |
 
 Workflow the owner has confirmed, phase by phase:
 
@@ -102,26 +103,14 @@ These came from the owner and are binding. All are recorded in `CLIENT_PLAN.md`
   amber, or some sort of blue, whichever is better". Orange was chosen because
   blue is Avero's info tone. One line in `global.css` if they want otherwise.
 
-- **The browser pass was skipped, by choice.** Offered on 2026-10-05 before
-  Phase 10 ("skip 1 and go ahead"). It was not offered again; it is now the
-  largest open risk and belongs at the front of Phase 14 at the latest.
+- **The browser pass was skipped on 2026-10-05, by choice, and done on
+  2026-10-06** at the start of Phase 14 — with a headless Chrome driven by
+  Playwright, because the owner declined the Chrome extension that day.
 - **A link to a comment** (`?comment=<id>`, "Copy link") was added in Phase 10
   without being asked for, so the `comment` query is reachable (D6). The owner
   was told and did not object. It is recorded as F10.7.
 
-Still undecided, and worth raising:
-
-- When to look at the app in a browser and run it against the real backend.
-- Deployment topology (same registrable domain or not) — decides whether the
-  `SameSite=Lax` cookies work in production (risk R2).
-- Whether the backend gaps in the table below are fixed before release, or
-  shipped as the UI now discloses them.
-- Whether to switch CI on (`apps/backend/ci/github-actions.ci.yml` is a
-  template; there is no `.github/workflows`).
-- Integration: `origin/main` is ahead of `origin/dev`, which is not the shape
-  the README describes (work lands on `dev`, releases merge `dev` → `main`).
-  `frontend/main` has never been merged into `dev`. The owner decides how the
-  frontend reaches `dev`.
+Still undecided: see "What is left" below.
 
 ---
 
@@ -359,53 +348,83 @@ Where a feature shows up outside its own module:
 
 ---
 
-## What Phase 14 needs
+## What is left
 
-Phase 14 is hardening and release; it builds nothing new. Its tracker and exit
-criteria are in `CLIENT_PLAN.md`. Much of it cannot be done from tests alone,
-and some of it is blocked on someone else. Sort it this way before starting:
+Phase 14 is done as far as an agent can take it. Each of these needs the
+owner, or someone else:
 
-**Can be done by an agent, now**
+| What | Whose | Detail |
+|---|---|---|
+| Contrast in Avero | Owner (Avero) | Six color pairs fail WCAG; empty-state text is worst at 1.4:1. The list, with ratios, is in known-debt, Phase 14. Two of them could be forced locally with a token override in `global.css` — the owner was asked on 2026-10-06 and had not answered when this was written |
+| Deployment topology | Owner | Same site as the API, or not (risk R2). `docs/deployment.md` section 1 lays out the three shapes |
+| A real deployment | Owner | The production build has only been served by `vite preview` on this machine |
+| Switching CI on | Owner | `apps/frontend/ci/github-actions.ci.yml` is a template that has never run |
+| A payload budget | Owner | Numbers are recorded in `CLIENT_PLAN.md`; none has been agreed |
+| A screen-reader pass | A person | NVDA or VoiceOver over sign-in, the board, a task, the AI approval |
+| Backend advisories | Backend | `pnpm audit --prod` lists eight, one critical (`proxy-addr` via Express 4) |
+| A configurable rate limit | Backend | Would take the end-to-end run from nine minutes to about three |
+| How the frontend reaches `dev`; pushing `main` | Owner | Unchanged — see Git state |
 
-- F14.6 coverage thresholds in `vitest.config.ts` (`test:coverage` exists).
-- F14.9 reconcile `known-debt.md`; write `apps/frontend/README.md`.
-- F14.10 a CI workflow file — as a template beside the backend's, since
-  switching CI on is the owner's call. Include the check that the compiled
-  CSS contains an Avero class (the only guard on the `@source` paths) and a
-  lint rule against arbitrary color values (risk R10).
-- F14.11 the deployment doc: static output, env vars (`VITE_API_URL`,
-  `VITE_WS_URL`), SPA fallback, registering the origin in `CORS_ORIGINS`, CSP.
-- F14.8 the security review against `apps/backend/docs/SECURITY.md`. Known
-  good so far: no token in storage (asserted), no `dangerouslySetInnerHTML`
-  anywhere, user text rendered as plain text, the post-login return target is
-  validated, ids from the URL and from notification metadata are checked
-  before use, the custom header backs up `SameSite`. Still to do: a CSP, a
-  grep of the built bundle for secrets, dependency audit.
-- F14.4 bundle analysis. Known heavy spot: Recharts (known-debt, Phase 9), now
-  wanted by two pages — a sprint and the project's Analytics tab.
-- The `health` query is the one row of Appendix A still open: it needs a use
-  (a status line, or the deployment doc's smoke check) or a written ➖.
+---
 
-**Needs a browser and the running backend** (a person, or an agent with a
-browser tool and a local PostgreSQL)
+## The end-to-end suite
 
-- The first look at every screen, at 360px and at desktop width.
-- F14.1 the full-route `axe` sweep with color contrast on; F14.2 the keyboard
-  walkthrough; F14.3 the screen-reader pass; F14.5 Lighthouse.
-- F14.7 the E2E suite against the real backend, including a drag on the board
-  and a `graphql-ws` case.
-- Everything listed as "not verified" under each phase in `CLIENT_PLAN.md`:
-  the drag feel, the burndown chart, the socket against the real server, two
-  tabs loading at once (refresh-token reuse), two windows updating each other.
+`apps/frontend/e2e/`, run with Playwright against the **real backend**. It is
+the only place layout, colors, a real drag, a real socket and real cookies
+are checked.
 
-**Blocked on someone else**
+- **Running it**: `pnpm run e2e` (dev server) or `pnpm run e2e:build`
+  (production build, served with the deployment's security headers). Both
+  servers are started if they are not up. One file:
+  `pnpm exec playwright test board`.
+- **It uses the installed Chrome** (`channel: 'chrome'`), so nothing is
+  downloaded. `E2E_BROWSER_CHANNEL=msedge` for Edge.
+- **It writes to the backend's database** and does not clean up: accounts
+  under `@e2e.optitask.test`.
+- **It paces itself** under the API's 300 requests a minute
+  (`support/pace.ts`). A test that sits for 50 seconds before starting is
+  waiting for the minute to clear, not hanging.
+- **Specs import `test` and `expect` from `./support/test`**, not from
+  Playwright — that is what applies the pacing.
+- **Arrange through the API, act through the browser**: `seedWorkspace()` in
+  `support/api.ts` builds an organisation with a project, team, sprint, epic,
+  tasks, comments and AI suggestions in about 45 requests.
+- **A toast's text is on the page twice** — once in the toast, once in a live
+  region. Use `toast(page, title)` from `support/app.ts`.
+- **The connection badge reads "Live updates: Live"** to a locator; use
+  `expectLive(page)`.
+- **Creating an organisation, a project or a sprint opens it.** Do not click
+  its link afterwards; wait for its heading.
+- **The accessibility sweep has a known list** (`KNOWN_CONTRAST_PAIRS` in
+  `sweep.e2e.ts`). It fails on anything not on it. When Avero fixes a pair,
+  delete its line.
+- **Looking at a screen**: `page.screenshot({ path, fullPage: true })` in a
+  throwaway spec, then open the image. In a full-page screenshot a sticky
+  sidebar looks cut short; it is not.
 
-- Accessibility sign-off is blocked by white-on-amber primary buttons until
-  Avero has a `--color-primary-foreground` token (risk R11). The owner
-  maintains Avero.
-- The deployment topology decision (risk R2) comes before the deployment doc
-  can be finished.
-- Pushing `main`, and how the frontend reaches `dev`, are the repo owner's.
+### Notes from Phase 14 worth keeping
+
+- **A scroller must be a containing block.** `sr-only` is `position:
+  absolute`; inside an `overflow-x-auto` element that is not positioned, it
+  escapes and widens the page. `global.css` makes every `.overflow-x-auto`
+  `relative`. A new scroller made some other way needs `relative` itself.
+- **A grid that holds something wide needs `grid-cols-1`** at its narrowest:
+  an implicit column is as wide as its widest item.
+- **Charts are lazy inside their pages** (`SprintDetail.page`,
+  `ProjectAnalytics.page`), behind `ChartSkeleton`. A test file that opens
+  either preloads the chart component as well as the page in `beforeAll`.
+- **`vite preview` sends the deployment's security headers**
+  (`securityHeaders` in `vite.config.ts`), on port 5173. Change the policy
+  there and in `docs/deployment.md` together.
+- **Nothing is inlined into the CSS** (`assetsInlineLimit: 0`): a `data:` font
+  would break `font-src 'self'`.
+- **Source maps are written but not referenced** (`sourcemap: 'hidden'`).
+- **`pnpm run build:check`** after a build: Avero's classes are in the CSS,
+  no bare `@contracts`, no map pointer, nothing shaped like a secret.
+- **Lint bans arbitrary colors** (`text-[#…]`, an inline `style` color).
+- **`verify` now typechecks and lints `e2e/` too.**
+
+---
 
 ### Notes from Phase 12 worth keeping
 
