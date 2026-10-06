@@ -305,10 +305,10 @@ line is not done, regardless of whether the feature "works".
 | 10 | Collaboration — Comments & Attachments | 85% | ✅ |
 | 11 | Notifications & Realtime | 90% | ✅ |
 | 12 | AI Recommendations & Approval | 95% | ✅ |
-| 13 | Analytics | 98% | ⬜ |
+| 13 | Analytics | 98% | ✅ |
 | 14 | Hardening, A11y, Perf & Release | 100% | ⬜ |
 
-**Current overall progress: 95%** (Phases 0–12 and Amendment A1 complete).
+**Current overall progress: 98%** (Phases 0–13 and Amendment A1 complete).
 
 **Critical path:** 0 → 1 → 2 → 3 unlock everything. 4 → 5 gate all authenticated
 screens. 6 → 7 feed 8. 8 feeds 9/10/12. 11 depends on 8–10. 13 depends on 8–9.
@@ -1097,29 +1097,54 @@ must make the "AI suggests, a human decides" contract visible at every step.
 
 | ID | Task | Status |
 |---|---|:--:|
-| F13.1 | `ProjectAnalytics.page.tsx` — KPI row: total/completed tasks, total/completed story points, completion rate, team velocity | ⬜ |
-| F13.2 | Task distribution by status and by priority | ⬜ |
-| F13.3 | Story point trends per sprint (committed vs completed) | ⬜ |
-| F13.4 | Individual workloads table — active tasks, active points, completed | ⬜ |
-| F13.5 | User analytics — completed tasks, historical points, avg completion time, velocity, active assignments | ⬜ |
-| F13.6 | `recomputeUserStatistics` action, explaining live vs persisted figures | ⬜ |
+| F13.1 | `ProjectAnalytics.page.tsx` — an Analytics tab on the project, offered to those with `analytics:view`: total/completed tasks, total/completed story points, completion rate, team velocity | ✅ |
+| F13.2 | Task distribution by status and by priority — two tables with a comparison bar per row; every status and priority is listed, an empty one as zero | ✅ |
+| F13.3 | Story point trends per sprint (committed vs completed) — `@averoui/charts` `LineChart`, with the totals in a sentence underneath | ✅ |
+| F13.4 | Individual workloads table — open tasks, open points, completed; each person links to their profile | ✅ |
+| F13.5 | User analytics — completed tasks, historical points, avg completion time, velocity, active assignments. A card on the viewer's own profile; on someone else's, asked for on demand | ✅ |
+| F13.6 | `recomputeUserStatistics` — "Save the live figures" on the viewer's own card, with the live and the saved figures side by side and a sentence on why they can differ | ✅ |
+| F13.7 | The project's figures are re-read when a task or a sprint in it changes (`taskUpdated`, `sprintUpdated`), and whenever the tab is opened | ✅ |
 
 ### Exit criteria (DoD)
 
-- [ ] A brand-new project renders **zeroed/empty shapes**, never `NaN`, `—` with no
-      explanation, or a broken chart.
-- [ ] Every chart has an accessible data-table equivalent and a text summary.
-- [ ] Chart series colors come from the semantic token families.
-- [ ] `completionRate` and `teamVelocity` render with defined precision and units.
-- [ ] `avgCompletionSeconds` renders as a human duration; a `null` renders as an
-      explained absence, not a blank cell.
-- [ ] `userAnalytics` is visible for self; another user's is attempted only where
-      permitted and `FORBIDDEN` is handled.
-- [ ] The UI explains that `user.statistics` is a cache and `userAnalytics` is live
-      (per known-debt) so a mismatch is not read as a bug.
-- [ ] Charts have their own `overflow-x: auto` container and never widen the page.
-- [ ] Tests: zeroed project, populated fixtures reconcile with rendered figures,
-      `FORBIDDEN`, network failure.
+- [x] A brand-new project renders **zeroed/empty shapes**: zeros in the
+      headline figures, 0%, and an empty state each for the distributions, the
+      trend and the workloads. Asserted that no `NaN`, `undefined` or
+      `Infinity` reaches the screen.
+- [x] The one chart has a data-table equivalent (asserted cell by cell) and a
+      text summary ("Across 2 sprints, 25 of 40 committed story points were
+      completed."). The table is visible to assistive technology only — see
+      known-debt, Phase 9.
+- [x] Chart series colors come from Avero's chart tokens; none is written here.
+      (They are the chart palette, not the semantic families — as in Phase 9.)
+- [x] `completionRate` renders as a whole percentage, with a line saying what it
+      is a rate of; `teamVelocity` and a person's velocity render to one decimal
+      at most, as "points per sprint".
+- [x] `avgCompletionSeconds` renders as a human duration in its two largest
+      units ("2d 3h"); a `null` reads "No completed task to measure yet". No
+      cell is ever blank (asserted).
+- [~] `userAnalytics` is shown for self on sight. Another user's is asked for
+      only when the viewer presses "Show analytics", and a `FORBIDDEN` is
+      explained in place, naming who may see the figures. It cannot be limited
+      to "where permitted": the API does not say whether the viewer administers
+      an organisation that person belongs to (see known-debt).
+- [x] The viewer's own card shows the live and the saved figures in two columns
+      and says the saved ones change only when saved, so a mismatch is not read
+      as a bug.
+- [x] The chart has its own `overflow-x: auto` container, and so does each
+      table. That nothing widens the page at 360px is **unverified**: the test
+      DOM performs no layout.
+- [x] Tests: zeroed project, populated fixtures reconcile with rendered figures,
+      `FORBIDDEN` (the page, the save, another person's figures),
+      `BAD_USER_INPUT` on the save, network failure with retry on all three
+      surfaces, a re-read on a realtime event, `axe` on the analytics tab and
+      the profile. 38 new tests; the suite is 667 tests in 26 files.
+
+> **Not verified by me:** none of this has been seen in a browser, and nothing
+> has run against the real backend. The trend chart has never been drawn — the
+> test DOM has no size, so only its data table is asserted. Whether five
+> headline figures, two side-by-side tables and a five-column workload table
+> sit well at 360px is unseen.
 
 ---
 
@@ -1209,8 +1234,8 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | `unreadNotificationCount` | 11 | ✅ |
 | `aiRecommendation` | 12 | ✅ |
 | `assignmentContext` | 12 | ✅ |
-| `projectAnalytics` | 13 | ⬜ |
-| `userAnalytics` | 13 | ⬜ |
+| `projectAnalytics` | 13 | ✅ |
+| `userAnalytics` | 13 | ✅ |
 
 ### Mutations (75)
 
@@ -1227,7 +1252,7 @@ Full parity (D6) means every row reaches ✅ or carries a written justification 
 | Comment | `createComment` `editComment` `resolveComment` `deleteComment` `addTaskAttachment` `addCommentAttachment` `removeAttachment` | 10 | ✅ — attachments are records only; `Attachment.url` is deliberately never selected (known-debt) |
 | Notification | `markNotificationRead` `markAllNotificationsRead` | 11 | ✅ |
 | AI | `requestStoryPointEstimate` `requestAssignmentRecommendation` `requestSprintHealthAnalysis` `requestProgressTracking` `approveRecommendation` `rejectRecommendation` `overrideRecommendation` | 12 | ✅ — an override always names a value; unassigning through one is not offered (known-debt) |
-| Analytics | `recomputeUserStatistics` | 13 | ⬜ |
+| Analytics | `recomputeUserStatistics` | 13 | ✅ — offered for the viewer's own statistics only; the server refuses it for anyone else (known-debt) |
 
 ### Subscriptions (5)
 

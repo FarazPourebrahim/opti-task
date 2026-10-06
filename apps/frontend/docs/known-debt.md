@@ -821,6 +821,86 @@ same Radix primitives.
 - **Right fix**: none needed until the backend makes one.
 - **Impact**: a filter option that always finds nothing.
 
+## Phase 13 — Analytics
+
+- **What**: another person's analytics are asked for only when the viewer
+  presses "Show analytics", and a refusal is explained in the card.
+- **Why**: the server shows them to the person themselves and to
+  administrators of an organisation that person belongs to. The API does not
+  say whether the viewer is one, and a refused request is logged by the
+  backend as a security event — so asking on sight would log one for nearly
+  every profile opened.
+- **Right fix**: a field that states it (e.g. `User.viewerCanSeeAnalytics`),
+  then show the figures on sight where it is true and no card where it is not.
+- **Impact**: an administrator presses a button to see figures they are
+  entitled to; anyone else can press it and is told why nothing is shown.
+
+- **What**: the Analytics tab is not offered to a team lead who is a plain
+  member of the project, though `rbac.md` gives `TEAM_LEAD` `analytics:view`.
+- **Why**: it matches the server. `projectAnalytics` authorizes against the
+  project, and role resolution at project scope reads the project and
+  organisation memberships only — a team role is found only when a team is
+  named. So such a team lead is refused; the project frame's roles leave team
+  roles out for the same reason.
+- **Right fix**: a backend decision — either resolve the viewer's team roles
+  within the project for this check, or take `analytics:view` off `TEAM_LEAD`
+  in the matrix.
+- **Impact**: none through the UI: the hint and the server agree. The matrix
+  in `rbac.md` promises something the API does not do.
+
+- **What**: "Save the live figures" exists on the viewer's own card only.
+- **Why**: `recomputeUserStatistics` takes any `userId`, but the server
+  authorizes it for the owner or for a role on a placeholder organisation
+  nobody belongs to — in effect, the owner alone.
+- **Right fix**: on the backend, check `analytics:view` against the person's
+  real organisations, as `userAnalytics` does; then offer the action to
+  administrators too.
+- **Impact**: an administrator cannot bring someone else's saved figures up
+  to date.
+
+- **What**: the saved figures are shown, but nothing else in this client
+  reads them.
+- **Why**: `User.statistics` is a cache that only `recomputeUserStatistics`
+  writes, and every other screen uses the live figures.
+- **Right fix**: on the backend, refresh the copy from task events (its own
+  known-debt), or drop it in favour of the live figures.
+- **Impact**: saving changes one column on the user's own profile and nothing
+  else they can see. The card says what the saved copy is.
+
+- **What**: the trend chart has never been drawn, and two sprints with the
+  same name share a row key in its data table.
+- **Why**: as with the burndown — the test DOM has no size. The chart's x
+  axis and its table are keyed by the sprint's name, which the API does not
+  require to be unique.
+- **Right fix**: a look in a browser; and a category key separate from the
+  label in `@averoui/charts`.
+- **Impact**: axis labels may crowd in a project of many sprints. Duplicate
+  names would draw as one category and log a React key warning.
+
+- **What**: a team velocity of 0 reads the same whether no sprint has been
+  completed or completed sprints delivered nothing.
+- **Why**: the API returns 0 for both.
+- **Right fix**: a nullable `teamVelocity` on the backend, or the count of
+  completed sprints beside it.
+- **Impact**: a new project shows "0 points per sprint". The line under the
+  figure says what it averages.
+
+- **What**: the figures follow other people's work only as far as the socket
+  announces it.
+- **Why**: the page re-reads on `taskUpdated` and `sprintUpdated`; a task
+  created or deleted is announced by neither (Phase 11).
+- **Right fix**: as Phase 11 — publish those events.
+- **Impact**: a count can lag until the tab is opened again, which always
+  re-reads.
+
+- **What**: `formatElapsed` (analytics) and `formatDuration` (task) both write
+  a number of seconds as text.
+- **Why**: logged time is hours and minutes; a task's time to completion runs
+  to days, which the first does not write.
+- **Right fix**: one formatter in `shared/utils` taking the largest unit to
+  use, if a third caller appears.
+- **Impact**: two small functions to keep in step.
+
 ## Amendment A1 — Avero migration
 
 - **What**: Avero's filled primary button is white text on the amber brand
