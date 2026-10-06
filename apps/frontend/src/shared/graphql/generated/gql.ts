@@ -27,6 +27,10 @@ type Documents = {
   '\n  mutation RejectRecommendation($id: UUID!) {\n    rejectRecommendation(id: $id) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.RejectRecommendationDocument;
   '\n  mutation OverrideRecommendation(\n    $id: UUID!\n    $input: OverrideRecommendationInput!\n  ) {\n    overrideRecommendation(id: $id, input: $input) {\n      ...AiRecommendationItem\n    }\n  }\n': typeof types.OverrideRecommendationDocument;
   '\n  subscription AiRecommendationUpdated($projectId: UUID!) {\n    aiRecommendationUpdated(projectId: $projectId) {\n      recommendationId\n      projectId\n      approvalStatus\n      recommendation {\n        ...AiRecommendationItem\n      }\n    }\n  }\n': typeof types.AiRecommendationUpdatedDocument;
+  '\n  query ProjectAnalytics($projectId: UUID!) {\n    projectAnalytics(projectId: $projectId) {\n      projectId\n      totalTasks\n      completedTasks\n      totalStoryPoints\n      completedStoryPoints\n      completionRate\n      teamVelocity\n      taskDistributionByStatus {\n        status\n        count\n      }\n      taskDistributionByPriority {\n        priority\n        count\n      }\n      storyPointTrends {\n        sprintId\n        name\n        committedStoryPoints\n        completedStoryPoints\n      }\n      individualWorkloads {\n        assigneeId\n        activeTasks\n        activeStoryPoints\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n': typeof types.ProjectAnalyticsDocument;
+  '\n  query UserAnalytics($userId: UUID!) {\n    userAnalytics(userId: $userId) {\n      userId\n      completedTasks\n      historicalStoryPoints\n      avgCompletionSeconds\n      velocity\n      activeAssignments\n    }\n  }\n': typeof types.UserAnalyticsDocument;
+  '\n  query MyStatistics {\n    me {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n': typeof types.MyStatisticsDocument;
+  '\n  mutation RecomputeUserStatistics($userId: UUID!) {\n    recomputeUserStatistics(userId: $userId) {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n': typeof types.RecomputeUserStatisticsDocument;
   '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n': typeof types.CurrentUserDocument;
   '\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n': typeof types.LoginDocument;
   '\n  mutation Register($input: RegisterInput!) {\n    register(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n': typeof types.RegisterDocument;
@@ -170,6 +174,14 @@ const documents: Documents = {
     types.OverrideRecommendationDocument,
   '\n  subscription AiRecommendationUpdated($projectId: UUID!) {\n    aiRecommendationUpdated(projectId: $projectId) {\n      recommendationId\n      projectId\n      approvalStatus\n      recommendation {\n        ...AiRecommendationItem\n      }\n    }\n  }\n':
     types.AiRecommendationUpdatedDocument,
+  '\n  query ProjectAnalytics($projectId: UUID!) {\n    projectAnalytics(projectId: $projectId) {\n      projectId\n      totalTasks\n      completedTasks\n      totalStoryPoints\n      completedStoryPoints\n      completionRate\n      teamVelocity\n      taskDistributionByStatus {\n        status\n        count\n      }\n      taskDistributionByPriority {\n        priority\n        count\n      }\n      storyPointTrends {\n        sprintId\n        name\n        committedStoryPoints\n        completedStoryPoints\n      }\n      individualWorkloads {\n        assigneeId\n        activeTasks\n        activeStoryPoints\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n':
+    types.ProjectAnalyticsDocument,
+  '\n  query UserAnalytics($userId: UUID!) {\n    userAnalytics(userId: $userId) {\n      userId\n      completedTasks\n      historicalStoryPoints\n      avgCompletionSeconds\n      velocity\n      activeAssignments\n    }\n  }\n':
+    types.UserAnalyticsDocument,
+  '\n  query MyStatistics {\n    me {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n':
+    types.MyStatisticsDocument,
+  '\n  mutation RecomputeUserStatistics($userId: UUID!) {\n    recomputeUserStatistics(userId: $userId) {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n':
+    types.RecomputeUserStatisticsDocument,
   '\n  query CurrentUser {\n    me {\n      id\n      email\n      name\n      avatarUrl\n      seniority\n      organizationCount\n    }\n  }\n':
     types.CurrentUserDocument,
   '\n  mutation Login($input: LoginInput!) {\n    login(input: $input) {\n      accessToken\n      user {\n        id\n        email\n        name\n        avatarUrl\n        seniority\n        organizationCount\n      }\n    }\n  }\n':
@@ -493,6 +505,30 @@ export function graphql(
 export function graphql(
   source: '\n  subscription AiRecommendationUpdated($projectId: UUID!) {\n    aiRecommendationUpdated(projectId: $projectId) {\n      recommendationId\n      projectId\n      approvalStatus\n      recommendation {\n        ...AiRecommendationItem\n      }\n    }\n  }\n',
 ): (typeof documents)['\n  subscription AiRecommendationUpdated($projectId: UUID!) {\n    aiRecommendationUpdated(projectId: $projectId) {\n      recommendationId\n      projectId\n      approvalStatus\n      recommendation {\n        ...AiRecommendationItem\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query ProjectAnalytics($projectId: UUID!) {\n    projectAnalytics(projectId: $projectId) {\n      projectId\n      totalTasks\n      completedTasks\n      totalStoryPoints\n      completedStoryPoints\n      completionRate\n      teamVelocity\n      taskDistributionByStatus {\n        status\n        count\n      }\n      taskDistributionByPriority {\n        priority\n        count\n      }\n      storyPointTrends {\n        sprintId\n        name\n        committedStoryPoints\n        completedStoryPoints\n      }\n      individualWorkloads {\n        assigneeId\n        activeTasks\n        activeStoryPoints\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query ProjectAnalytics($projectId: UUID!) {\n    projectAnalytics(projectId: $projectId) {\n      projectId\n      totalTasks\n      completedTasks\n      totalStoryPoints\n      completedStoryPoints\n      completionRate\n      teamVelocity\n      taskDistributionByStatus {\n        status\n        count\n      }\n      taskDistributionByPriority {\n        priority\n        count\n      }\n      storyPointTrends {\n        sprintId\n        name\n        committedStoryPoints\n        completedStoryPoints\n      }\n      individualWorkloads {\n        assigneeId\n        activeTasks\n        activeStoryPoints\n        completedTasks\n        user {\n          id\n          name\n          avatarUrl\n        }\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query UserAnalytics($userId: UUID!) {\n    userAnalytics(userId: $userId) {\n      userId\n      completedTasks\n      historicalStoryPoints\n      avgCompletionSeconds\n      velocity\n      activeAssignments\n    }\n  }\n',
+): (typeof documents)['\n  query UserAnalytics($userId: UUID!) {\n    userAnalytics(userId: $userId) {\n      userId\n      completedTasks\n      historicalStoryPoints\n      avgCompletionSeconds\n      velocity\n      activeAssignments\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query MyStatistics {\n    me {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n',
+): (typeof documents)['\n  query MyStatistics {\n    me {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation RecomputeUserStatistics($userId: UUID!) {\n    recomputeUserStatistics(userId: $userId) {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n',
+): (typeof documents)['\n  mutation RecomputeUserStatistics($userId: UUID!) {\n    recomputeUserStatistics(userId: $userId) {\n      id\n      statistics {\n        completedTasks\n        historicalStoryPoints\n        avgCompletionSeconds\n        velocity\n      }\n    }\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

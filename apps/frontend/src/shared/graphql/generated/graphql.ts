@@ -539,6 +539,85 @@ export type AiRecommendationUpdatedSubscription = {
   };
 };
 
+export type ProjectAnalyticsQueryVariables = Exact<{
+  projectId: string;
+}>;
+
+export type ProjectAnalyticsQuery = {
+  projectAnalytics: {
+    projectId: string;
+    totalTasks: number;
+    completedTasks: number;
+    totalStoryPoints: number;
+    completedStoryPoints: number;
+    completionRate: number;
+    teamVelocity: number;
+    taskDistributionByStatus: Array<{ status: TaskStatus; count: number }>;
+    taskDistributionByPriority: Array<{
+      priority: TaskPriority;
+      count: number;
+    }>;
+    storyPointTrends: Array<{
+      sprintId: string;
+      name: string;
+      committedStoryPoints: number;
+      completedStoryPoints: number;
+    }>;
+    individualWorkloads: Array<{
+      assigneeId: string;
+      activeTasks: number;
+      activeStoryPoints: number;
+      completedTasks: number;
+      user: { id: string; name: string; avatarUrl: string | null };
+    }>;
+  };
+};
+
+export type UserAnalyticsQueryVariables = Exact<{
+  userId: string;
+}>;
+
+export type UserAnalyticsQuery = {
+  userAnalytics: {
+    userId: string;
+    completedTasks: number;
+    historicalStoryPoints: number;
+    avgCompletionSeconds: number | null;
+    velocity: number | null;
+    activeAssignments: number;
+  };
+};
+
+export type MyStatisticsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type MyStatisticsQuery = {
+  me: {
+    id: string;
+    statistics: {
+      completedTasks: number;
+      historicalStoryPoints: number;
+      avgCompletionSeconds: number | null;
+      velocity: number | null;
+    };
+  };
+};
+
+export type RecomputeUserStatisticsMutationVariables = Exact<{
+  userId: string;
+}>;
+
+export type RecomputeUserStatisticsMutation = {
+  recomputeUserStatistics: {
+    id: string;
+    statistics: {
+      completedTasks: number;
+      historicalStoryPoints: number;
+      avgCompletionSeconds: number | null;
+      velocity: number | null;
+    };
+  };
+};
+
 export type CurrentUserQueryVariables = Exact<{ [key: string]: never }>;
 
 export type CurrentUserQuery = {
@@ -5037,6 +5116,365 @@ export const AiRecommendationUpdatedDocument = {
 } as unknown as DocumentNode<
   AiRecommendationUpdatedSubscription,
   AiRecommendationUpdatedSubscriptionVariables
+>;
+export const ProjectAnalyticsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ProjectAnalytics' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectAnalytics' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalTasks' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'totalStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completionRate' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'teamVelocity' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'taskDistributionByStatus' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'taskDistributionByPriority' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'priority' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'storyPointTrends' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'sprintId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'committedStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completedStoryPoints' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'individualWorkloads' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'assigneeId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'activeTasks' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'activeStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completedTasks' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'user' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'avatarUrl' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectAnalyticsQuery,
+  ProjectAnalyticsQueryVariables
+>;
+export const UserAnalyticsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'UserAnalytics' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'userId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userAnalytics' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'userId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'userId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'completedTasks' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'historicalStoryPoints' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'avgCompletionSeconds' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'velocity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'activeAssignments' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserAnalyticsQuery, UserAnalyticsQueryVariables>;
+export const MyStatisticsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'MyStatistics' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'me' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'statistics' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completedTasks' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'historicalStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'avgCompletionSeconds' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'velocity' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<MyStatisticsQuery, MyStatisticsQueryVariables>;
+export const RecomputeUserStatisticsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RecomputeUserStatistics' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'userId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'recomputeUserStatistics' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'userId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'userId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'statistics' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'completedTasks' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'historicalStoryPoints' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'avgCompletionSeconds' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'velocity' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RecomputeUserStatisticsMutation,
+  RecomputeUserStatisticsMutationVariables
 >;
 export const CurrentUserDocument = {
   kind: 'Document',
