@@ -42,6 +42,23 @@ module.exports = {
     '@typescript-eslint/consistent-type-imports': 'error',
     // alert()/prompt()/confirm() are banned — Toast and ConfirmDialog exist.
     'no-alert': 'error',
+    // Colors come from theme tokens. An arbitrary value (`text-[#123456]`) or
+    // an inline `style` color is how a design system drifts, one screen at a
+    // time, and nothing else would notice.
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector:
+          'Literal[value=/-\\[(#|rgb|hsl|oklch|oklab|color\\()/], TemplateElement[value.raw=/-\\[(#|rgb|hsl|oklch|oklab|color\\()/]',
+        message:
+          'Use a theme token (e.g. text-text-subtle, bg-primary), not an arbitrary color value.',
+      },
+      {
+        selector:
+          "JSXAttribute[name.name='style'] Property[key.name=/^(color|background|backgroundColor|borderColor|fill|stroke)$/]",
+        message: 'Set colors with a token class, not an inline style.',
+      },
+    ],
     // `@/…` is app-internal, `@contracts` is a workspace package. Never reach
     // across the app boundary with a relative path.
     'no-restricted-imports': [

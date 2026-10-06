@@ -30,7 +30,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Written beside the bundle for an error tracker to read, but not pointed
+    // at from it: the browser never asks for them, and the host should not
+    // serve them (see docs/deployment.md).
+    sourcemap: 'hidden',
   },
   test: {
     environment: 'happy-dom',
