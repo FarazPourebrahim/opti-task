@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "run_id": "task_assignment__qwen3_reranker_0_6b__reranker_yes_no__5194cd33",
-  "status": "failed",
-  "status_reason": "ChunkedEncodingError",
+  "status": "completed",
+  "status_reason": null,
   "smoke": false,
   "context": {
     "project": "Opti-Task",
@@ -27,16 +27,16 @@
     "revision_sha": "e61197ed45024b0ed8a2d74b80b4d909f1255473",
     "family": "reranker",
     "license": "Apache-2.0",
-    "total_params": null,
-    "trainable_params": null,
+    "total_params": 595776512,
+    "trainable_params": 10092544,
     "recipe": "reranker_yes_no",
-    "finetune_method": null
+    "finetune_method": "lora"
   },
   "data": {
     "fingerprint": "7ba294912a0820ce",
-    "n_train": null,
-    "n_val": null,
-    "n_test": null,
+    "n_train": 44058,
+    "n_val": 500,
+    "n_test": 2500,
     "label_distribution": {
       "train": {
         "n_pairs": 23383,
@@ -125,24 +125,319 @@
       "n_random_negatives": 2,
       "per_device_batch_used": 4,
       "precision": "bf16",
-      "grad_accumulation": null,
+      "grad_accumulation": 8,
       "optimizer": "AdamW, linear decay with warmup"
     },
-    "best_epoch": null,
-    "epochs_run": null,
-    "history": [],
+    "best_epoch": 2,
+    "epochs_run": 2,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 0.4598276096341613,
+        "val_primary": 0.7938853014945433,
+        "epoch_time_s": 8132.66
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.37965904321526595,
+        "val_primary": 0.8204008556747572,
+        "epoch_time_s": 8188.81
+      }
+    ],
     "oom_retry": false,
     "resumed_from_epoch": null,
-    "train_time_s": null,
-    "peak_gpu_mem_mb": 0.0
+    "train_time_s": 16322.167619399988,
+    "peak_gpu_mem_mb": 3364.7
   },
   "metrics": {
-    "zero_shot_val": null,
-    "val": null,
-    "test": null,
-    "slices": null
+    "zero_shot_val": {
+      "n_tasks": 500,
+      "ndcg@10": 0.42114622476508473,
+      "ndcg@5": 0.35511708412698717,
+      "recall@5": 0.3247948745698746,
+      "recall@10": 0.5199563547563547,
+      "hit@1": 0.088,
+      "mrr": 0.2320934817908536,
+      "spearman_plausibility": 0.26418774422961244,
+      "overqualified_top1_rate": 0.096,
+      "underqualified_top1_rate": 0.252
+    },
+    "val": {
+      "n_tasks": 500,
+      "ndcg@10": 0.8204008556747572,
+      "ndcg@5": 0.7551461630771596,
+      "recall@5": 0.6950209568209569,
+      "recall@10": 0.9072648851148851,
+      "hit@1": 0.292,
+      "mrr": 0.4940372710391376,
+      "spearman_plausibility": 0.4561590344539637,
+      "overqualified_top1_rate": 0.33,
+      "underqualified_top1_rate": 0.134
+    },
+    "test": {
+      "n_tasks": 2000,
+      "ndcg@10": 0.8249403686658866,
+      "ndcg@5": 0.7654559414962753,
+      "recall@5": 0.7085101712013477,
+      "recall@10": 0.9022810705634234,
+      "hit@1": 0.283,
+      "mrr": 0.49089112780425914,
+      "spearman_plausibility": 0.4564169195441824,
+      "overqualified_top1_rate": 0.346,
+      "underqualified_top1_rate": 0.092,
+      "latency_ms_per_task": 1458.8034499902278
+    },
+    "slices": {
+      "all_tasks": {
+        "n_tasks": 2500,
+        "ndcg@10": 0.7146988598910798,
+        "ndcg@5": 0.6508853411262376,
+        "recall@5": 0.6206245105874517,
+        "recall@10": 0.8226466879525703,
+        "hit@1": 0.238,
+        "mrr": 0.430683042675659,
+        "spearman_plausibility": 0.396679345837063,
+        "overqualified_top1_rate": 0.3448,
+        "underqualified_top1_rate": 0.0992
+      },
+      "primary_area:API/Integration": {
+        "n_tasks": 254,
+        "ndcg@10": 0.8158581317393153,
+        "ndcg@5": 0.7521644913479034,
+        "recall@5": 0.6960454134666733,
+        "recall@10": 0.8823020483453554,
+        "hit@1": 0.35039370078740156,
+        "mrr": 0.5528636717613096,
+        "spearman_plausibility": 0.43844572809351406,
+        "overqualified_top1_rate": 0.31496062992125984,
+        "underqualified_top1_rate": 0.1062992125984252
+      },
+      "primary_area:Backend": {
+        "n_tasks": 138,
+        "ndcg@10": 0.7212861057739862,
+        "ndcg@5": 0.6474238350505743,
+        "recall@5": 0.6386026413200326,
+        "recall@10": 0.8328528556789426,
+        "hit@1": 0.2318840579710145,
+        "mrr": 0.4364316262445729,
+        "spearman_plausibility": 0.37849800745148077,
+        "overqualified_top1_rate": 0.34057971014492755,
+        "underqualified_top1_rate": 0.08695652173913043
+      },
+      "primary_area:Database": {
+        "n_tasks": 277,
+        "ndcg@10": 0.7974079268437123,
+        "ndcg@5": 0.7328505761571587,
+        "recall@5": 0.6734274550159026,
+        "recall@10": 0.8681995301128875,
+        "hit@1": 0.3574007220216607,
+        "mrr": 0.5381597823968814,
+        "spearman_plausibility": 0.44674626602652967,
+        "overqualified_top1_rate": 0.4043321299638989,
+        "underqualified_top1_rate": 0.08303249097472924
+      },
+      "primary_area:DevOps": {
+        "n_tasks": 216,
+        "ndcg@10": 0.7370320000416981,
+        "ndcg@5": 0.660164952483938,
+        "recall@5": 0.6489431350542462,
+        "recall@10": 0.8587069437763882,
+        "hit@1": 0.30092592592592593,
+        "mrr": 0.49052999913286865,
+        "spearman_plausibility": 0.4169190855892989,
+        "overqualified_top1_rate": 0.37037037037037035,
+        "underqualified_top1_rate": 0.1527777777777778
+      },
+      "primary_area:Documentation": {
+        "n_tasks": 124,
+        "ndcg@10": 0.8314363355706804,
+        "ndcg@5": 0.7726534062240351,
+        "recall@5": 0.7638216845878136,
+        "recall@10": 0.9358582949308756,
+        "hit@1": 0.4274193548387097,
+        "mrr": 0.6123879928315411,
+        "spearman_plausibility": 0.4305309727150047,
+        "overqualified_top1_rate": 0.28225806451612906,
+        "underqualified_top1_rate": 0.12096774193548387
+      },
+      "primary_area:Frontend": {
+        "n_tasks": 560,
+        "ndcg@10": 0.8888695783470622,
+        "ndcg@5": 0.8355258713569451,
+        "recall@5": 0.710998247783962,
+        "recall@10": 0.9396874355802928,
+        "hit@1": 0.11964285714285715,
+        "mrr": 0.36385372575185737,
+        "spearman_plausibility": 0.5318714960768143,
+        "overqualified_top1_rate": 0.25,
+        "underqualified_top1_rate": 0.06785714285714285
+      },
+      "primary_area:Infrastructure": {
+        "n_tasks": 121,
+        "ndcg@10": 0.7661441563707874,
+        "ndcg@5": 0.6889052508246847,
+        "recall@5": 0.6712807988209057,
+        "recall@10": 0.8915974103139879,
+        "hit@1": 0.23140495867768596,
+        "mrr": 0.4423705082795992,
+        "spearman_plausibility": 0.43587961507784395,
+        "overqualified_top1_rate": 0.47107438016528924,
+        "underqualified_top1_rate": 0.11570247933884298
+      },
+      "primary_area:QA/Testing": {
+        "n_tasks": 154,
+        "ndcg@10": 0.855537298952332,
+        "ndcg@5": 0.8143764333498427,
+        "recall@5": 0.7858096268810555,
+        "recall@10": 0.9107426303854875,
+        "hit@1": 0.4935064935064935,
+        "mrr": 0.6688616371715473,
+        "spearman_plausibility": 0.4224368147161517,
+        "overqualified_top1_rate": 0.577922077922078,
+        "underqualified_top1_rate": 0.05194805194805195
+      },
+      "primary_area:Security": {
+        "n_tasks": 156,
+        "ndcg@10": 0.8827764428449891,
+        "ndcg@5": 0.8490215205372302,
+        "recall@5": 0.8350894475894476,
+        "recall@10": 0.9560430310430311,
+        "hit@1": 0.36538461538461536,
+        "mrr": 0.5761337042587042,
+        "spearman_plausibility": 0.42565435664927975,
+        "overqualified_top1_rate": 0.3333333333333333,
+        "underqualified_top1_rate": 0.08974358974358974
+      },
+      "primary_area:Unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.2737328247918523,
+        "ndcg@5": 0.19260293964608724,
+        "recall@5": 0.26908186813186813,
+        "recall@10": 0.5041091575091575,
+        "hit@1": 0.058,
+        "mrr": 0.18985070216125807,
+        "spearman_plausibility": 0.15772905100858528,
+        "overqualified_top1_rate": 0.34,
+        "underqualified_top1_rate": 0.128
+      },
+      "required_level:Intern": {
+        "n_tasks": 11,
+        "ndcg@10": 0.37130403519148736,
+        "ndcg@5": 0.24220967596042575,
+        "recall@5": 0.3939393939393939,
+        "recall@10": 0.712121212121212,
+        "hit@1": 0.0,
+        "mrr": 0.13201062222801352,
+        "spearman_plausibility": 0.2084584551740994,
+        "overqualified_top1_rate": 1.0,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Junior": {
+        "n_tasks": 254,
+        "ndcg@10": 0.5381125923468556,
+        "ndcg@5": 0.46564941036034424,
+        "recall@5": 0.47524584995057434,
+        "recall@10": 0.6782801297565075,
+        "hit@1": 0.047244094488188976,
+        "mrr": 0.24694886743243674,
+        "spearman_plausibility": 0.3231390626275849,
+        "overqualified_top1_rate": 1.0,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Mid-level": {
+        "n_tasks": 1745,
+        "ndcg@10": 0.7757042464193736,
+        "ndcg@5": 0.7189099499318071,
+        "recall@5": 0.6491441964406737,
+        "recall@10": 0.8513173171566901,
+        "hit@1": 0.27908309455587393,
+        "mrr": 0.4736450884560147,
+        "spearman_plausibility": 0.43699251491595387,
+        "overqualified_top1_rate": 0.34154727793696277,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Senior": {
+        "n_tasks": 427,
+        "ndcg@10": 0.6165386599337513,
+        "ndcg@5": 0.5358345366447692,
+        "recall@5": 0.5977959589200807,
+        "recall@10": 0.7877474984032361,
+        "hit@1": 0.21779859484777517,
+        "mrr": 0.3920184450547412,
+        "spearman_plausibility": 0.30419555179148483,
+        "overqualified_top1_rate": 0.00234192037470726,
+        "underqualified_top1_rate": 0.43559718969555034
+      },
+      "required_level:Staff": {
+        "n_tasks": 50,
+        "ndcg@10": 0.4483591163479129,
+        "ndcg@5": 0.33769286764237455,
+        "recall@5": 0.55,
+        "recall@10": 0.8416666666666666,
+        "hit@1": 0.06,
+        "mrr": 0.2856695535647148,
+        "spearman_plausibility": 0.23353109693137067,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 0.98
+      },
+      "required_level:Principal": {
+        "n_tasks": 13,
+        "ndcg@10": 0.515256405659799,
+        "ndcg@5": 0.4684802298510139,
+        "recall@5": 0.8461538461538461,
+        "recall@10": 0.9615384615384616,
+        "hit@1": 0.0,
+        "mrr": 0.33418803418803417,
+        "spearman_plausibility": 0.2467696683433669,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 1.0
+      },
+      "classified": {
+        "n_tasks": 2000,
+        "ndcg@10": 0.8249403686658866,
+        "ndcg@5": 0.7654559414962753,
+        "recall@5": 0.7085101712013477,
+        "recall@10": 0.9022810705634234,
+        "hit@1": 0.283,
+        "mrr": 0.49089112780425914,
+        "spearman_plausibility": 0.4564169195441824,
+        "overqualified_top1_rate": 0.346,
+        "underqualified_top1_rate": 0.092,
+        "latency_ms_per_task": 1458.8034499902278
+      },
+      "unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.2737328247918523,
+        "ndcg@5": 0.19260293964608724,
+        "recall@5": 0.26908186813186813,
+        "recall@10": 0.5041091575091575,
+        "hit@1": 0.058,
+        "mrr": 0.18985070216125807,
+        "spearman_plausibility": 0.15772905100858528,
+        "overqualified_top1_rate": 0.34,
+        "underqualified_top1_rate": 0.128
+      },
+      "held_out_members": {
+        "n_tasks": 1452,
+        "ndcg@10": 0.8134742577297007,
+        "ndcg@5": 0.754380725370955,
+        "recall@5": 0.6574815844322407,
+        "recall@10": 0.8698456792221984,
+        "hit@1": 0.23140495867768596,
+        "mrr": 0.4441547925780148,
+        "spearman_plausibility": 0.48000814222668736,
+        "overqualified_top1_rate": 0.3615702479338843,
+        "underqualified_top1_rate": 0.07300275482093664
+      }
+    }
   },
-  "efficiency": null,
+  "efficiency": {
+    "latency_ms_bs1_median": 1458.8034499902278,
+    "latency_ms_batched_median": 2034.2650625025271,
+    "batch_size_for_latency": 8,
+    "throughput_items_per_s": 0.4915780241390041,
+    "n_timed": 200
+  },
   "environment": {
     "python": "3.13.0",
     "torch": "2.8.0+cu126",
@@ -155,21 +450,19 @@
     "numpy": "2.3.5",
     "cuda": "12.6",
     "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
-    "os": "Windows 11 (10.0.26200)",
+    "os": "Windows 11 (10.0.26300)",
     "hostname_hash": "f835105b6100"
   },
   "timestamps": {
-    "started": "2026-10-02T22:59:43+00:00",
-    "finished": "2026-10-02T23:04:50+00:00"
+    "started": "2026-10-13T11:50:05+00:00",
+    "finished": "2026-10-13T18:23:06+00:00"
   },
-  "disk_freed_mb": 1.6,
+  "disk_freed_mb": 1306.2,
   "notes": [
+    "reranker yes/no scorer: score = P(yes) from the 2-way softmax over the 'yes'/'no' next-token logits; LoRA fine-tuned with BCE on (logit_yes - logit_no) against soft target Plausibility. The task text is truncated first so the template and profile always fit.",
+    "Training pairs (pointwise): 44058 from 5000 tasks.",
     "train_time_s covers the fit loop including the per-epoch validation passes.",
     "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
   ],
-  "error": {
-    "type": "ChunkedEncodingError",
-    "message": "('Connection broken: IncompleteRead(953361858 bytes read, 238226422 more expected)', IncompleteRead(953361858 bytes read, 238226422 more expected))",
-    "traceback": "Traceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 929, in _error_catcher\n    yield\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1067, in _raw_read\n    raise IncompleteRead(self._fp_bytes_read, self.length_remaining)\nurllib3.exceptions.IncompleteRead: IncompleteRead(953361858 bytes read, 238226422 more expected)\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\requests\\models.py\", line 937, in generate\n    yield from self.raw.stream(chunk_size, decode_content=True)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1291, in stream\n    data = self.read(amt=amt, decode_content=decode_content)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1179, in read\n    data = self._raw_read(amt)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 1045, in _raw_read\n    with self._error_catcher():\n         ~~~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\contextlib.py\", line 162, in __exit__\n    self.gen.throw(value)\n    ~~~~~~~~~~~~~~^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\response.py\", line 949, in _error_catcher\n    raise ProtocolError(arg, e) from e\nurllib3.exceptions.ProtocolError: ('Connection broken: IncompleteRead(953361858 bytes read, 238226422 more expected)', IncompleteRead(953361858 bytes read, 238226422 more expected))\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\run_model_selection.py\", line 254, in run_unit\n    path = registry.pull(u.repo, revision, cfg.get(\"hf_cache_dir\"))\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\oa2\\registry.py\", line 152, in pull\n    return snapshot_download(repo, revision=revision, cache_dir=cache_dir, ignore_patterns=_IGNORE, max_workers=1)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\_snapshot_download.py\", line 332, in snapshot_download\n    thread_map(\n    ~~~~~~~~~~^\n        _inner_hf_hub_download,\n        ^^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        tqdm_class=tqdm_class or hf_tqdm,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\tqdm\\contrib\\concurrent.py\", line 191, in thread_map\n    return _executor_map(ThreadPoolExecutor, fn, *iterables, **tqdm_kwargs)\n  File \"<venv>\\Lib\\site-packages\\tqdm\\contrib\\concurrent.py\", line 163, in _executor_map\n    return list(ex.map(\n        fn, *iterables, timeout=timeout, chunksize=chunksize, **map_kwargs))\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 619, in result_iterator\n    yield _result_or_cancel(fs.pop())\n          ~~~~~~~~~~~~~~~~~^^^^^^^^^^\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 317, in _result_or_cancel\n    return fut.result(timeout)\n           ~~~~~~~~~~^^^^^^^^^\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 456, in result\n    return self.__get_result()\n           ~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\concurrent\\futures\\_base.py\", line 401, in __get_result\n    raise self._exception\n  File \"<python>\\Lib\\concurrent\\futures\\thread.py\", line 58, in run\n    result = self.fn(*self.args, **self.kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\_snapshot_download.py\", line 306, in _inner_hf_hub_download\n    return hf_hub_download(\n        repo_id,\n    ...<15 lines>...\n        headers=headers,\n    )\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 1007, in hf_hub_download\n    return _hf_hub_download_to_cache_dir(\n        # Destination\n    ...<14 lines>...\n        force_download=force_download,\n    )\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 1168, in _hf_hub_download_to_cache_dir\n    _download_to_tmp_and_move(\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^\n        incomplete_path=Path(blob_path + \".incomplete\"),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<8 lines>...\n        xet_file_data=xet_file_data,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 1735, in _download_to_tmp_and_move\n    http_get(\n    ~~~~~~~~^\n        url_to_download,\n        ^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        expected_size=expected_size,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\file_download.py\", line 493, in http_get\n    for chunk in r.iter_content(chunk_size=constants.DOWNLOAD_CHUNK_SIZE):\n                 ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\models.py\", line 939, in generate\n    raise ChunkedEncodingError(e)\nrequests.exceptions.ChunkedEncodingError: ('Connection broken: IncompleteRead(953361858 bytes read, 238226422 more expected)', IncompleteRead(953361858 bytes read, 238226422 more expected))\n"
-  }
+  "error": null
 }

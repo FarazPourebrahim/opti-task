@@ -13,6 +13,7 @@ Opti-Task benchmarks small open-weight models for two features: **(A) story-poin
 
 | model_key | recipe | finetune_method | total_params | test_qwk | test_mae_bucket | test_within_one_acc | test_macro_f1 | test_ece | delta_qwk_vs_tfidf | train_time_s | latency_ms_bs1_median |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| qwen3_0_6b | generative_sft | lora | 596.0M | 0.5325 | 1.0627 | 0.6986 | 0.3427 | 0.1536 | 0.0711 | 11670.7 | 114.2 |
 | deberta_v3_base | coral | full | 183.8M | 0.4857 | 1.2835 | 0.6447 | 0.2129 | 0.3017 | 0.0243 | 6489.9 | 111.4 |
 | bge_m3 | coral | lora | 567.8M | 0.4738 | 1.3117 | 0.6344 | 0.2066 | 0.3195 | 0.0124 | 11202.1 | 212.6 |
 | qwen3_embedding_0_6b | coral | lora | 595.8M | 0.4696 | 1.2683 | 0.6460 | 0.2205 | 0.3084 | 0.0082 | 25277.0 | 158.7 |
@@ -22,13 +23,15 @@ Opti-Task benchmarks small open-weight models for two features: **(A) story-poin
 | baseline_median_per_project | median_per_project | none | 0.0M | 0.2415 | 1.2168 | 0.6416 | 0.1699 | - | -0.2199 | 0.0 | 0.9 |
 | e5_large_instruct | coral | lora | 559.9M | 0.0000 | 1.7643 | 0.5126 | 0.0619 | 0.3070 | -0.4614 | 5576.8 | 213.2 |
 
-- Best by `test_qwk`: **deberta_v3_base** (coral) = 0.4857
-- Efficiency-adjusted (smallest, then fastest, pretrained model within 0.01 of the best pretrained `test_qwk` = 0.4857): **deberta_v3_base** (coral), 183.8M params, 0.4857, 111.4 ms bs1
+- Best by `test_qwk`: **qwen3_0_6b** (generative_sft) = 0.5325
+- Efficiency-adjusted (smallest, then fastest, pretrained model within 0.01 of the best pretrained `test_qwk` = 0.5325): **qwen3_0_6b** (generative_sft), 596.0M params, 0.5325, 114.2 ms bs1
 
 ## Task B — assignee ranking
 
 | model_key | recipe | finetune_method | total_params | test_ndcg@10 | test_recall@5 | test_hit@1 | test_heldout_ndcg@10 | zero_shot_val_ndcg@10 | delta_ndcg@10_vs_tfidf | train_time_s | latency_ms_bs1_median |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| qwen3_embedding_0_6b | bi_encoder | lora | 595.8M | 0.8357 | 0.7294 | 0.3145 | 0.8277 | 0.2751 | 0.6036 | 19175.4 | 99.9 |
+| qwen3_reranker_0_6b | reranker_yes_no | lora | 595.8M | 0.8249 | 0.7085 | 0.2830 | 0.8135 | 0.4211 | 0.5929 | 16322.2 | 1458.8 |
 | qwen3_0_6b | generative_yes_no | lora | 596.0M | 0.8234 | 0.7095 | 0.2880 | 0.8195 | - | 0.5913 | 19259.6 | 1249.8 |
 | e5_large_instruct | bi_encoder | lora | 559.9M | 0.8214 | 0.7089 | 0.3040 | 0.8149 | 0.2915 | 0.5893 | 19441.0 | 213.6 |
 | bge_m3 | bi_encoder | lora | 567.8M | 0.8046 | 0.6889 | 0.2775 | 0.8031 | 0.2392 | 0.5725 | 7869.2 | 83.0 |
@@ -39,8 +42,8 @@ Opti-Task benchmarks small open-weight models for two features: **(A) story-poin
 | baseline_tfidf_cosine | tfidf_cosine | none | 0.1M | 0.2321 | 0.1708 | 0.0195 | 0.2648 | - | 0.0000 | 1.1 | 0.7 |
 | baseline_random | random | none | 0.0M | 0.1515 | 0.1076 | 0.0240 | 0.1575 | - | -0.0806 | 0.0 | 0.1 |
 
-- Best by `test_ndcg@10`: **qwen3_0_6b** (generative_yes_no) = 0.8234
-- Efficiency-adjusted (smallest, then fastest, pretrained model within 0.01 of the best pretrained `test_ndcg@10` = 0.8234): **e5_large_instruct** (bi_encoder), 559.9M params, 0.8214, 213.6 ms bs1
+- Best by `test_ndcg@10`: **qwen3_embedding_0_6b** (bi_encoder) = 0.8357
+- Efficiency-adjusted (smallest, then fastest, pretrained model within 0.01 of the best pretrained `test_ndcg@10` = 0.8357): **qwen3_embedding_0_6b** (bi_encoder), 595.8M params, 0.8357, 99.9 ms bs1
 
 ## Failed / skipped units
 
@@ -49,16 +52,13 @@ Opti-Task benchmarks small open-weight models for two features: **(A) story-poin
 | story_point | `story_point__embeddinggemma_300m__coral__cf70bf18` | skipped | gated_access_denied | 403 Client Error. (Request ID: Root=1-6abc794c-7a91ed6b34b66b9131865bc5;46d6bf81-6c9d-46bc-9536-34cf004a6a0d)  Cannot access gated repo for url https://huggingf |
 | story_point | `story_point__harrier_0_6b__coral__8a4638bd` | skipped | repo_id_unverified | hf_repo_id None is missing or marked 'verify'; not guessing. |
 | story_point | `story_point__neobert__coral__a1c9f612` | failed | ImportError | This modeling file requires the following packages that were not found in your environment: xformers. Run `pip install xformers` |
-| story_point | `story_point__qwen3_0_6b__generative_sft__f0336cc3` | failed | ConnectionError | (ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)), '(Reques |
 | task_assignment | `task_assignment__bitnet_embedding_0_6b__bi_encoder__28ff8107` | skipped | repo_id_unverified | hf_repo_id None is missing or marked 'verify'; not guessing. |
 | task_assignment | `task_assignment__embeddinggemma_300m__bi_encoder__2c8ab7fe` | skipped | gated_access_denied | 403 Client Error. (Request ID: Root=1-6abc794f-068a84f7082b4d7b46b34139;9bfc5d56-35a9-4927-a1fe-32959fa743ac)  Cannot access gated repo for url https://huggingf |
 | task_assignment | `task_assignment__harrier_0_6b__bi_encoder__eade0929` | skipped | repo_id_unverified | hf_repo_id None is missing or marked 'verify'; not guessing. |
 | task_assignment | `task_assignment__neobert__cross_encoder__9412f43c` | failed | ImportError | This modeling file requires the following packages that were not found in your environment: xformers. Run `pip install xformers` |
-| task_assignment | `task_assignment__qwen3_embedding_0_6b__bi_encoder__8b22f441` | failed | SSLError | (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(S |
-| task_assignment | `task_assignment__qwen3_reranker_0_6b__reranker_yes_no__5194cd33` | failed | ChunkedEncodingError | ('Connection broken: IncompleteRead(953361858 bytes read, 238226422 more expected)', IncompleteRead(953361858 bytes read, 238226422 more expected)) |
 
 ## Provenance
 
 - Data fingerprint(s): `74acaad6fd8e80d1`, `7ba294912a0820ce`
-- Generated: 2026-10-03T06:06:09+00:00
-- Repo commit: `2fd617f031b2c39ad73327d837aaaf5ef81f23b6`
+- Generated: 2026-10-13T22:20:14+00:00
+- Repo commit: `a2bf2fc6eb73d3910633d0bc84e98bebe9ba7af0`

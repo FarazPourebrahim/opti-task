@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "run_id": "task_assignment__qwen3_embedding_0_6b__bi_encoder__8b22f441",
-  "status": "failed",
-  "status_reason": "SSLError",
+  "status": "completed",
+  "status_reason": null,
   "smoke": false,
   "context": {
     "project": "Opti-Task",
@@ -24,19 +24,19 @@
   "model": {
     "key": "qwen3_embedding_0_6b",
     "hf_repo_id": "Qwen/Qwen3-Embedding-0.6B",
-    "revision_sha": null,
+    "revision_sha": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
     "family": "embedder",
     "license": "Apache-2.0",
-    "total_params": null,
-    "trainable_params": null,
+    "total_params": 595776512,
+    "trainable_params": 10092544,
     "recipe": "bi_encoder",
-    "finetune_method": null
+    "finetune_method": "lora"
   },
   "data": {
     "fingerprint": "7ba294912a0820ce",
-    "n_train": null,
-    "n_val": null,
-    "n_test": null,
+    "n_train": 19546,
+    "n_val": 500,
+    "n_test": 2500,
     "label_distribution": {
       "train": {
         "n_pairs": 23383,
@@ -125,24 +125,319 @@
       "n_random_negatives": 2,
       "per_device_batch_used": 4,
       "precision": "bf16",
-      "grad_accumulation": null,
+      "grad_accumulation": 8,
       "optimizer": "AdamW, linear decay with warmup"
     },
-    "best_epoch": null,
-    "epochs_run": null,
-    "history": [],
+    "best_epoch": 2,
+    "epochs_run": 2,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 1.288947173367011,
+        "val_primary": 0.807473583106465,
+        "epoch_time_s": 2042.08
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.48074997156852345,
+        "val_primary": 0.826458070032299,
+        "epoch_time_s": 8981.98
+      }
+    ],
     "oom_retry": false,
-    "resumed_from_epoch": null,
-    "train_time_s": null,
-    "peak_gpu_mem_mb": 0.0
+    "resumed_from_epoch": 2,
+    "train_time_s": 19175.366263099946,
+    "peak_gpu_mem_mb": 3755.5
   },
   "metrics": {
-    "zero_shot_val": null,
-    "val": null,
-    "test": null,
-    "slices": null
+    "zero_shot_val": {
+      "n_tasks": 500,
+      "ndcg@10": 0.27506686309173894,
+      "ndcg@5": 0.192647687344394,
+      "recall@5": 0.20646969696969697,
+      "recall@10": 0.386739405039405,
+      "hit@1": 0.034,
+      "mrr": 0.13145329692861235,
+      "spearman_plausibility": 0.18213184346867417,
+      "overqualified_top1_rate": 0.146,
+      "underqualified_top1_rate": 0.704
+    },
+    "val": {
+      "n_tasks": 500,
+      "ndcg@10": 0.826458070032299,
+      "ndcg@5": 0.774126219671657,
+      "recall@5": 0.723329637029637,
+      "recall@10": 0.9080655344655345,
+      "hit@1": 0.308,
+      "mrr": 0.5137776203298952,
+      "spearman_plausibility": 0.45622891125767995,
+      "overqualified_top1_rate": 0.284,
+      "underqualified_top1_rate": 0.14
+    },
+    "test": {
+      "n_tasks": 2000,
+      "ndcg@10": 0.8357120027851138,
+      "ndcg@5": 0.7850497059941297,
+      "recall@5": 0.7293846531736238,
+      "recall@10": 0.9075751357302828,
+      "hit@1": 0.3145,
+      "mrr": 0.5202418555827376,
+      "spearman_plausibility": 0.4568648507298217,
+      "overqualified_top1_rate": 0.296,
+      "underqualified_top1_rate": 0.102,
+      "latency_ms_per_task": 99.91800000716466
+    },
+    "slices": {
+      "all_tasks": {
+        "n_tasks": 2500,
+        "ndcg@10": 0.6992705235381352,
+        "ndcg@5": 0.6479846527356958,
+        "recall@5": 0.606451788472965,
+        "recall@10": 0.7797121415512592,
+        "hit@1": 0.2572,
+        "mrr": 0.4384532773009638,
+        "spearman_plausibility": 0.3840144030887922,
+        "overqualified_top1_rate": 0.3112,
+        "underqualified_top1_rate": 0.1036
+      },
+      "primary_area:API/Integration": {
+        "n_tasks": 254,
+        "ndcg@10": 0.8292283022427361,
+        "ndcg@5": 0.7771046436759779,
+        "recall@5": 0.740521104005356,
+        "recall@10": 0.9013336619635832,
+        "hit@1": 0.3425196850393701,
+        "mrr": 0.5578536250484765,
+        "spearman_plausibility": 0.4407000698217239,
+        "overqualified_top1_rate": 0.2874015748031496,
+        "underqualified_top1_rate": 0.1141732283464567
+      },
+      "primary_area:Backend": {
+        "n_tasks": 138,
+        "ndcg@10": 0.7397203375945179,
+        "ndcg@5": 0.6858700290753731,
+        "recall@5": 0.6732961080787168,
+        "recall@10": 0.8311735366083192,
+        "hit@1": 0.2536231884057971,
+        "mrr": 0.47265060115124063,
+        "spearman_plausibility": 0.37705820277456714,
+        "overqualified_top1_rate": 0.37681159420289856,
+        "underqualified_top1_rate": 0.09420289855072464
+      },
+      "primary_area:Database": {
+        "n_tasks": 277,
+        "ndcg@10": 0.8295655285651509,
+        "ndcg@5": 0.7836212345182496,
+        "recall@5": 0.7298214220596891,
+        "recall@10": 0.8873518679475358,
+        "hit@1": 0.41155234657039713,
+        "mrr": 0.5887258899271087,
+        "spearman_plausibility": 0.4543665242059088,
+        "overqualified_top1_rate": 0.34296028880866425,
+        "underqualified_top1_rate": 0.09386281588447654
+      },
+      "primary_area:DevOps": {
+        "n_tasks": 216,
+        "ndcg@10": 0.7687500709675271,
+        "ndcg@5": 0.6898406548188307,
+        "recall@5": 0.672728775853776,
+        "recall@10": 0.8885406645823312,
+        "hit@1": 0.30092592592592593,
+        "mrr": 0.4979148846130112,
+        "spearman_plausibility": 0.41840195315934897,
+        "overqualified_top1_rate": 0.3194444444444444,
+        "underqualified_top1_rate": 0.16666666666666666
+      },
+      "primary_area:Documentation": {
+        "n_tasks": 124,
+        "ndcg@10": 0.843869081476004,
+        "ndcg@5": 0.806652117315757,
+        "recall@5": 0.7818836405529953,
+        "recall@10": 0.9137288786482335,
+        "hit@1": 0.4838709677419355,
+        "mrr": 0.6564016628532757,
+        "spearman_plausibility": 0.42772755656496675,
+        "overqualified_top1_rate": 0.23387096774193547,
+        "underqualified_top1_rate": 0.11290322580645161
+      },
+      "primary_area:Frontend": {
+        "n_tasks": 560,
+        "ndcg@10": 0.8802975602660582,
+        "ndcg@5": 0.8316434278115423,
+        "recall@5": 0.7070405586477014,
+        "recall@10": 0.9317444856730572,
+        "hit@1": 0.18571428571428572,
+        "mrr": 0.41382811084201504,
+        "spearman_plausibility": 0.5294469527444519,
+        "overqualified_top1_rate": 0.20714285714285716,
+        "underqualified_top1_rate": 0.08214285714285714
+      },
+      "primary_area:Infrastructure": {
+        "n_tasks": 121,
+        "ndcg@10": 0.796588116167391,
+        "ndcg@5": 0.7252917142967175,
+        "recall@5": 0.6870299635005518,
+        "recall@10": 0.8962026683951817,
+        "hit@1": 0.33884297520661155,
+        "mrr": 0.5268417236321198,
+        "spearman_plausibility": 0.4412904597375156,
+        "overqualified_top1_rate": 0.39669421487603307,
+        "underqualified_top1_rate": 0.09917355371900827
+      },
+      "primary_area:QA/Testing": {
+        "n_tasks": 154,
+        "ndcg@10": 0.8504124045326413,
+        "ndcg@5": 0.8105144307184501,
+        "recall@5": 0.7933853844568131,
+        "recall@10": 0.9155560709132138,
+        "hit@1": 0.45454545454545453,
+        "mrr": 0.6258692365835223,
+        "spearman_plausibility": 0.41936621257053497,
+        "overqualified_top1_rate": 0.551948051948052,
+        "underqualified_top1_rate": 0.07142857142857142
+      },
+      "primary_area:Security": {
+        "n_tasks": 156,
+        "ndcg@10": 0.8841145593890914,
+        "ndcg@5": 0.8568679692152261,
+        "recall@5": 0.8466915029415029,
+        "recall@10": 0.9568773818773818,
+        "hit@1": 0.33974358974358976,
+        "mrr": 0.5747894974319728,
+        "spearman_plausibility": 0.4231823701251825,
+        "overqualified_top1_rate": 0.16025641025641027,
+        "underqualified_top1_rate": 0.10897435897435898
+      },
+      "primary_area:Unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.15350460655022105,
+        "ndcg@5": 0.09972443970196025,
+        "recall@5": 0.11472032967032968,
+        "recall@10": 0.26826016483516485,
+        "hit@1": 0.028,
+        "mrr": 0.1112989641738685,
+        "spearman_plausibility": 0.09261261252467393,
+        "overqualified_top1_rate": 0.372,
+        "underqualified_top1_rate": 0.11
+      },
+      "required_level:Intern": {
+        "n_tasks": 11,
+        "ndcg@10": 0.4000144637045834,
+        "ndcg@5": 0.2982991754034488,
+        "recall@5": 0.42424242424242425,
+        "recall@10": 0.6515151515151515,
+        "hit@1": 0.09090909090909091,
+        "mrr": 0.19844322344322346,
+        "spearman_plausibility": 0.22945870761303064,
+        "overqualified_top1_rate": 1.0,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Junior": {
+        "n_tasks": 254,
+        "ndcg@10": 0.5178994335385404,
+        "ndcg@5": 0.45940093169212326,
+        "recall@5": 0.4436935439888196,
+        "recall@10": 0.6058474224812807,
+        "hit@1": 0.09448818897637795,
+        "mrr": 0.26462028153993655,
+        "spearman_plausibility": 0.2922351758511603,
+        "overqualified_top1_rate": 0.9606299212598425,
+        "underqualified_top1_rate": 0.0
+      },
+      "required_level:Mid-level": {
+        "n_tasks": 1745,
+        "ndcg@10": 0.7527302285660411,
+        "ndcg@5": 0.7115946546809152,
+        "recall@5": 0.6305879701885096,
+        "recall@10": 0.7991344970272157,
+        "hit@1": 0.29283667621776505,
+        "mrr": 0.4765150943690888,
+        "spearman_plausibility": 0.42331778162851474,
+        "overqualified_top1_rate": 0.29283667621776505,
+        "underqualified_top1_rate": 0.0057306590257879654
+      },
+      "required_level:Senior": {
+        "n_tasks": 427,
+        "ndcg@10": 0.6175690826603176,
+        "ndcg@5": 0.5330894184159845,
+        "recall@5": 0.605711092186502,
+        "recall@10": 0.8007152488417125,
+        "hit@1": 0.21779859484777517,
+        "mrr": 0.394972133212002,
+        "spearman_plausibility": 0.30433976745365876,
+        "overqualified_top1_rate": 0.02576112412177986,
+        "underqualified_top1_rate": 0.4613583138173302
+      },
+      "required_level:Staff": {
+        "n_tasks": 50,
+        "ndcg@10": 0.5318071390067545,
+        "ndcg@5": 0.4513912045813166,
+        "recall@5": 0.605,
+        "recall@10": 0.8266666666666665,
+        "hit@1": 0.18,
+        "mrr": 0.38480186214968826,
+        "spearman_plausibility": 0.230757916950637,
+        "overqualified_top1_rate": 0.02,
+        "underqualified_top1_rate": 0.86
+      },
+      "required_level:Principal": {
+        "n_tasks": 13,
+        "ndcg@10": 0.6479299639817715,
+        "ndcg@5": 0.6200838422395386,
+        "recall@5": 0.7307692307692307,
+        "recall@10": 0.8076923076923077,
+        "hit@1": 0.38461538461538464,
+        "mrr": 0.563440970793912,
+        "spearman_plausibility": 0.23874782923383706,
+        "overqualified_top1_rate": 0.0,
+        "underqualified_top1_rate": 0.6923076923076923
+      },
+      "classified": {
+        "n_tasks": 2000,
+        "ndcg@10": 0.8357120027851138,
+        "ndcg@5": 0.7850497059941297,
+        "recall@5": 0.7293846531736238,
+        "recall@10": 0.9075751357302828,
+        "hit@1": 0.3145,
+        "mrr": 0.5202418555827376,
+        "spearman_plausibility": 0.4568648507298217,
+        "overqualified_top1_rate": 0.296,
+        "underqualified_top1_rate": 0.102,
+        "latency_ms_per_task": 99.91800000716466
+      },
+      "unclassified": {
+        "n_tasks": 500,
+        "ndcg@10": 0.15350460655022105,
+        "ndcg@5": 0.09972443970196025,
+        "recall@5": 0.11472032967032968,
+        "recall@10": 0.26826016483516485,
+        "hit@1": 0.028,
+        "mrr": 0.1112989641738685,
+        "spearman_plausibility": 0.09261261252467393,
+        "overqualified_top1_rate": 0.372,
+        "underqualified_top1_rate": 0.11
+      },
+      "held_out_members": {
+        "n_tasks": 1452,
+        "ndcg@10": 0.8276547948556716,
+        "ndcg@5": 0.7761544991731091,
+        "recall@5": 0.6804386580577636,
+        "recall@10": 0.8823457769723569,
+        "hit@1": 0.2796143250688705,
+        "mrr": 0.484485211256318,
+        "spearman_plausibility": 0.48031378508463646,
+        "overqualified_top1_rate": 0.31473829201101927,
+        "underqualified_top1_rate": 0.0709366391184573
+      }
+    }
   },
-  "efficiency": null,
+  "efficiency": {
+    "latency_ms_bs1_median": 99.91800000716466,
+    "latency_ms_batched_median": 60.42002500180388,
+    "batch_size_for_latency": 8,
+    "throughput_items_per_s": 16.550804141013586,
+    "n_timed": 200
+  },
   "environment": {
     "python": "3.13.0",
     "torch": "2.8.0+cu126",
@@ -155,21 +450,22 @@
     "numpy": "2.3.5",
     "cuda": "12.6",
     "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
-    "os": "Windows 11 (10.0.26200)",
+    "os": "Windows 11 (10.0.26300)",
     "hostname_hash": "f835105b6100"
   },
   "timestamps": {
-    "started": "2026-10-02T22:59:11+00:00",
-    "finished": "2026-10-02T22:59:42+00:00"
+    "started": "2026-10-13T09:06:07+00:00",
+    "finished": "2026-10-13T11:50:04+00:00"
   },
-  "disk_freed_mb": 1151.6,
+  "disk_freed_mb": 1306.2,
   "notes": [
+    "Bi-encoder prefixes: query='Instruct: Given a software task description, retrieve team member profiles suited to do the task\\nQuery:', document=''. Score = cosine similarity. Member embeddings are precomputed once per evaluation (and once before latency timing).",
+    "Loss: MultipleNegativesRankingLoss (scale 20) over the positive, its hard/random negatives and in-batch candidates; in-batch candidates that are themselves relevant to the anchor task are masked out (only 48 distinct profiles exist, so collisions are frequent). In-batch negatives come from the per-device micro-batch.",
+    "Every Task_Assignment pair has Plausibility > 0, so no over-qualified pair has relevance 0. The task's most over-qualified present member (largest Capability - Plausibility, gap >= overqualified_min_gap) is added as an extra negative for the task's top positive only.",
+    "Training tuples (anchor, positive, negatives): 19546 from 5000 tasks.",
     "train_time_s covers the fit loop including the per-epoch validation passes.",
-    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
+    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state).",
+    "This unit was RESUMED after an interruption: {'epoch': 2, 'micro_batch': 2344, 'training_finished': False}. train_time_s adds the time trained before the interruption; work lost since the last checkpoint is not counted."
   ],
-  "error": {
-    "type": "SSLError",
-    "message": "(MaxRetryError(\"HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)')))\"), '(Request ID: ef205c91-0cd5-46c0-aa3c-d6e701ffd970)')",
-    "traceback": "Traceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 470, in _make_request\n    self._validate_conn(conn)\n    ~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 1125, in _validate_conn\n    conn.connect()\n    ~~~~~~~~~~~~^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 878, in connect\n    wrapped_socket, is_verified = _ssl_wrap_socket_and_match_hostname(\n                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<14 lines>...\n        assert_fingerprint=self.assert_fingerprint,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 1080, in _ssl_wrap_socket_and_match_hostname\n    ssl_sock = ssl_wrap_socket(\n        sock=sock,\n    ...<8 lines>...\n        tls_in_tls=tls_in_tls,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 437, in ssl_wrap_socket\n    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 481, in _ssl_wrap_socket_impl\n    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<python>\\Lib\\ssl.py\", line 455, in wrap_socket\n    return self.sslsocket_class._create(\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<5 lines>...\n        session=session\n        ^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<python>\\Lib\\ssl.py\", line 1076, in _create\n    self.do_handshake()\n    ~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\ssl.py\", line 1372, in do_handshake\n    self._sslobj.do_handshake()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\nssl.SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 793, in urlopen\n    response = self._make_request(\n        conn,\n    ...<10 lines>...\n        **response_kw,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 494, in _make_request\n    raise new_e\nurllib3.exceptions.SSLError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\requests\\adapters.py\", line 696, in send\n    resp = conn.urlopen(\n        method=request.method,\n    ...<9 lines>...\n        chunked=chunked,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 847, in urlopen\n    retries = retries.increment(\n        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\retry.py\", line 555, in increment\n    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nurllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)')))\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\run_model_selection.py\", line 250, in run_unit\n    revision = registry.verify_repo(u.entry)[\"revision_sha\"]\n               ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\oa2\\registry.py\", line 127, in verify_repo\n    info = model_info(repo, revision=entry.get(\"revision\"))\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\hf_api.py\", line 2660, in model_info\n    r = get_session().get(path, headers=headers, timeout=timeout, params=params)\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 671, in get\n    return self.request(\"GET\", url, params=params, **kwargs)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_http.py\", line 95, in send\n    return super().send(request, *args, **kwargs)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\adapters.py\", line 727, in send\n    raise SSLError(e, request=request)\nrequests.exceptions.SSLError: (MaxRetryError(\"HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)')))\"), '(Request ID: ef205c91-0cd5-46c0-aa3c-d6e701ffd970)')\n"
-  }
+  "error": null
 }

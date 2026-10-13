@@ -1,0 +1,175 @@
+{
+  "schema_version": "1.0",
+  "run_id": "task_assignment__qwen3_embedding_0_6b__bi_encoder__8b22f441",
+  "status": "failed",
+  "status_reason": "SSLError",
+  "smoke": false,
+  "context": {
+    "project": "Opti-Task",
+    "benchmark": "OA2 model selection",
+    "task": "task_assignment",
+    "task_description": "Learning to rank: score a (task text, team-member profile) pair for suitability and sort all 48 members, for suggesting a ranked assignee shortlist on task creation.",
+    "primary_metric": "ndcg@10",
+    "dataset": "TAWOS v1.1 staffing extension (synthetic 48-member team)",
+    "caveats": [
+      "TAWOS is public open-source Jira data (39 projects); results may not transfer to other teams' conventions.",
+      "Models see the final issue text; some issues were edited after estimation (see the text_changed_after_estimation slice for the gap).",
+      "Single seed, no hyperparameter search: every model gets the same fixed budget.",
+      "Team is synthetic; Task B labels are a scorer's opinion (Plausibility), not observed outcomes.",
+      "Headline test metrics use classified tasks only; 'Unclassified' tasks are a separate slice.",
+      "Nine members (one per area) are held out of training entirely to measure cold start.",
+      "Sampled tasks: train 5000 / val 500 / test 2500 (of which 500 unclassified). Rare required levels (Staff, Intern, Principal) have few training examples at small sample sizes."
+    ]
+  },
+  "model": {
+    "key": "qwen3_embedding_0_6b",
+    "hf_repo_id": "Qwen/Qwen3-Embedding-0.6B",
+    "revision_sha": null,
+    "family": "embedder",
+    "license": "Apache-2.0",
+    "total_params": null,
+    "trainable_params": null,
+    "recipe": "bi_encoder",
+    "finetune_method": null
+  },
+  "data": {
+    "fingerprint": "7ba294912a0820ce",
+    "n_train": null,
+    "n_val": null,
+    "n_test": null,
+    "label_distribution": {
+      "train": {
+        "n_pairs": 23383,
+        "n_tasks": 5000,
+        "mean_relevant_per_task": 4.6766,
+        "plausibility_quantiles": {
+          "q10": 0.4718,
+          "q25": 0.547,
+          "q50": 0.6755,
+          "q75": 0.8128,
+          "q90": 0.8694
+        }
+      },
+      "val": {
+        "n_pairs": 2400,
+        "n_tasks": 500,
+        "mean_relevant_per_task": 4.8,
+        "plausibility_quantiles": {
+          "q10": 0.4677,
+          "q25": 0.5285,
+          "q50": 0.6617,
+          "q75": 0.8009,
+          "q90": 0.8694
+        }
+      },
+      "test": {
+        "n_pairs": 10840,
+        "n_tasks": 2500,
+        "mean_relevant_per_task": 4.336,
+        "plausibility_quantiles": {
+          "q10": 0.4197,
+          "q25": 0.4932,
+          "q50": 0.628,
+          "q75": 0.7711,
+          "q90": 0.8692
+        }
+      }
+    },
+    "held_out_member_ids": [
+      7,
+      15,
+      21,
+      28,
+      29,
+      33,
+      39,
+      41,
+      47
+    ],
+    "sampled_split_sizes": {
+      "train": 5000,
+      "val": 500,
+      "test": 2500
+    }
+  },
+  "training": {
+    "hyperparameters": {
+      "effective_batch": 32,
+      "per_device_batch": 4,
+      "eval_batch": 32,
+      "max_seq_len": 512,
+      "lr_full": 2e-05,
+      "lr_lora": 0.0002,
+      "lr_head": 0.001,
+      "warmup_ratio": 0.06,
+      "weight_decay": 0.01,
+      "max_grad_norm": 1.0,
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.05
+      },
+      "lora_param_threshold_m": 300,
+      "early_stopping_patience": 1,
+      "gradient_checkpointing": true,
+      "latency_samples": 200,
+      "latency_warmup": 10,
+      "latency_batch_tasks": 8,
+      "precision_override": null,
+      "epochs": 2,
+      "seed": 20260916,
+      "query_instruction": "Given a software task description, retrieve team member profiles suited to do the task",
+      "query_prefix": "Instruct: Given a software task description, retrieve team member profiles suited to do the task\nQuery:",
+      "doc_prefix": "",
+      "n_hard_negatives": 4,
+      "n_random_negatives": 2,
+      "per_device_batch_used": 4,
+      "precision": "bf16",
+      "grad_accumulation": null,
+      "optimizer": "AdamW, linear decay with warmup"
+    },
+    "best_epoch": null,
+    "epochs_run": null,
+    "history": [],
+    "oom_retry": false,
+    "resumed_from_epoch": null,
+    "train_time_s": null,
+    "peak_gpu_mem_mb": 0.0
+  },
+  "metrics": {
+    "zero_shot_val": null,
+    "val": null,
+    "test": null,
+    "slices": null
+  },
+  "efficiency": null,
+  "environment": {
+    "python": "3.13.0",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "sentence_transformers": "5.1.2",
+    "peft": "0.17.1",
+    "huggingface_hub": "0.36.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.2.3",
+    "numpy": "2.3.5",
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "os": "Windows 11 (10.0.26200)",
+    "hostname_hash": "f835105b6100"
+  },
+  "timestamps": {
+    "started": "2026-10-02T22:59:11+00:00",
+    "finished": "2026-10-02T22:59:42+00:00"
+  },
+  "disk_freed_mb": 1151.6,
+  "notes": [
+    "train_time_s covers the fit loop including the per-epoch validation passes.",
+    "Mid-unit resume: a resume checkpoint is written every 15 min and at each epoch boundary; an interrupted unit continues from it (same data order and RNG state)."
+  ],
+  "error": {
+    "type": "SSLError",
+    "message": "(MaxRetryError(\"HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)')))\"), '(Request ID: ef205c91-0cd5-46c0-aa3c-d6e701ffd970)')",
+    "traceback": "Traceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 470, in _make_request\n    self._validate_conn(conn)\n    ~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 1125, in _validate_conn\n    conn.connect()\n    ~~~~~~~~~~~~^^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 878, in connect\n    wrapped_socket, is_verified = _ssl_wrap_socket_and_match_hostname(\n                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<14 lines>...\n        assert_fingerprint=self.assert_fingerprint,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connection.py\", line 1080, in _ssl_wrap_socket_and_match_hostname\n    ssl_sock = ssl_wrap_socket(\n        sock=sock,\n    ...<8 lines>...\n        tls_in_tls=tls_in_tls,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 437, in ssl_wrap_socket\n    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\ssl_.py\", line 481, in _ssl_wrap_socket_impl\n    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<python>\\Lib\\ssl.py\", line 455, in wrap_socket\n    return self.sslsocket_class._create(\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        sock=sock,\n        ^^^^^^^^^^\n    ...<5 lines>...\n        session=session\n        ^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"<python>\\Lib\\ssl.py\", line 1076, in _create\n    self.do_handshake()\n    ~~~~~~~~~~~~~~~~~^^\n  File \"<python>\\Lib\\ssl.py\", line 1372, in do_handshake\n    self._sslobj.do_handshake()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~^^\nssl.SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 793, in urlopen\n    response = self._make_request(\n        conn,\n    ...<10 lines>...\n        **response_kw,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 494, in _make_request\n    raise new_e\nurllib3.exceptions.SSLError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"<venv>\\Lib\\site-packages\\requests\\adapters.py\", line 696, in send\n    resp = conn.urlopen(\n        method=request.method,\n    ...<9 lines>...\n        chunked=chunked,\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\connectionpool.py\", line 847, in urlopen\n    retries = retries.increment(\n        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]\n    )\n  File \"<venv>\\Lib\\site-packages\\urllib3\\util\\retry.py\", line 555, in increment\n    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nurllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)')))\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\run_model_selection.py\", line 250, in run_unit\n    revision = registry.verify_repo(u.entry)[\"revision_sha\"]\n               ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"<repo>\\apps\\ai\\model_selection\\OA2\\oa2\\registry.py\", line 127, in verify_repo\n    info = model_info(repo, revision=entry.get(\"revision\"))\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_validators.py\", line 114, in _inner_fn\n    return fn(*args, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\hf_api.py\", line 2660, in model_info\n    r = get_session().get(path, headers=headers, timeout=timeout, params=params)\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 671, in get\n    return self.request(\"GET\", url, params=params, **kwargs)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n  File \"<venv>\\Lib\\site-packages\\requests\\sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n  File \"<venv>\\Lib\\site-packages\\huggingface_hub\\utils\\_http.py\", line 95, in send\n    return super().send(request, *args, **kwargs)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<venv>\\Lib\\site-packages\\requests\\adapters.py\", line 727, in send\n    raise SSLError(e, request=request)\nrequests.exceptions.SSLError: (MaxRetryError(\"HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /api/models/Qwen/Qwen3-Embedding-0.6B (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1020)')))\"), '(Request ID: ef205c91-0cd5-46c0-aa3c-d6e701ffd970)')\n"
+  }
+}
