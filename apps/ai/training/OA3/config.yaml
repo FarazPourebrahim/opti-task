@@ -1,0 +1,62 @@
+# OA3 - production training of the Task B assignee-ranking model (Qwen3-Embedding-0.6B bi-encoder).
+# See README.md (how to run), DESIGN.md (every choice below, with the reason) and INTEGRATION.md (how to use the
+# exported model in the product). Paths are relative to this file's folder.
+#
+# Everything that changes WHAT is trained (data budget, recipe, model revision) feeds the run ID, so a changed value
+# never resumes or overwrites an older run: it creates a new one.
+
+seed: 20260916                        # same seed as OA2: held-out members, val/test samples and negatives match OA2
+dataset_dir: ../../datasets/TAWOS/TAWOS_staffing_dataset
+oa2_dir: ../../model_selection/OA2    # OA3 imports OA2's `oa2` package (data prep, metrics, training loop)
+hf_cache_dir: null                    # optional; null = default Hugging Face cache
+
+model:
+  hf_repo_id: Qwen/Qwen3-Embedding-0.6B
+  revision: 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3   # pinned: the exact revision OA2 benchmarked
+  license: Apache-2.0
+  local_path: null                    # offline machines: a folder holding that revision (README §3); skips the download
+
+data:
+  max_text_chars: 8000                # description cut at prep time (same as OA2); the model reads <= max_seq_len tokens
+  split: {train: 0.70, val: 0.15, test: 0.15}        # per-project chronological split (same as OA2)
+  train_tasks: 50000                  # of 246,641 classified training tasks; nested sampling (DESIGN.md §4.2)
+  val_tasks: 2000                     # model selection only; OA2 used 500
+  test_tasks: 2000                    # identical to OA2's test set (same seed + size), so results compare 1:1
+  test_unclassified_tasks: 500        # reported as a separate slice, never in the headline metric
+  hold_out_members: true              # keep OA2's 9 held-out members out of training to re-measure cold start
+  n_hard_negatives: 4
+  n_random_negatives: 2
+  overqualified_min_gap: 0.10
+
+prompt:
+  # The exact strings the model is trained with. INTEGRATION.md §3: production must send them byte-for-byte.
+  query_instruction: "Given a software task description, retrieve team member profiles suited to do the task"
+  query_prefix: "Instruct: {instruction}\nQuery:"    # no space after "Query:" (OA2 behaviour, kept on purpose)
+  doc_prefix: ""
+
+training:                             # the OA2 recipe, unchanged (DESIGN.md §5)
+  epochs: 2
+  early_stopping_patience: 1
+  effective_batch: 32
+  per_device_batch: 4                 # micro-batch; OA2 used 4 for this model on a 6 GB GPU (peak 3.8 GB)
+  eval_batch: 16                      # what OA2 effectively used for this model (32 x 4/8); only affects speed/memory
+  max_seq_len: 512
+  lr_lora: 2.0e-4
+  warmup_ratio: 0.06
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  lora: {r: 16, alpha: 32, dropout: 0.05}
+  mnrl_scale: 20.0
+  gradient_checkpointing: true
+  precision: null                     # null = auto (bf16 if the GPU supports it, else fp16; fp32 on CPU)
+
+export:
+  dtype: bfloat16                     # weights dtype of the exported model (the upstream repo ships bf16 too)
+  verify_tolerance: 0.002             # max |test nDCG@10 (exported model) - test nDCG@10 (trained model)|
+
+evaluation:
+  latency_samples: 200
+  latency_warmup: 10
+  latency_batch_tasks: 8
+  bootstrap_resamples: 1000           # paired bootstrap vs OA2's Qwen3-Embedding test predictions
+  oa2_reference_predictions: ../../model_selection/OA2/reports_tast_assignment/predictions/task_assignment__qwen3_embedding_0_6b__bi_encoder__8b22f441.csv.gz
