@@ -101,7 +101,6 @@ export function TaskFilters({
         </div>
       ) : null}
       <ComboboxField<TaskStatus | Any>
-        placeholder={values.status}
         label={t('task.status')}
         value={values.status}
         onValueChange={set('status')}
