@@ -5,6 +5,11 @@ import {
   Card,
   Chip,
   EmptyState,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
   Table,
   TableBody,
   TableCell,
@@ -12,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@averoui/react';
-import { ListTodo, Plus, SearchX } from 'lucide-react';
+import { ListTodo, Plus, SearchX, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProjectContext } from '@/modules/project/hooks/useProjectContext';
@@ -60,6 +65,7 @@ export function TaskListPage() {
   const { project, roles, members } = useProjectContext();
   const [values, setValues] = useState(DEFAULT_TASK_FILTERS);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   // The API has no list of a project's labels; these are the ones met so far.
   const [seenLabels, setSeenLabels] = useState<Record<string, string>>({});
 
@@ -122,19 +128,32 @@ export function TaskListPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      {createButton ? (
-        <div className="flex justify-end">{createButton}</div>
-      ) : null}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={() => setIsFiltersOpen(true)}>
+          <SlidersHorizontal aria-hidden className="size-4" />
+          {t('task.list.filters')}
+        </Button>
+        {createButton}
+      </div>
 
-      <TaskFilters
-        values={values}
-        onChange={setValues}
-        assignees={assignees}
-        sprints={sprints}
-        epics={epics}
-        labels={labels}
-        isFiltered={isFiltered}
-      />
+      <Drawer open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+        <DrawerContent side="end" size="panel">
+          <DrawerHeader>
+            <DrawerTitle>{t('task.list.filters')}</DrawerTitle>
+          </DrawerHeader>
+          <DrawerBody>
+            <TaskFilters
+              values={values}
+              onChange={setValues}
+              assignees={assignees}
+              sprints={sprints}
+              epics={epics}
+              labels={labels}
+              isFiltered={isFiltered}
+            />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
 
       {isLoading ? (
         <PageSkeleton />
